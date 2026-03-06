@@ -1,7 +1,7 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
-import db from "./config/db.ts";
+import db from "./config/db.js";
 const app = express();
 const server = http.createServer(app);
 
