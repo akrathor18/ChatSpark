@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import db from "./config/db.js";
 
 import authRoutes from "./routes/auth.routes.js";
+import conversationRoutes from "./routes/conversation.routes.js";
 import cookieParser from "cookie-parser";
 
 import bodyParser from "body-parser";
@@ -23,6 +24,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/conversations", conversationRoutes);
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 

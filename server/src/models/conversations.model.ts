@@ -1,28 +1,32 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
 
 export interface IConversation extends Document {
-  type: string;
-  name: string; 
-  updatedAt: Date;
+    type: string;
+    name: string;
+    createdBy: Types.ObjectId;
+    lastMessageId?: Types.ObjectId;
+
+    updatedAt: Date;
 }
 
-const conversationSchema = new Schema<IConversation>(
-  {
-    type: { 
-        type: String,
-        enum: ['private', 'group'],
-        required: true,
+const conversationSchema = new Schema(
+    {
+        type: {
+            type: String,
+            enum: ["direct", "group"],
+            required: true
+        },
+        name: String,
+        createdBy: {
+            type: Schema.Types.ObjectId,
+            ref: "User"
+        },
+        lastMessageId: {
+            type: Schema.Types.ObjectId,
+            ref: "Message"
+        }
     },
-    name: {
-        type: String,
-        required: true
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
-}, {
-    timestamps: true
-});
+    { timestamps: true }
+);
 
-export const conversation = mongoose.model<IConversation>('conversation', conversationSchema);
+export const Conversation = mongoose.model<IConversation>('conversation', conversationSchema);
