@@ -2,8 +2,15 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import db from "./config/db.js";
+
+import authRoutes from "./routes/auth.routes.js";
+import cookieParser from "cookie-parser";
+
+import bodyParser from "body-parser";
 const app = express();
 const server = http.createServer(app);
+app.use(cookieParser());
+app.use(bodyParser.json());
 
 const io = new Server(server, {
   cors: {
@@ -15,7 +22,7 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-
+app.use("/api/auth", authRoutes);
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
