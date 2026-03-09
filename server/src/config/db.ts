@@ -10,7 +10,7 @@ if (!url) {
 }
 
 mongoose.connect(url, {
-    dbName: 'StudyHub',
+    dbName: 'chatspark',
 });
 
 console.log('🟢 Connecting to MongoDB');
