@@ -1,38 +1,32 @@
-"use client"
+import type { Metadata } from "next"
+import { Geist, Geist_Mono } from "next/font/google"
+import "./globals.css"
 
-import { Sparkles } from "lucide-react"
-import Link from "next/link"
-import { Geist } from "next/font/google";
+const geistSans = Geist({
+  variable: "--font-sans",
+  subsets: ["latin"],
+})
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geistMono = Geist_Mono({
+  variable: "--font-mono",
+  subsets: ["latin"],
+})
 
+export const metadata: Metadata = {
+  title: "ChatSpark",
+  description: "ChatSpark – Real-time chat application",
+}
 
-export default function AuthLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-background">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 md:px-8">
-        <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
-            <Sparkles className="h-4.5 w-4.5 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-semibold tracking-tight text-foreground">ChatSpark</span>
-        </Link>
-      </header>
-
-      {/* Content */}
-      <main className="flex flex-1 items-center justify-center px-4 py-8">
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
-      </main>
-
-      {/* Footer */}
-      <footer className="px-6 py-4 text-center text-xs text-muted-foreground md:px-8">
-        <p>By continuing, you agree to ChatSpark&apos;s <Link href="#" className="text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary hover:underline">Privacy Policy</Link></p>
-      </footer>
-    </div>
+      </body>
+    </html>
   )
 }
