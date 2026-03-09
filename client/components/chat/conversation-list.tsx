@@ -1,0 +1,156 @@
+"use client"
+
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Search, Sparkles, Plus, Settings } from "lucide-react"
+import Link from "next/link"
+
+export interface Conversation {
+  id: string
+  name: string
+  avatar: string
+  lastMessage: string
+  timestamp: string
+  unreadCount: number
+  isOnline: boolean
+}
+
+interface ConversationListProps {
+  conversations: Conversation[]
+  selectedId: string | null
+  onSelect: (id: string) => void
+  newChatButton?: React.ReactNode
+}
+
+export function ConversationList({ conversations, selectedId, onSelect, newChatButton }: ConversationListProps) {
+  return (
+    <div className="flex h-full flex-col bg-sidebar">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
+            <Sparkles className="h-4.5 w-4.5 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-base font-semibold tracking-tight text-foreground">ChatSpark</h1>
+            <p className="text-[11px] text-muted-foreground">Developer Chat</p>
+          </div>
+        </div>
+        {newChatButton || (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 rounded-lg text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground"
+          >
+            <Plus className="h-4.5 w-4.5" />
+            <span className="sr-only">New chat</span>
+          </Button>
+        )}
+      </div>
+
+      {/* Search */}
+      <div className="px-4 pb-3">
+        <div className="flex items-center gap-2.5 rounded-xl bg-input px-3.5 py-2.5 ring-1 ring-border/50 transition-all duration-200 focus-within:ring-primary/50">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search conversations..."
+            className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+          />
+          <kbd className="hidden rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-block">
+            /
+          </kbd>
+        </div>
+      </div>
+
+      {/* Section Label */}
+      <div className="px-5 py-2">
+        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Messages
+        </span>
+      </div>
+
+      {/* Conversations */}
+      <div className="flex-1 overflow-y-auto overscroll-contain px-2" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="space-y-0.5 pb-4">
+          {conversations.map((conversation) => (
+            <button
+              key={conversation.id}
+              onClick={() => onSelect(conversation.id)}
+              className={cn(
+                "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
+                selectedId === conversation.id 
+                  ? "bg-sidebar-accent shadow-sm" 
+                  : "hover:bg-sidebar-accent/50"
+              )}
+            >
+              <div className="relative shrink-0">
+                <Avatar className="h-11 w-11 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
+                  <AvatarImage src={conversation.avatar} alt={conversation.name} />
+                  <AvatarFallback className="bg-secondary text-sm font-medium text-foreground">
+                    {conversation.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                {conversation.isOnline && (
+                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-sidebar bg-online shadow-sm shadow-online/50" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={cn(
+                    "truncate text-sm transition-colors duration-200",
+                    selectedId === conversation.id || conversation.unreadCount > 0
+                      ? "font-semibold text-foreground"
+                      : "font-medium text-foreground/90"
+                  )}>
+                    {conversation.name}
+                  </span>
+                  <span className={cn(
+                    "shrink-0 text-[11px] transition-colors duration-200",
+                    conversation.unreadCount > 0 ? "font-medium text-primary" : "text-muted-foreground"
+                  )}>
+                    {conversation.timestamp}
+                  </span>
+                </div>
+                <div className="mt-0.5 flex items-center justify-between gap-2">
+                  <p className={cn(
+                    "truncate text-[13px] transition-colors duration-200",
+                    conversation.unreadCount > 0 ? "text-foreground/80" : "text-muted-foreground"
+                  )}>
+                    {conversation.lastMessage}
+                  </p>
+                  {conversation.unreadCount > 0 && (
+                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm shadow-primary/30">
+                      {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* User Profile Footer */}
+      <div className="border-t border-sidebar-border p-3">
+        <Link
+          href="/profile"
+          className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 hover:bg-sidebar-accent"
+        >
+          <Avatar className="h-9 w-9 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
+            <AvatarImage src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" alt="Your profile" />
+            <AvatarFallback className="bg-secondary text-xs font-medium text-foreground">
+              AD
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-foreground">Alex Developer</p>
+            <p className="truncate text-xs text-muted-foreground">View profile</p>
+          </div>
+          <Settings className="h-4 w-4 text-muted-foreground transition-colors duration-200 group-hover:text-foreground" />
+        </Link>
+      </div>
+    </div>
+  )
+}
