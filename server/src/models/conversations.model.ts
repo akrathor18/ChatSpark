@@ -24,3 +24,5 @@ const conversationSchema = new Schema<IConversation>(
 }, {
     timestamps: true
 });
+
+export const conversation = mongoose.model<IConversation>('conversation', conversationSchema);
