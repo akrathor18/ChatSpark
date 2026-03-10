@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Mail, Lock, User, Github, Loader2, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
-
+import { useAuthStore } from "@/store/useAuthStore"
 export default function SignUpPage() {
   const router = useRouter()
+  const { register, error, isLoading } = useAuthStore()
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -45,6 +45,8 @@ export default function SignUpPage() {
     }
     if (!formData.password) {
       newErrors.password = "Password is required"
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters long"
     } else if (passwordStrength < 3) {
       newErrors.password = "Please create a stronger password"
     }
@@ -54,11 +56,10 @@ export default function SignUpPage() {
       return
     }
 
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
+   const success= await register(formData.name, formData.email, formData.password)
+    if(success){
     router.push("/chat")
+    }
   }
 
   return (
@@ -187,6 +188,9 @@ export default function SignUpPage() {
             </div>
             {errors.password && (
               <p className="text-xs text-destructive">{errors.password}</p>
+            )}
+            {error && (
+              <p className="text-xs text-destructive">{error}</p>
             )}
 
             {/* Password strength indicator */}

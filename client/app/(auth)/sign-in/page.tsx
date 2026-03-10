@@ -40,8 +40,10 @@ export default function SignInPage() {
       setErrors(newErrors)
       return
     }
-    login(formData.email, formData.password)
-    // router.push("/chat")
+   const success= await login(formData.email, formData.password)
+    if(success){
+    router.push("/chat")
+    }
   }
 
   return (

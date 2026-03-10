@@ -5,8 +5,8 @@ interface AuthState {
     user: any;
     isLoading: boolean;
     error: any
-    login: (email: string, password: string) => Promise<void>;
-    register: (name: string, email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<boolean>;
+    register: (name: string, email: string, password: string) => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -22,12 +22,13 @@ export const useAuthStore = create<AuthState>((set) => ({
             console.log(res)
 
             set({ user: res.user, isLoading: false });
-
+            return true;
         } catch (error: any) {
             console.log(error);
 
             set({ isLoading: false, error: error });
             throw error;
+            return false;
         }
     },
     register: async (name, email, password) => {
@@ -36,11 +37,13 @@ export const useAuthStore = create<AuthState>((set) => ({
             const res = await authService.register(name, email, password);
             console.log(res)
             set({ user: res.user, isLoading: false });
+            return true;
         } catch (error: any) {
             console.log(error);
             
             set({ isLoading: false, error: error });
             throw error;
+            return false;
         }
     },
 
