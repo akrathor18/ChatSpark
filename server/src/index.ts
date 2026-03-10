@@ -13,13 +13,23 @@ const app = express();
 const server = http.createServer(app);
 app.use(cookieParser());
 app.use(bodyParser.json());
+import cors from "cors";
 
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
-    origin: "*"
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
   }
 });
-
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.FRONTEND_URL
+        : "http://localhost:3000",
+    credentials: true,
+  }),
+);
 app.get("/", (req, res) => {  
   res.send("Hello World!");
 });
@@ -29,13 +39,19 @@ app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("User connected:", socket.id)
+
+  socket.on("send_message", (data) => {
+    console.log(data)
+
+    io.emit("receive_message", data)
+  })
 
   socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
+    console.log("User disconnected", socket.id)
+  })
+})
 
 server.listen(5000, () => {
-  console.log("Server running on port 5000");
-});
+  console.log("Server running on port 5000")
+})

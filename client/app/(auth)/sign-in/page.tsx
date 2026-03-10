@@ -8,10 +8,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Mail, Lock, Github, Loader2 } from "lucide-react"
 
+import { useAuthStore } from "@/store/useAuthStore"
 export default function SignInPage() {
   const router = useRouter()
+
+  const { login, error, isLoading } = useAuthStore()
+
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -37,12 +40,8 @@ export default function SignInPage() {
       setErrors(newErrors)
       return
     }
-
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
-    router.push("/chat")
+    login(formData.email, formData.password)
+    // router.push("/chat")
   }
 
   return (
@@ -160,6 +159,9 @@ export default function SignInPage() {
             {errors.password && (
               <p className="text-xs text-destructive">{errors.password}</p>
             )}
+            {error && (
+              <p className="text-xs text-destructive">{error}</p>
+            )}
           </div>
 
           <Button
@@ -176,6 +178,7 @@ export default function SignInPage() {
               "Sign in"
             )}
           </Button>
+            
         </form>
 
         {/* Sign up link */}
