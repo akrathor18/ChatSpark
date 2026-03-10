@@ -80,7 +80,7 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
 
   if (!user) {
     return (
-      <div className="flex h-full flex-col items-center justify-center bg-background px-8">
+      <div className="flex h-full flex-col items-center justify-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
           <Sparkles className="h-9 w-9 text-primary" />
         </div>
