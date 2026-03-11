@@ -31,11 +31,11 @@ export const createConversationService = async (currentUserId: string, userId: s
 
   return conversation;
 };
-
 export const getUserConversationsService = async (userId: string) => {
 
   const memberships = await ConversationMember.find({ userId })
-    .select("conversationId");
+    .populate("userId", "name email avatar") 
+    .select("conversationId userId");
 
   const conversationIds = memberships.map(m => m.conversationId);
 
@@ -44,5 +44,8 @@ export const getUserConversationsService = async (userId: string) => {
   })
     .sort({ updatedAt: -1 });
 
-  return conversations;
+  return {
+    conversations,
+    members: memberships
+  };
 };
