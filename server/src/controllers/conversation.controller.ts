@@ -2,7 +2,7 @@ import { createConversationService, getUserConversationsService } from "../servi
 import type { Request, Response } from "express";
 export const createConversationController = async (req: Request, res: Response) => {
     try {
-        const currentUserId = req.user.id;
+        const currentUserId = (req as any).user.id;
         const { userId } = req.body;
 
         const conversation = await createConversationService(
@@ -26,12 +26,15 @@ export const createConversationController = async (req: Request, res: Response) 
 export const getUserConversationsController = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 20;
 
-        const conversations = await getUserConversationsService(userId);
+        const conversations = await getUserConversationsService(userId, page, limit);
 
         res.status(200).json({
             success: true,
-            data: conversations
+            data: conversations,
+            pagination: { page, limit }
         });
 
     } catch (error: any) {

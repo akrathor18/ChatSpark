@@ -1,6 +1,6 @@
 import api from "@/api/axios";
 
-export const conversations = async (conversationId: string) => {
+export const fetchConversations = async (conversationId: string) => {
     return api.get(`/conversations/`);
 }
 
