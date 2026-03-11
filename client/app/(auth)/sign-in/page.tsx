@@ -47,7 +47,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full max-w-md overflow-scroll">
       <div className="rounded-2xl border border-border bg-card p-6 shadow-xl shadow-black/5 md:p-8">
         {/* Header */}
         <div className="mb-8 text-center">

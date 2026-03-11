@@ -130,6 +130,7 @@ export default function ChatPage() {
 
   const handleSelectConversation = useCallback((id: string) => {
     setSelectedConversationId(id)
+    console.log(id)
     setConversations((prev) =>
       prev.map((conv) => (conv.id === id ? { ...conv, unreadCount: 0 } : conv))
     )
