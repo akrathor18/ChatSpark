@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { ConversationList, type Conversation } from "@/components/chat/conversation-list"
 import { ChatWindow, type Message, type ChatUser } from "@/components/chat/chat-window"
 import { NewChatModal, type SearchableUser } from "@/components/chat/new-chat-modal"
-
+import { useConversationStore } from "@/store/useConversationStore"
 // Sample data
 const sampleConversations: Conversation[] = [
   {
@@ -121,8 +121,17 @@ const allSearchableUsers: SearchableUser[] = [
 ]
 
 export default function ChatPage() {
+  const { conversations, isLoading, error, fetchConversations, createConversation } = useConversationStore()
+
+    useEffect(() => {
+        fetchConversations()
+    }, [])
+
+isLoading && <div className="text-red-500">Loading...</div>
+error && <div>Error: {error.message}</div>
+
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
-  const [conversations, setConversations] = useState(sampleConversations)
+  const [conversationss, setConversations] = useState(sampleConversations)
   const [messages, setMessages] = useState(sampleMessages)
 
   const selectedUser = selectedConversationId ? users[selectedConversationId] : null

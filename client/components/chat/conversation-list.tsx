@@ -6,14 +6,20 @@ import { Button } from "@/components/ui/button"
 import { Search, Sparkles, Plus, Settings } from "lucide-react"
 import Link from "next/link"
 
+// Updated to match API response shape
 export interface Conversation {
-  id: string
-  name: string
-  avatar: string
-  lastMessage: string
-  timestamp: string
-  unreadCount: number
-  isOnline: boolean
+  conversationId: string
+  type: "direct" | "group"
+  user: {
+    _id: string
+    name: string
+    email: string
+    avatar?: string
+  } | null
+  lastMessage?: string
+  lastMessageAt?: string
+  unreadCount?: number
+  isOnline?: boolean
 }
 
 interface ConversationListProps {
@@ -74,61 +80,71 @@ export function ConversationList({ conversations, selectedId, onSelect, newChatB
       {/* Conversations */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-2" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className="space-y-0.5 pb-4">
-          {conversations.map((conversation) => (
-            <button
-              key={conversation.id}
-              onClick={() => onSelect(conversation.id)}
-              className={cn(
-                "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
-                selectedId === conversation.id 
-                  ? "bg-sidebar-accent shadow-sm" 
-                  : "hover:bg-sidebar-accent/50"
-              )}
-            >
-              <div className="relative shrink-0">
-                <Avatar className="h-11 w-11 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
-                  <AvatarImage src={conversation.avatar} alt={conversation.name} />
-                  <AvatarFallback className="bg-secondary text-sm font-medium text-foreground">
-                    {conversation.name.slice(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                {conversation.isOnline && (
-                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-sidebar bg-online shadow-sm shadow-online/50" />
+          {conversations.map((conversation) => {
+            // Destructure API fields
+            const { conversationId, user, lastMessage, lastMessageAt, unreadCount = 0, isOnline = false } = conversation
+            const name = user?.name ?? "Unknown"
+            const avatar = user?.avatar ?? ""
+            const timestamp = lastMessageAt
+              ? new Date(lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              : ""
+
+            return (
+              <button
+                key={conversationId}
+                onClick={() => onSelect(conversationId)}
+                className={cn(
+                  "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
+                  selectedId === conversationId
+                    ? "bg-sidebar-accent shadow-sm"
+                    : "hover:bg-sidebar-accent/50"
                 )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={cn(
-                    "truncate text-sm transition-colors duration-200",
-                    selectedId === conversation.id || conversation.unreadCount > 0
-                      ? "font-semibold text-foreground"
-                      : "font-medium text-foreground/90"
-                  )}>
-                    {conversation.name}
-                  </span>
-                  <span className={cn(
-                    "shrink-0 text-[11px] transition-colors duration-200",
-                    conversation.unreadCount > 0 ? "font-medium text-primary" : "text-muted-foreground"
-                  )}>
-                    {conversation.timestamp}
-                  </span>
-                </div>
-                <div className="mt-0.5 flex items-center justify-between gap-2">
-                  <p className={cn(
-                    "truncate text-[13px] transition-colors duration-200",
-                    conversation.unreadCount > 0 ? "text-foreground/80" : "text-muted-foreground"
-                  )}>
-                    {conversation.lastMessage}
-                  </p>
-                  {conversation.unreadCount > 0 && (
-                    <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm shadow-primary/30">
-                      {conversation.unreadCount > 99 ? "99+" : conversation.unreadCount}
-                    </span>
+              >
+                <div className="relative shrink-0">
+                  <Avatar className="h-11 w-11 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
+                    <AvatarImage src={avatar} alt={name} />
+                    <AvatarFallback className="bg-secondary text-sm font-medium text-foreground">
+                      {name.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {isOnline && (
+                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-sidebar bg-online shadow-sm shadow-online/50" />
                   )}
                 </div>
-              </div>
-            </button>
-          ))}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={cn(
+                      "truncate text-sm transition-colors duration-200",
+                      selectedId === conversationId || unreadCount > 0
+                        ? "font-semibold text-foreground"
+                        : "font-medium text-foreground/90"
+                    )}>
+                      {name}
+                    </span>
+                    <span className={cn(
+                      "shrink-0 text-[11px] transition-colors duration-200",
+                      unreadCount > 0 ? "font-medium text-primary" : "text-muted-foreground"
+                    )}>
+                      {timestamp}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 flex items-center justify-between gap-2">
+                    <p className={cn(
+                      "truncate text-[13px] transition-colors duration-200",
+                      unreadCount > 0 ? "text-foreground/80" : "text-muted-foreground"
+                    )}>
+                      {lastMessage ?? "No messages yet"}
+                    </p>
+                    {unreadCount > 0 && (
+                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm shadow-primary/30">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </button>
+            )
+          })}
         </div>
       </div>
 
