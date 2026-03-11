@@ -5,7 +5,8 @@ export interface IConversation extends Document {
     name: string;
     createdBy: Types.ObjectId;
     lastMessageId?: Types.ObjectId;
-
+    lastMessage?: string;
+    lastMessageAt?: Date;
     updatedAt: Date;
 }
 
@@ -24,7 +25,16 @@ const conversationSchema = new Schema(
         lastMessageId: {
             type: Schema.Types.ObjectId,
             ref: "Message"
+        },
+        
+        lastMessage: {
+            type: String,
+        },
+        
+        lastMessageAt: {
+            type: Date,
         }
+        
     },
     { timestamps: true }
 );

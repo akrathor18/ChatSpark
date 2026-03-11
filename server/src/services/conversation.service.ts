@@ -42,7 +42,6 @@ export const getUserConversationsService = async (userId: string) => {
   const conversations = await Conversation.find({
     _id: { $in: conversationIds }
   })
-    .populate("lastMessageId")
     .sort({ updatedAt: -1 });
 
   return conversations;

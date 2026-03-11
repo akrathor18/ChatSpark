@@ -1,4 +1,5 @@
-import {Message} from "../models/message.model.js";
+import { Message } from "../models/message.model.js";
+import { Conversation } from "../models/conversations.model.js";
 
 export const createMessage = async (
   conversationId: string,
@@ -8,8 +9,14 @@ export const createMessage = async (
 
   const message = await Message.create({
     conversationId,
-    senderId: senderId,
+    senderId,
     content
+  });
+
+  await Conversation.findByIdAndUpdate(conversationId, {
+    lastMessageId: message._id,
+    lastMessage: content,
+    lastMessageAt: new Date()
   });
 
   return message;
@@ -20,7 +27,7 @@ export const getConversationMessages = async (conversationId: string) => {
   const messages = await Message.find({
     conversationId
   })
-  .sort({ createdAt: 1 });
+    .sort({ createdAt: 1 });
 
   return messages;
 };
