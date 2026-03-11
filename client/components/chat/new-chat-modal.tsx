@@ -39,7 +39,6 @@ export function NewChatModal({
   const [isSearching, setIsSearching] = useState(false)
   const [filteredUsers, setFilteredUsers] = useState<SearchableUser[]>([])
 
-  // Simulate search with debounce
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredUsers([])
@@ -95,30 +94,34 @@ export function NewChatModal({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
-        <DialogHeader className="border-b border-border px-5 py-4">
+      <DialogContent
+        className="gap-0 overflow-hidden p-0 flex flex-col max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] sm:mx-auto sm:max-w-md"
+      >
+        {/* Header — fixed, never scrolls */}
+        <DialogHeader className="border-b border-border px-4 py-3 sm:px-5 sm:py-4 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
-              <UserPlus className="h-4 w-4 text-primary-foreground" />
+            <div className="flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
+              <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-foreground" />
             </div>
-            <div>
-              <DialogTitle className="text-base font-semibold tracking-tight">
+            <div className="min-w-0">
+              <DialogTitle className="text-sm sm:text-base font-semibold tracking-tight">
                 New Conversation
               </DialogTitle>
-              <p className="text-[11px] text-muted-foreground">
+              {/* FIX 5: Hide subtitle on very small screens to save vertical space */}
+              <p className="hidden sm:block text-[11px] text-muted-foreground">
                 Search by name or email address
               </p>
             </div>
           </div>
         </DialogHeader>
 
-        {/* Search Input */}
-        <div className="border-b border-border px-4 py-3">
-          <div className="flex items-center gap-2.5 rounded-xl bg-input px-3.5 py-2.5 ring-1 ring-border/50 transition-all duration-200 focus-within:ring-primary/50">
+        {/* Search Input — fixed, never scrolls */}
+        <div className="border-b border-border px-3 py-2.5 sm:px-4 sm:py-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 rounded-xl bg-input px-3 py-2 sm:px-3.5 sm:py-2.5 ring-1 ring-border/50 transition-all duration-200 focus-within:ring-primary/50">
             {isSearching ? (
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
             ) : (
-              <Mail className="h-4 w-4 text-muted-foreground" />
+              <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
             )}
             <input
               type="text"
@@ -126,23 +129,28 @@ export function NewChatModal({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Enter email or name..."
               autoFocus
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              className="flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
-            <kbd className="hidden rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-block">
+            {/* FIX 6: Hide Esc kbd hint on mobile — irrelevant for touch */}
+            <kbd className="hidden sm:inline-block rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
               Esc
             </kbd>
           </div>
         </div>
 
-        {/* Results */}
+        {/* 
+          FIX 7: Results area is the ONLY scrollable region.
+          flex-1 + overflow-y-auto means it expands to fill available modal height
+          and scrolls internally — header/footer never get pushed off screen.
+        */}
         <div
-          className="max-h-72 overflow-y-auto overscroll-contain"
+          className="flex-1 overflow-y-auto overscroll-contain"
           style={{ WebkitOverflowScrolling: "touch" }}
         >
           {!searchQuery.trim() ? (
-            <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary">
-                <Search className="h-5 w-5 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center px-6 py-8 sm:py-10 text-center">
+              <div className="mb-3 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-secondary">
+                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium text-foreground">
                 Find someone to chat with
@@ -152,13 +160,13 @@ export function NewChatModal({
               </p>
             </div>
           ) : isSearching ? (
-            <div className="flex items-center justify-center py-10">
+            <div className="flex items-center justify-center py-8 sm:py-10">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : filteredUsers.length === 0 ? (
-            <div className="flex flex-col items-center justify-center px-6 py-10 text-center">
-              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary">
-                <Sparkles className="h-5 w-5 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center px-6 py-8 sm:py-10 text-center">
+              <div className="mb-3 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-secondary">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
               </div>
               <p className="text-sm font-medium text-foreground">No users found</p>
               <p className="mt-1 text-xs text-muted-foreground">
@@ -173,10 +181,10 @@ export function NewChatModal({
                   <button
                     key={user.id}
                     onClick={() => handleSelectUser(user)}
-                    className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200 hover:bg-secondary"
+                    className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200 hover:bg-secondary active:bg-secondary"
                   >
                     <div className="relative shrink-0">
-                      <Avatar className="h-10 w-10 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
+                      <Avatar className="h-9 w-9 sm:h-10 sm:w-10 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
                         <AvatarImage src={user.avatar} alt={user.name} />
                         <AvatarFallback className="bg-muted text-sm font-medium text-foreground">
                           {user.name.slice(0, 2).toUpperCase()}
@@ -201,7 +209,8 @@ export function NewChatModal({
                         {user.email}
                       </p>
                     </div>
-                    <div className="shrink-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                    {/* FIX 8: Always show action icon on touch, hover-only on desktop */}
+                    <div className="shrink-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-0">
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                         <Plus className="h-3.5 w-3.5" />
                       </div>
@@ -213,8 +222,9 @@ export function NewChatModal({
           )}
         </div>
 
-        {/* Footer hint */}
-        <div className="border-t border-border bg-secondary/30 px-4 py-2.5">
+        {/* Footer — fixed, never scrolls */}
+        {/* FIX 9: Hide footer on mobile to reclaim vertical space */}
+        <div className="hidden sm:block border-t border-border bg-secondary/30 px-4 py-2.5 shrink-0">
           <p className="text-center text-[11px] text-muted-foreground">
             <kbd className="rounded bg-secondary px-1 py-0.5 font-mono text-[10px]">
               Enter
@@ -231,4 +241,3 @@ export function NewChatModal({
     </Dialog>
   )
 }
-

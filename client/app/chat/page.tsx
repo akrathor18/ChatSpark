@@ -185,20 +185,19 @@ export default function ChatPage() {
   const existingConversationIds = conversations.map((c) => c.id)
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-background">
-      {/*
-        Desktop: both panels always visible side by side.
-        Mobile: show list OR chat — translated via CSS based on selectedConversationId.
-      */}
+    <div className="relative flex h-[100dvh] w-screen overflow-hidden bg-background">
 
-      {/* Sidebar */}
+      {/* ── SIDEBAR ──────────────────────────────────────────────────
+          Mobile  : fills viewport, slides off-left when chat is open
+          Desktop : static column, fixed width, never moves            */}
       <aside
         className={[
-          // Desktop: always visible fixed width
-          "md:relative md:flex md:w-80 md:shrink-0 lg:w-96",
-          // Mobile: full-width, slide out left when a chat is selected
-          "absolute inset-0 z-10 w-full transition-transform duration-300 ease-in-out md:translate-x-0",
-          selectedConversationId ? "-translate-x-full" : "translate-x-0",
+          "h-full flex-shrink-0",
+          // mobile only
+          "max-md:absolute max-md:inset-0 max-md:z-20 max-md:w-full max-md:transition-transform max-md:duration-300 max-md:ease-in-out",
+          selectedConversationId ? "max-md:-translate-x-full" : "max-md:translate-x-0",
+          // desktop only
+          "md:relative md:w-80 lg:w-96",
         ].join(" ")}
       >
         <ConversationList
@@ -215,14 +214,15 @@ export default function ChatPage() {
         />
       </aside>
 
-      {/* Chat panel */}
+      {/* ── CHAT PANEL ───────────────────────────────────────────────
+          Mobile  : fills viewport, slides in from right when selected
+          Desktop : fills remaining space beside the sidebar           */}
       <main
         className={[
-          // Desktop: fill remaining space
-          "md:relative md:flex md:flex-1 md:flex-col md:translate-x-0",
-          // Mobile: full-width, slides in from right
-          "absolute inset-0 z-10 w-full transition-transform duration-300 ease-in-out",
-          selectedConversationId ? "translate-x-0" : "translate-x-full",
+          "flex flex-col flex-1 min-w-0 h-full",
+          // mobile only
+          "max-md:absolute max-md:inset-0 max-md:z-20 max-md:transition-transform max-md:duration-300 max-md:ease-in-out",
+          selectedConversationId ? "max-md:translate-x-0" : "max-md:translate-x-full",
         ].join(" ")}
       >
         <ChatWindow
@@ -232,6 +232,7 @@ export default function ChatPage() {
           onBack={handleBack}
         />
       </main>
+
     </div>
   )
 }
