@@ -79,6 +79,9 @@ const sampleMessages: Record<string, Message[]> = {
     { id: "3", content: "That's awesome. Would love to review it when you're done", timestamp: "2:22 PM", isSent: false },
     { id: "4", content: "Of course! I should have it ready by end of day. Want to hop on a quick call to walk through it?", timestamp: "2:25 PM", isSent: true, status: "read" },
     { id: "5", content: "That sounds great! Let me know when you're free", timestamp: "2:34 PM", isSent: false },
+    { id: "55", content: "That sounds great! Let me know when you're free", timestamp: "2:34 PM", isSent: true, status: "read" },
+    { id: "23", content: "SDFGJSKLDFEJRGEIJRSDFGLSEKJRKLEWJRLKJSDLKFJGLSKDFJLSDFJGLKSDJGKLSDJGLKSDJFGKLEJRGJSDLKFJGLSKDJGLKSDFJGLKSDJGSLDKFGJSDLKFGJSDLKFJSLDKFGJSLDKFJLSKDFGJLSKDFJGLKSDFGKLSDJJKLJFLKJKLJLKJ", timestamp: "2:34 PM", isSent: true, status: "read" },
+    { id: "25", content: "SDFGJSKLDFEJRGEIJRSDFGLSEKJRKLEWJRLKJSDLKFJGLSKDFJLSDFJGLKSDJGKLSDJGLKSDJFGKLEJRGJSDLKFJGLSKDJGLKSDFJGLKSDJGSLDKFGJSDLKFGJSDLKFJSLDKFGJSLDKFJLSKDFGJLSKDFJGLKSDFGKLSDJJKLJFLKJKLJLKJ", timestamp: "2:34 PM", isSent: false, status: "read" },
   ],
   "2": [
     { id: "1", content: "Did you get a chance to look at the proposal?", timestamp: "12:45 PM", isSent: true, status: "read" },

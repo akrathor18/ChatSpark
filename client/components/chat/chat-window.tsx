@@ -47,7 +47,6 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     const container = scrollContainerRef.current
     if (container) {
@@ -70,7 +69,6 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
     }
   }
 
-  // Auto-grow textarea
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const el = e.target
     el.style.height = "auto"
@@ -103,7 +101,6 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
       {/* Header */}
       <header className="flex shrink-0 items-center justify-between border-b border-border bg-card/50 px-4 py-3">
         <div className="flex items-center gap-3">
-          {/* Back button — mobile only */}
           {onBack && (
             <Button
               variant="ghost"
@@ -156,13 +153,15 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
         </div>
       </header>
 
-      {/* Messages — native scroll container, fills all remaining height */}
+      {/* Messages */}
       <div
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto overscroll-contain px-4 py-4"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        <div className="flex flex-col gap-2">
+        {/* FIX: justify-end pushes messages to bottom when few exist.
+            NO w-full here — that was causing bubbles to span full width */}
+        <div className="flex min-h-full flex-col justify-end gap-2">
           {messages.map((message, index) => {
             const prevSame = index > 0 && messages[index - 1].isSent === message.isSent
             const nextSame = index < messages.length - 1 && messages[index + 1].isSent === message.isSent
@@ -177,14 +176,22 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
                   prevSame ? "mt-0.5" : "mt-3"
                 )}
               >
-                <div className={cn("max-w-[78%] sm:max-w-[65%]", message.isSent ? "items-end" : "items-start")}>
+                {/* FIX: removed w-full — it was making every bubble stretch
+                    full width regardless of isSent alignment.
+                    min-w-0 allows the flex child to shrink below content size
+                    so max-w-[78%] is actually respected. */}
+                <div className={cn(
+                  "flex min-w-0 max-w-[78%] flex-col sm:max-w-[65%]",
+                  message.isSent ? "items-end" : "items-start"
+                )}>
+                  {/* FIX: overflow-hidden clips any content that escapes the
+                      bubble. break-words wraps long unbroken strings. */}
                   <div
                     className={cn(
-                      "px-4 py-2.5 text-[14px] leading-relaxed shadow-sm",
+                      "w-full break-words px-4 py-2.5 text-[14px] leading-relaxed shadow-sm",
                       message.isSent
                         ? "rounded-2xl rounded-br-md bg-[var(--message-sent)] text-[var(--message-sent-foreground)]"
                         : "rounded-2xl rounded-bl-md bg-[var(--message-received)] text-[var(--message-received-foreground)] ring-1 ring-border/40",
-                      // Tighter radius for consecutive same-sender bubbles
                       prevSame && message.isSent && "rounded-tr-md",
                       prevSame && !message.isSent && "rounded-tl-md",
                       nextSame && message.isSent && "rounded-br-md",
