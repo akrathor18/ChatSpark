@@ -5,27 +5,27 @@ export const register = async (req: Request, res: Response) => {
 
     try {
         const { user, token } = await authServices.registerUser(email, password, name);
-          res.cookie("token", token, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-});
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        });
         res.status(201).json({ user, token });
     }
     catch (error: any) {
         res.status(400).json({ message: error.message });
-    }   
+    }
 };
 
 export const login = async (req: Request, res: Response) => {
-    const { email, password } = req.body;   
+    const { email, password } = req.body;
     try {
         const { user, token } = await authServices.loginUser(email, password);
-          res.cookie("token", token, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-});
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        });
         res.status(200).json({ user, token });
     } catch (error: any) {
         res.status(400).json({ message: error.message });

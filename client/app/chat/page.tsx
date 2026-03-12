@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
 import { ConversationList, type Conversation } from "@/components/chat/conversation-list"
 import { ChatWindow, type Message, type ChatUser } from "@/components/chat/chat-window"
 import { NewChatModal, type SearchableUser } from "@/components/chat/new-chat-modal"
 import { useConversationStore } from "@/store/useConversationStore"
+import { useMessageStore } from "@/store/useMessageStore"
 // Sample data
 const sampleConversations: Conversation[] = [
   {
@@ -121,47 +122,61 @@ const allSearchableUsers: SearchableUser[] = [
 ]
 
 export default function ChatPage() {
-  const { conversations, isLoading, error, fetchConversations, createConversation } = useConversationStore()
+  const { conversations, isLoading, error, fetchConversations } = useConversationStore()
+  // messages here is whatever your store exposes — likely BackendMessage[]
+  const { messages, fetchMessages, sendMessage } = useMessageStore()
 
-    useEffect(() => {
-        fetchConversations()
-    }, [])
+  useEffect(() => {
+    fetchConversations()
+  }, [])
 
 isLoading && <div className="text-red-500">Loading...</div>
 error && <div>Error: {error.message}</div>
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
   const [conversationss, setConversations] = useState(sampleConversations)
-  const [messages, setMessages] = useState(sampleMessages)
 
   const selectedUser = selectedConversationId ? users[selectedConversationId] : null
-  const currentMessages = selectedConversationId ? messages[selectedConversationId] || [] : []
+
+  // ── Transform backend messages → UI Message shape ──────────────────────────
+const currentMessages: Message[] = useMemo(() => {
+  if (!selectedConversationId || !messages) return []  // ← add !messages guard
+
+  const raw: BackendMessage[] = Array.isArray(messages)
+    ? messages
+    : ((messages as Record<string, BackendMessage[]>)[selectedConversationId] ?? [])
+
+  return raw.map((msg) => ({
+    id: msg._id,
+    content: msg.content,
+    timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+    isSent: msg.senderId === CURRENT_USER_ID,
+    status: msg.status ?? "sent",
+  }))
+}, [messages, selectedConversationId])
+  // ──────────────────────────────────────────────────────────────────────────
 
   const handleSelectConversation = useCallback((id: string) => {
     setSelectedConversationId(id)
-    console.log(id)
+    fetchMessages(id)
     setConversations((prev) =>
       prev.map((conv) => (conv.id === id ? { ...conv, unreadCount: 0 } : conv))
     )
-  }, [])
+  }, [fetchMessages])
 
   const handleBack = useCallback(() => {
     setSelectedConversationId(null)
   }, [])
 
-  const handleSendMessage = useCallback((content: string) => {
+  const handleSendMessage = useCallback(async (content: string) => {
     if (!selectedConversationId) return
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      isSent: true,
-      status: "sent",
-    }
-    setMessages((prev) => ({
-      ...prev,
-      [selectedConversationId]: [...(prev[selectedConversationId] || []), newMessage],
-    }))
+    // Call your store's sendMessage (adjust params to match your store's API)
+    await sendMessage({ conversationId: selectedConversationId, content })
+    // Refresh messages after sending
+    fetchMessages(selectedConversationId)
     setConversations((prev) =>
       prev.map((conv) =>
         conv.id === selectedConversationId
@@ -169,17 +184,15 @@ error && <div>Error: {error.message}</div>
           : conv
       )
     )
-  }, [selectedConversationId])
+  }, [selectedConversationId, sendMessage, fetchMessages])
 
   const handleNewChat = useCallback((user: SearchableUser, isExisting: boolean) => {
     if (isExisting) {
-      // Open existing conversation
       setSelectedConversationId(user.id)
       setConversations((prev) =>
         prev.map((conv) => (conv.id === user.id ? { ...conv, unreadCount: 0 } : conv))
       )
     } else {
-      // Create new conversation
       const newConversation: Conversation = {
         id: user.id,
         name: user.name,
@@ -190,26 +203,22 @@ error && <div>Error: {error.message}</div>
         isOnline: user.isOnline || false,
       }
       setConversations((prev) => [newConversation, ...prev])
-      setMessages((prev) => ({ ...prev, [user.id]: [] }))
       setSelectedConversationId(user.id)
     }
   }, [])
 
   const existingConversationIds = conversations.map((c) => c.id)
 
+  if (isLoading) return <div className="text-red-500">Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+
   return (
     <div className="relative flex h-[100dvh] w-screen overflow-hidden bg-background">
-
-      {/* ── SIDEBAR ──────────────────────────────────────────────────
-          Mobile  : fills viewport, slides off-left when chat is open
-          Desktop : static column, fixed width, never moves            */}
       <aside
         className={[
           "h-full flex-shrink-0",
-          // mobile only
           "max-md:absolute max-md:inset-0 max-md:z-20 max-md:w-full max-md:transition-transform max-md:duration-300 max-md:ease-in-out",
           selectedConversationId ? "max-md:-translate-x-full" : "max-md:translate-x-0",
-          // desktop only
           "md:relative md:w-80 lg:w-96",
         ].join(" ")}
       >
@@ -227,13 +236,9 @@ error && <div>Error: {error.message}</div>
         />
       </aside>
 
-      {/* ── CHAT PANEL ───────────────────────────────────────────────
-          Mobile  : fills viewport, slides in from right when selected
-          Desktop : fills remaining space beside the sidebar           */}
       <main
         className={[
           "flex flex-col flex-1 min-w-0 h-full",
-          // mobile only
           "max-md:absolute max-md:inset-0 max-md:z-20 max-md:transition-transform max-md:duration-300 max-md:ease-in-out",
           selectedConversationId ? "max-md:translate-x-0" : "max-md:translate-x-full",
         ].join(" ")}
@@ -245,7 +250,6 @@ error && <div>Error: {error.message}</div>
           onBack={handleBack}
         />
       </main>
-
     </div>
   )
 }
