@@ -22,11 +22,21 @@ export const createMessage = async (
   return message;
 };
 
-export const getConversationMessages = async (conversationId: string) => {
+export const getConversationMessages = async (
+  conversationId: string,
+  userId: string
+) => {
 
-  const messages = await Message.find({
-    conversationId
-  })
+  const conversation = await Conversation.findOne({
+    _id: conversationId,
+    members: userId
+  });
+
+  if (!conversation) {
+    throw new Error("Unauthorized access");
+  }
+
+  const messages = await Message.find({ conversationId })
     .sort({ createdAt: 1 });
 
   return messages;
