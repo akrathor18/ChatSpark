@@ -6,68 +6,69 @@ import { ChatWindow, type Message, type ChatUser } from "@/components/chat/chat-
 import { NewChatModal, type SearchableUser } from "@/components/chat/new-chat-modal"
 import { useConversationStore } from "@/store/useConversationStore"
 import { useMessageStore } from "@/store/useMessageStore"
+import { useAuthStore } from "@/store/useAuthStore"
 // Sample data
 const sampleConversations: Conversation[] = [
   {
-    id: "1",
-    name: "Sarah Chen",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
+    conversationId: "1",
+    type: "direct",
+    user: { _id: "u1", name: "Sarah Chen", email: "sarah@example.com", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" },
     lastMessage: "That sounds great! Let me know when you're free",
-    timestamp: "2:34 PM",
+    lastMessageAt: "2:34 PM",
     unreadCount: 3,
     isOnline: true,
   },
   {
-    id: "2",
-    name: "Alex Rivera",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
+    conversationId: "2",
+    type: "direct",
+    user: { _id: "u2", name: "Alex Rivera", email: "alex@example.com", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" },
     lastMessage: "I'll send over the files tonight",
-    timestamp: "1:15 PM",
+    lastMessageAt: "1:15 PM",
     unreadCount: 0,
     isOnline: true,
   },
   {
-    id: "3",
-    name: "Jordan Taylor",
-    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop",
+    conversationId: "3",
+    type: "direct",
+    user: { _id: "u3", name: "Jordan Taylor", email: "jordan@example.com", avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&h=100&fit=crop" },
     lastMessage: "Meeting moved to 3pm tomorrow",
-    timestamp: "11:42 AM",
+    lastMessageAt: "11:42 AM",
     unreadCount: 1,
     isOnline: false,
   },
   {
-    id: "4",
-    name: "Design Team",
-    avatar: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&h=100&fit=crop",
+    conversationId: "4",
+    type: "group",
+    user: { _id: "u4", name: "Design Team", email: "design@example.com", avatar: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=100&h=100&fit=crop" },
     lastMessage: "Mike: New mockups are ready for review",
-    timestamp: "Yesterday",
+    lastMessageAt: "Yesterday",
     unreadCount: 12,
     isOnline: false,
   },
   {
-    id: "5",
-    name: "Emma Watson",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
+    conversationId: "5",
+    type: "direct",
+    user: { _id: "u5", name: "Emma Watson", email: "emma@example.com", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop" },
     lastMessage: "Thanks for your help!",
-    timestamp: "Yesterday",
+    lastMessageAt: "Yesterday",
     unreadCount: 0,
     isOnline: false,
   },
   {
-    id: "6",
-    name: "Marcus Johnson",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
+    conversationId: "6",
+    type: "direct",
+    user: { _id: "u6", name: "Marcus Johnson", email: "marcus@example.com", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" },
     lastMessage: "Let's catch up this weekend",
-    timestamp: "Monday",
+    lastMessageAt: "Monday",
     unreadCount: 0,
     isOnline: true,
   },
   {
-    id: "7",
-    name: "Engineering",
-    avatar: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=100&h=100&fit=crop",
+    conversationId: "7",
+    type: "group",
+    user: { _id: "u7", name: "Engineering", email: "eng@example.com", avatar: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=100&h=100&fit=crop" },
     lastMessage: "David: Bug fix deployed to production",
-    timestamp: "Monday",
+    lastMessageAt: "Monday",
     unreadCount: 0,
     isOnline: false,
   },
@@ -121,8 +122,20 @@ const allSearchableUsers: SearchableUser[] = [
   { id: "10", name: "Sophia Kim", email: "sophia.kim@example.com", avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&h=100&fit=crop", isOnline: true },
 ]
 
+// Define expected backend message shape
+interface BackendMessage {
+  _id: string
+  content: string
+  createdAt: string
+  senderId: string
+  status?: "sent" | "delivered" | "read"
+}
+
 export default function ChatPage() {
-  const { conversations, isLoading, error, fetchConversations } = useConversationStore()
+  const { user } = useAuthStore()
+  const CURRENT_USER_ID = user?._id || ""
+
+  const { conversations, isLoading, error, fetchConversations, selectedConversation, selectedConversationUser } = useConversationStore()
   // messages here is whatever your store exposes — likely BackendMessage[]
   const { messages, fetchMessages, sendMessage } = useMessageStore()
 
@@ -134,13 +147,10 @@ isLoading && <div className="text-red-500">Loading...</div>
 error && <div>Error: {error.message}</div>
 
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
-  const [conversationss, setConversations] = useState(sampleConversations)
-
-  const selectedUser = selectedConversationId ? users[selectedConversationId] : null
-
+  
   // ── Transform backend messages → UI Message shape ──────────────────────────
 const currentMessages: Message[] = useMemo(() => {
-  if (!selectedConversationId || !messages) return []  // ← add !messages guard
+  if (!selectedConversationId || !messages) return []
 
   const raw: BackendMessage[] = Array.isArray(messages)
     ? messages
@@ -156,16 +166,14 @@ const currentMessages: Message[] = useMemo(() => {
     isSent: msg.senderId === CURRENT_USER_ID,
     status: msg.status ?? "sent",
   }))
-}, [messages, selectedConversationId])
+}, [messages, selectedConversationId, CURRENT_USER_ID])
   // ──────────────────────────────────────────────────────────────────────────
 
   const handleSelectConversation = useCallback((id: string) => {
     setSelectedConversationId(id)
+    selectedConversation(id)
     fetchMessages(id)
-    setConversations((prev) =>
-      prev.map((conv) => (conv.id === id ? { ...conv, unreadCount: 0 } : conv))
-    )
-  }, [fetchMessages])
+  }, [fetchMessages, selectedConversation])
 
   const handleBack = useCallback(() => {
     setSelectedConversationId(null)
@@ -174,40 +182,24 @@ const currentMessages: Message[] = useMemo(() => {
   const handleSendMessage = useCallback(async (content: string) => {
     if (!selectedConversationId) return
     // Call your store's sendMessage (adjust params to match your store's API)
-    await sendMessage({ conversationId: selectedConversationId, content })
-    // Refresh messages after sending
+    await sendMessage(selectedConversationId, content)
+    // Refresh messages and conversations after sending
     fetchMessages(selectedConversationId)
-    setConversations((prev) =>
-      prev.map((conv) =>
-        conv.id === selectedConversationId
-          ? { ...conv, lastMessage: content, timestamp: "Just now" }
-          : conv
-      )
-    )
-  }, [selectedConversationId, sendMessage, fetchMessages])
+    fetchConversations()
+  }, [selectedConversationId, sendMessage, fetchMessages, fetchConversations])
 
   const handleNewChat = useCallback((user: SearchableUser, isExisting: boolean) => {
     if (isExisting) {
       setSelectedConversationId(user.id)
-      setConversations((prev) =>
-        prev.map((conv) => (conv.id === user.id ? { ...conv, unreadCount: 0 } : conv))
-      )
+      selectedConversation(user.id)
     } else {
-      const newConversation: Conversation = {
-        id: user.id,
-        name: user.name,
-        avatar: user.avatar,
-        lastMessage: "Start a conversation...",
-        timestamp: "Now",
-        unreadCount: 0,
-        isOnline: user.isOnline || false,
-      }
-      setConversations((prev) => [newConversation, ...prev])
+      // In a real app we'd dispatch createConversation store action here
+      // For now we just select it
       setSelectedConversationId(user.id)
     }
-  }, [])
+  }, [selectedConversation])
 
-  const existingConversationIds = conversations.map((c) => c.id)
+  const existingConversationIds = conversations.map((c: any) => c.conversationId)
 
   if (isLoading) return <div className="text-red-500">Loading...</div>
   if (error) return <div>Error: {error.message}</div>
@@ -244,8 +236,8 @@ const currentMessages: Message[] = useMemo(() => {
         ].join(" ")}
       >
         <ChatWindow
-          user={selectedUser}
-          messages={currentMessages}
+          user={selectedConversationUser?.user}
+          messages={messages}
           onSendMessage={handleSendMessage}
           onBack={handleBack}
         />

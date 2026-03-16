@@ -18,7 +18,7 @@ export const useMessageStore = create<MessageState>((set) => ({
             set({ isLoading: true, error: null });
             const res = await messageService.fetchMessages(conversationId);
             console.log(res)
-            set({ messages: res.data, isLoading: false });
+            set({ messages: res, isLoading: false });
         } catch (error: any) {
             console.log(error);
             set({ isLoading: false, error: error });

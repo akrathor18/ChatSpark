@@ -32,9 +32,9 @@ export const getConversationMessages = async (
     members: userId
   });
 
-  if (!conversation) {
-    throw new Error("Unauthorized access");
-  }
+  // if (!conversation) {
+  //   throw new Error("Unauthorized access");
+  // }
 
   const messages = await Message.find({ conversationId })
     .sort({ createdAt: 1 });
