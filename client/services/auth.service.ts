@@ -9,5 +9,5 @@ export const register = async (name: string, email: string, password: string) =>
 }
 
 export const getProfile = async () => {
-    return api.get("/auth/profile");
+    return api.get("/userS/profile");
 }

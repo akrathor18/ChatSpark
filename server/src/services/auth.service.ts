@@ -34,7 +34,3 @@ export const loginUser = async (email: string, password: string) => {
     return { user, token };
 };
 
-export const getUserProfile = async (userId: string) => {
-    const user = await User.findById(userId).select('-password');
-    return user;
-}
