@@ -7,6 +7,7 @@ interface AuthState {
     error: any
     login: (email: string, password: string) => Promise<boolean>;
     register: (name: string, email: string, password: string) => Promise<boolean>;
+    getProfile: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -19,8 +20,6 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ isLoading: true, error: null });
 
             const res: any = await authService.login(email, password);
-            console.log(res)
-
             set({ user: res.user, isLoading: false });
             return true;
         } catch (error: any) {
@@ -34,7 +33,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             set({ isLoading: true, error:null });
             const res: any = await authService.register(name, email, password);
-            console.log(res)
             set({ user: res.user, isLoading: false });
             return true;
         } catch (error: any) {
@@ -44,6 +42,17 @@ export const useAuthStore = create<AuthState>((set) => ({
             return false;
         }
     },
+
+    getProfile: async () => {
+        try {
+            set({ isLoading: true, error: null });
+            const res: any = await authService.getProfile();
+            set({ user: res, isLoading: false });
+        } catch (error: any) {
+            console.log(error);
+            set({ isLoading: false, error });
+        }
+    }
 
 }));
 

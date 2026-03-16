@@ -31,3 +31,23 @@ export const login = async (req: Request, res: Response) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+export const getProfile = async (req: Request, res: Response) => {
+    const userId = (req as any).user.id;
+    try {
+        const user = await authServices.getUserProfile(userId);
+        res.status(200).json(user);
+    }
+    catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const logout = (req: Request, res: Response) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    });
+    res.status(200).json({ message: "Logged out successfully" });
+}

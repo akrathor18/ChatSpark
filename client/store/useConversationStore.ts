@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import * as conversationService from "@/services/conversation.service";
-import { log } from "console";
 
 interface ConversationState {
     conversations: any[];
@@ -23,7 +22,6 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
             set({ isLoading: true, error: null });
 
             const res = await conversationService.fetchConversations("");
-            console.log(res.data)
             set({
                 conversations: res.data,
                 isLoading: false,
