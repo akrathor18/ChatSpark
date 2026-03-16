@@ -7,7 +7,7 @@ interface AuthState {
     error: any
     login: (email: string, password: string) => Promise<boolean>;
     register: (name: string, email: string, password: string) => Promise<boolean>;
-    getProfile: () => Promise<void>;
+    
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -43,16 +43,6 @@ export const useAuthStore = create<AuthState>((set) => ({
         }
     },
 
-    getProfile: async () => {
-        try {
-            set({ isLoading: true, error: null });
-            const res: any = await authService.getProfile();
-            set({ user: res, isLoading: false });
-        } catch (error: any) {
-            console.log(error);
-            set({ isLoading: false, error });
-        }
-    }
 
 }));
 

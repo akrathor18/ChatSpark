@@ -158,7 +158,7 @@ export function ConversationList({ conversations, selectedId, onSelect, newChatB
            <Avatar className="h-11 w-11 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
                     <AvatarImage src={user?.avatar} alt={user?.name} />
                     <AvatarFallback className="bg-secondary text-sm font-medium text-foreground">
-                      {user?.name.slice(0, 2).toUpperCase()}
+                      {user?.name?.slice(0, 2)?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
           <div className="min-w-0 flex-1">

@@ -7,7 +7,7 @@ import { NewChatModal, type SearchableUser } from "@/components/chat/new-chat-mo
 import { useConversationStore } from "@/store/useConversationStore"
 import { useMessageStore } from "@/store/useMessageStore"
 import { useAuthStore } from "@/store/useAuthStore"
-
+import { useUserStore } from "@/store/useUserStore"
 // All searchable users (simulates a user directory)
 const allSearchableUsers: SearchableUser[] = [
   { id: "1", name: "Sarah Chen", email: "sarah.chen@example.com", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop", isOnline: true },
@@ -32,7 +32,7 @@ interface BackendMessage {
 }
 
 export default function ChatPage() {
-  const { user, getProfile } = useAuthStore()
+  const { user, getProfile } = useUserStore()
 
   const { conversations, isLoading, error, fetchConversations, selectedConversation, selectedConversationUser } = useConversationStore()
   const { messages, fetchMessages, sendMessage } = useMessageStore()

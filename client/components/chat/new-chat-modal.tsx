@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Search, Plus, Mail, Loader2, UserPlus, Sparkles } from "lucide-react"
-
+import { useUserStore } from "@/store/useUserStore"
 export interface SearchableUser {
   id: string
   name: string
@@ -34,10 +34,13 @@ export function NewChatModal({
   onSelectUser,
   trigger,
 }: NewChatModalProps) {
+
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [filteredUsers, setFilteredUsers] = useState<SearchableUser[]>([])
+const { searchedUsers, searchUsers, isLoading } = useUserStore()
+  // Handle URL hash
   useEffect(() => {
     const handleHashChange = () => {
       if (window.location.hash === "#new") {
@@ -47,37 +50,29 @@ export function NewChatModal({
       }
     }
 
-    handleHashChange() // run on page load
+    handleHashChange()
     window.addEventListener("hashchange", handleHashChange)
 
     return () => window.removeEventListener("hashchange", handleHashChange)
   }, [])
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredUsers([])
-      setIsSearching(false)
-      return
-    }
 
-    setIsSearching(true)
-    const timeout = setTimeout(() => {
-      const query = searchQuery.toLowerCase()
-      const results = users.filter(
-        (user) =>
-          user.name.toLowerCase().includes(query) ||
-          user.email.toLowerCase().includes(query)
-      )
-      setFilteredUsers(results)
-      setIsSearching(false)
-    }, 300)
+useEffect(() => {
+  if (!searchQuery.trim()) return
 
-    return () => clearTimeout(timeout)
-  }, [searchQuery, users])
+  const timeout = setTimeout(() => {
+    searchUsers(searchQuery)
+  }, 300)
+
+  return () => clearTimeout(timeout)
+
+}, [searchQuery])
 
   const handleSelectUser = useCallback(
     (user: SearchableUser) => {
       const isExisting = existingConversationIds.includes(user.id)
+
       onSelectUser(user, isExisting)
+ 
       setOpen(false)
       setSearchQuery("")
       setFilteredUsers([])
@@ -86,20 +81,23 @@ export function NewChatModal({
   )
 
   const handleOpenChange = useCallback((isOpen: boolean) => {
-  setOpen(isOpen)
 
-  if (isOpen) {
-    window.location.hash = "new"
-  } else {
-    window.history.replaceState(
-      null,
-      "",
-      window.location.pathname
-    )
-    setSearchQuery("")
-    setFilteredUsers([])
-  }
-}, [])
+    setOpen(isOpen)
+
+    if (isOpen) {
+      window.location.hash = "new"
+    } else {
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname
+      )
+
+      setSearchQuery("")
+      setFilteredUsers([])
+    }
+
+  }, [])
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -183,7 +181,7 @@ export function NewChatModal({
             <div className="flex items-center justify-center py-8 sm:py-10">
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-          ) : filteredUsers.length === 0 ? (
+          ) : searchedUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-6 py-8 sm:py-10 text-center">
               <div className="mb-3 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-secondary">
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
@@ -195,7 +193,7 @@ export function NewChatModal({
             </div>
           ) : (
             <div className="space-y-0.5 p-2">
-              {filteredUsers.map((user) => {
+              {searchedUsers.map((user) => {
                 const isExisting = existingConversationIds.includes(user.id)
                 return (
                   <button
