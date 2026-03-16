@@ -127,6 +127,7 @@ useEffect(() => {
           conversations={conversations}
           selectedId={selectedConversationId}
           onSelect={handleSelectConversation}
+          user={user}
           newChatButton={
             <NewChatModal
               users={allSearchableUsers}

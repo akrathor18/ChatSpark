@@ -27,9 +27,10 @@ interface ConversationListProps {
   selectedId: string | null
   onSelect: (id: string) => void
   newChatButton?: React.ReactNode
+  user: any
 }
 
-export function ConversationList({ conversations, selectedId, onSelect, newChatButton }: ConversationListProps) {
+export function ConversationList({ conversations, selectedId, onSelect, newChatButton, user }: ConversationListProps) {
   return (
     <div className="flex h-full flex-col bg-sidebar">
       {/* Header */}
@@ -154,14 +155,15 @@ export function ConversationList({ conversations, selectedId, onSelect, newChatB
           href="/profile"
           className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 hover:bg-sidebar-accent"
         >
-          <Avatar className="h-9 w-9 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
-            <AvatarImage src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop" alt="Your profile" />
-            <AvatarFallback className="bg-secondary text-xs font-medium text-foreground">
-              AD
-            </AvatarFallback>
-          </Avatar>
+           <Avatar className="h-11 w-11 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
+                    <AvatarImage src={user?.avatar} alt={user?.name} />
+                    <AvatarFallback className="bg-secondary text-sm font-medium text-foreground">
+                      {user?.name.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">Alex Developer</p>
+            <p className="truncate text-sm font-medium text-foreground">{user?.name || "User"}</p>
+            <p className="truncate text-xs font-medium text-foreground">{user?.email || "user@example.com"}</p>
             <p className="truncate text-xs text-muted-foreground">View profile</p>
           </div>
           <Settings className="h-4 w-4 text-muted-foreground transition-colors duration-200 group-hover:text-foreground" />
