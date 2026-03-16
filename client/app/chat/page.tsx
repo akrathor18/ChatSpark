@@ -237,7 +237,7 @@ const currentMessages: Message[] = useMemo(() => {
       >
         <ChatWindow
           user={selectedConversationUser?.user}
-          messages={messages}
+          messages={currentMessages}
           onSendMessage={handleSendMessage}
           onBack={handleBack}
         />

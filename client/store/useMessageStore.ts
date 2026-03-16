@@ -16,7 +16,7 @@ export const useMessageStore = create<MessageState>((set) => ({
     fetchMessages: async (conversationId) => {
         try {
             set({ isLoading: true, error: null });
-            const res = await messageService.fetchMessages(conversationId);
+            const res: any = await messageService.fetchMessages(conversationId);
             console.log(res)
             set({ messages: res, isLoading: false });
         } catch (error: any) {
@@ -28,8 +28,8 @@ export const useMessageStore = create<MessageState>((set) => ({
     sendMessage: async (conversationId, content) => {
         try {
             set({ isLoading: true, error: null });
-            const res = await messageService.sendMessage(conversationId, content);
-            set((state) => ({ messages: [...state.messages, res.data], isLoading: false }));
+            const res: any = await messageService.sendMessage(conversationId, content);
+            set((state) => ({ messages: [...state.messages, res], isLoading: false }));
         }
 
         catch (error: any) {
