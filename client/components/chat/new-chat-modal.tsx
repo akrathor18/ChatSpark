@@ -38,7 +38,20 @@ export function NewChatModal({
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearching, setIsSearching] = useState(false)
   const [filteredUsers, setFilteredUsers] = useState<SearchableUser[]>([])
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === "#new") {
+        setOpen(true)
+      } else {
+        setOpen(false)
+      }
+    }
 
+    handleHashChange() // run on page load
+    window.addEventListener("hashchange", handleHashChange)
+
+    return () => window.removeEventListener("hashchange", handleHashChange)
+  }, [])
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredUsers([])
@@ -73,13 +86,20 @@ export function NewChatModal({
   )
 
   const handleOpenChange = useCallback((isOpen: boolean) => {
-    setOpen(isOpen)
-    if (!isOpen) {
-      setSearchQuery("")
-      setFilteredUsers([])
-    }
-  }, [])
+  setOpen(isOpen)
 
+  if (isOpen) {
+    window.location.hash = "new"
+  } else {
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname
+    )
+    setSearchQuery("")
+    setFilteredUsers([])
+  }
+}, [])
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -87,7 +107,7 @@ export function NewChatModal({
           <Button
             size="icon"
             variant="ghost"
-            className="h-8 w-8 rounded-lg text-muted-foreground transition-all duration-200 hover:bg-secondary hover:text-foreground"
+            className="h-8 w-8 rounded-lg text-muted-foreground transition-all duration-200 bg-secondary hover:text-foreground"
           >
             <Plus className="h-4.5 w-4.5" />
             <span className="sr-only">New chat</span>
