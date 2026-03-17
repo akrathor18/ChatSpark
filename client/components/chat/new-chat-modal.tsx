@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/dialog"
 import { Search, Plus, Mail, Loader2, UserPlus, Sparkles } from "lucide-react"
 import { useUserStore } from "@/store/useUserStore"
+import { useConversationStore } from "@/store/useConversationStore"
 export interface SearchableUser {
-  id: string
+  _id: string
   name: string
   email: string
   avatar: string
@@ -23,23 +24,23 @@ export interface SearchableUser {
 
 interface NewChatModalProps {
   users: SearchableUser[]
-  existingConversationIds: string[]
-  onSelectUser: (user: SearchableUser, isExisting: boolean) => void
+  existingConversationMap: Record<string, string>
+  onSelectUser: (user: SearchableUser, conversationId: string) => void
   trigger?: React.ReactNode
 }
 
 export function NewChatModal({
   users,
-  existingConversationIds,
+  existingConversationMap,
   onSelectUser,
   trigger,
 }: NewChatModalProps) {
 
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [isSearching, setIsSearching] = useState(false)
   const [filteredUsers, setFilteredUsers] = useState<SearchableUser[]>([])
-const { searchedUsers, searchUsers, isLoading } = useUserStore()
+  const { searchedUsers, searchUsers, isLoading, isSearching } = useUserStore()
+  const { selectedConversation, createConversation } = useConversationStore()
   // Handle URL hash
   useEffect(() => {
     const handleHashChange = () => {
@@ -56,29 +57,52 @@ const { searchedUsers, searchUsers, isLoading } = useUserStore()
     return () => window.removeEventListener("hashchange", handleHashChange)
   }, [])
 
-useEffect(() => {
-  if (!searchQuery.trim()) return
+  useEffect(() => {
+    if (!searchQuery.trim()) return
 
-  const timeout = setTimeout(() => {
-    searchUsers(searchQuery)
-  }, 300)
+    const timeout = setTimeout(() => {
+      searchUsers(searchQuery)
+    }, 300)
 
-  return () => clearTimeout(timeout)
+    return () => clearTimeout(timeout)
 
-}, [searchQuery])
+  }, [searchQuery])
 
   const handleSelectUser = useCallback(
-    (user: SearchableUser) => {
-      const isExisting = existingConversationIds.includes(user.id)
+  async (user: SearchableUser) => {
+    const existingConvId =
+      existingConversationMap[user._id?.toString()];
 
-      onSelectUser(user, isExisting)
- 
-      setOpen(false)
-      setSearchQuery("")
-      setFilteredUsers([])
-    },
-    [existingConversationIds, onSelectUser]
-  )
+    try {
+      if (existingConvId) {
+        // ✅ Existing
+        selectedConversation(existingConvId);
+        onSelectUser(user, existingConvId);
+      } else {
+        // ✅ New
+        const newConv = await createConversation(user._id);
+
+        const newConvId =
+          newConv?.conversationId ||
+          newConv?.conversation?._id ||
+          newConv?._id ||
+          "";
+
+        if (!newConvId) {
+          throw new Error("Conversation ID not found");
+        }
+
+        selectedConversation(newConvId);
+        onSelectUser(user, newConvId);
+      }
+    } catch (err) {
+      console.error("Failed to create/select conversation", err);
+    } finally {
+      setOpen(false);
+    }
+  },
+  [existingConversationMap, onSelectUser, createConversation, selectedConversation]
+);
 
   const handleOpenChange = useCallback((isOpen: boolean) => {
 
@@ -194,10 +218,10 @@ useEffect(() => {
           ) : (
             <div className="space-y-0.5 p-2">
               {searchedUsers.map((user) => {
-                const isExisting = existingConversationIds.includes(user.id)
+              const isExisting = existingConversationMap[user._id.toString()]
                 return (
                   <button
-                    key={user.id}
+                    key={user._id}
                     onClick={() => handleSelectUser(user)}
                     className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200 hover:bg-secondary active:bg-secondary"
                   >

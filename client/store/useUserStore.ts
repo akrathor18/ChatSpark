@@ -4,6 +4,7 @@ interface UserState {
     user: any;
     searchedUsers: any[];
     isLoading: boolean;
+    isSearching: boolean;
     error: any
     getProfile: () => Promise<void>;
     searchUsers: (query: string) => Promise<void>;
@@ -11,6 +12,7 @@ interface UserState {
 export const useUserStore = create<UserState>((set) => ({
     user: null,
     isLoading: false,
+    isSearching: false,
     error: null,
     searchedUsers: [],
     getProfile: async () => {
@@ -26,12 +28,12 @@ export const useUserStore = create<UserState>((set) => ({
 
     searchUsers: async (query: string) => {
         try {
-            set({ isLoading: true, error: null });
+            set({ isSearching: true, error: null });
             const res: any = await userService.searchUsers(query);
-            set({ searchedUsers: res, isLoading: false });
+            set({ searchedUsers: res, isSearching: false });
         } catch (error: any) {
             console.log(error);
-            set({ isLoading: false, error });
+            set({ isSearching: false, error });
         }
     },
 

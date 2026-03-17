@@ -1,8 +1,12 @@
 import {Conversation} from "../models/conversations.model.js";
 import {ConversationMember} from "../models/conversationMembers.model.js";
 
-export const createConversationService = async (currentUserId: string, userId: string) => {
+import mongoose from "mongoose";
 
+export const createConversationService = async (
+  currentUserId: string,
+  userId: string
+) => {
   if (!userId) {
     throw new Error("UserId is required");
   }
@@ -11,27 +15,103 @@ export const createConversationService = async (currentUserId: string, userId: s
     throw new Error("Cannot create conversation with yourself");
   }
 
-  // create conversation
-  const conversation = await Conversation.create({
-    type: "direct",
-    createdBy: currentUserId
+  //  Find user's conversations
+  const currentUserConversations = await ConversationMember.find({
+    userId: currentUserId,
+  }).select("conversationId");
+
+  const conversationIds = currentUserConversations.map(
+    (c) => c.conversationId
+  );
+
+  // Check existing
+  const existingConversation = await ConversationMember.findOne({
+    conversationId: { $in: conversationIds },
+    userId: userId,
   });
 
-  // add members
-  await ConversationMember.insertMany([
-    {
-      conversationId: conversation._id,
-      userId: currentUserId
-    },
-    {
-      conversationId: conversation._id,
-      userId: userId
+  // EXISTING CASE
+  if (existingConversation) {
+    const conversation = await Conversation.findById(
+      existingConversation.conversationId
+    );
+
+    if (!conversation) {
+      throw new Error("Conversation not found (data inconsistency)");
     }
-  ]);
 
-  return conversation;
+    const otherMember = await ConversationMember.findOne({
+      conversationId: conversation._id,
+      userId: { $ne: currentUserId },
+    }).populate("userId", "name email avatar");
+
+    return {
+      conversationId: conversation._id,
+      user: otherMember?.userId || null,
+      type: conversation.type,
+      lastMessage: conversation.lastMessage,
+      lastMessageAt: conversation.lastMessageAt,
+      isExisting: true,
+    };
+  }
+
+  //  CREATE WITH TRANSACTION
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Create conversation
+    const [newConversation] = await Conversation.create(
+      [
+        {
+          type: "direct",
+          createdBy: currentUserId,
+        },
+      ],
+      { session }
+    );
+
+    // Add members
+    await ConversationMember.insertMany(
+      [
+        {
+          conversationId: newConversation._id,
+          userId: currentUserId,
+        },
+        {
+          conversationId: newConversation._id,
+          userId: userId,
+        },
+      ],
+      { session }
+    );
+
+    //  Commit
+    await session.commitTransaction();
+    session.endSession();
+
+    // 3. Fetch other user AFTER commit
+    const otherMember = await ConversationMember.findOne({
+      conversationId: newConversation._id,
+      userId: userId,
+    }).populate("userId", "name email avatar");
+
+    return {
+      conversationId: newConversation._id,
+      user: otherMember?.userId || null,
+      type: newConversation.type,
+      lastMessage: null,
+      lastMessageAt: null,
+      isExisting: false,
+    };
+
+  } catch (error) {
+    // Rollback
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 };
-
 export const getUserConversationsService = async (userId: string, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 

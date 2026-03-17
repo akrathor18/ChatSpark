@@ -37,23 +37,23 @@ export default function ChatPage() {
   const { conversations, isLoading, error, fetchConversations, selectedConversation, selectedConversationUser } = useConversationStore()
   const { messages, fetchMessages, sendMessage } = useMessageStore()
 
- useEffect(() => {
-  if(!user) {
-    getProfile()
-  } 
-}, [])
+  useEffect(() => {
+    if (!user) {
+      getProfile()
+    }
+  }, [])
 
-useEffect(() => {
-  if (user) {
-    fetchConversations()
-  }
-}, [user])
-//   if (!user) {
-//   return <div>Loading profile...</div>
-// }
+  useEffect(() => {
+    if (user) {
+      fetchConversations()
+    }
+  }, [user])
+  //   if (!user) {
+  //   return <div>Loading profile...</div>
+  // }
   isLoading && <div className="text-red-500">Loading...</div>
   error && <div>Error: {error.message}</div>
-  
+
   const CURRENT_USER_ID = user?._id || ""
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
 
@@ -97,19 +97,18 @@ useEffect(() => {
     fetchConversations()
   }, [selectedConversationId, sendMessage, fetchMessages, fetchConversations])
 
-  const handleNewChat = useCallback((user: SearchableUser, isExisting: boolean) => {
-    if (isExisting) {
-      setSelectedConversationId(user.id)
-      selectedConversation(user.id)
-    } else {
-      // In a real app we'd dispatch createConversation store action here
-      // For now we just select it
-      setSelectedConversationId(user.id)
+  const handleNewChat = useCallback((user: SearchableUser, conversationId: string) => {
+    if (conversationId) {
+      setSelectedConversationId(conversationId)
+      fetchMessages(conversationId)
     }
-  }, [selectedConversation])
-
-  const existingConversationIds = conversations.map((c: any) => c.conversationId)
-
+  }, [fetchMessages])
+  const existingConversationMap = conversations.reduce((acc: any, c: any) => {
+    if (c.user && c.user._id) {
+      acc[c.user._id.toString()] = c.conversationId;
+    }
+    return acc;
+  }, {});
   if (isLoading) return <div className="text-red-500">Loading...</div>
   if (error) return <div>Error: {error.message}</div>
 
@@ -131,7 +130,7 @@ useEffect(() => {
           newChatButton={
             <NewChatModal
               users={allSearchableUsers}
-              existingConversationIds={existingConversationIds}
+              existingConversationMap={existingConversationMap}
               onSelectUser={handleNewChat}
             />
           }

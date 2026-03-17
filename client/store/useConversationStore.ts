@@ -7,7 +7,7 @@ interface ConversationState {
     isLoading: boolean;
     error: any;
     fetchConversations: () => Promise<void>;
-    createConversation: (userId: string) => Promise<void>;
+    createConversation: (userId: string) => Promise<any>;
     selectedConversation: (userId: string) => any;
 }
 
@@ -40,11 +40,25 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
             const res = await conversationService.createConversation(userId);
 
+            const newConv = res.data;
+
+            const formattedConv = {
+                conversationId:
+                    newConv?.conversationId ||
+                    newConv?.conversation?._id ||
+                    newConv?._id,
+                type: "direct",
+                user: newConv?.user || null,
+                lastMessage: null,
+                lastMessageAt: null,
+            };
+
             set((state) => ({
-                conversations: [res.data, ...state.conversations],
+                conversations: [formattedConv, ...state.conversations],
                 isLoading: false,
             }));
 
+            return newConv;
         } catch (error: any) {
             console.log(error);
             set({ isLoading: false, error });
@@ -55,20 +69,21 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     selectedConversation: (id: string) => {
         const { conversations } = get();
 
-        const selectedConversation = conversations.find(
-            (conv: any) => conv.conversationId === id
+        const selectedConv = conversations.find(
+            (conv: any) =>
+                conv.conversationId?.toString() === id?.toString()
         );
-        // Expose just the user property with adjusted shape for ChatWindow
-        if (selectedConversation && selectedConversation.user) {
+
+        if (selectedConv && selectedConv.user) {
             set({
                 selectedConversationUser: {
                     user: {
-                        id: selectedConversation.user._id,
-                        name: selectedConversation.user.name,
-                        avatar: selectedConversation.user.avatar || "",
-                        isOnline: true // Assuming true for now, can implement proper status later
-                    }
-                }
+                        id: selectedConv.user._id,
+                        name: selectedConv.user.name,
+                        avatar: selectedConv.user.avatar || "",
+                        isOnline: true,
+                    },
+                },
             });
         } else {
             set({ selectedConversationUser: null });
