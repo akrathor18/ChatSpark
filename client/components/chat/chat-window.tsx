@@ -43,7 +43,6 @@ interface ChatWindowProps {
 
 export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindowProps) {
 
-  // console.log(user)
   const [inputValue, setInputValue] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)

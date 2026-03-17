@@ -41,68 +41,6 @@ export function NewChatModal({
   const [filteredUsers, setFilteredUsers] = useState<SearchableUser[]>([])
   const { searchedUsers, searchUsers, isLoading, isSearching } = useUserStore()
   const { selectedConversation, createConversation } = useConversationStore()
-  // Handle URL hash
-  useEffect(() => {
-    const handleHashChange = () => {
-      if (window.location.hash === "#new") {
-        setOpen(true)
-      } else {
-        setOpen(false)
-      }
-    }
-
-    handleHashChange()
-    window.addEventListener("hashchange", handleHashChange)
-
-    return () => window.removeEventListener("hashchange", handleHashChange)
-  }, [])
-
-  useEffect(() => {
-    if (!searchQuery.trim()) return
-
-    const timeout = setTimeout(() => {
-      searchUsers(searchQuery)
-    }, 300)
-
-    return () => clearTimeout(timeout)
-
-  }, [searchQuery])
-
-  const handleSelectUser = useCallback(
-  async (user: SearchableUser) => {
-    const existingConvId =
-      existingConversationMap[user._id?.toString()];
-
-    try {
-      if (existingConvId) {
-        // ✅ Existing
-        selectedConversation(existingConvId);
-        onSelectUser(user, existingConvId);
-      } else {
-        // ✅ New
-        const newConv = await createConversation(user._id);
-
-        const newConvId =
-          newConv?.conversationId ||
-          newConv?.conversation?._id ||
-          newConv?._id ||
-          "";
-
-        if (!newConvId) {
-          throw new Error("Conversation ID not found");
-        }
-
-        selectedConversation(newConvId);
-        onSelectUser(user, newConvId);
-      }
-    } catch (err) {
-      console.error("Failed to create/select conversation", err);
-    } finally {
-      setOpen(false);
-    }
-  },
-  [existingConversationMap, onSelectUser, createConversation, selectedConversation]
-);
 
   const handleOpenChange = useCallback((isOpen: boolean) => {
 
@@ -122,6 +60,70 @@ export function NewChatModal({
     }
 
   }, [])
+  // Handle URL hash
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (window.location.hash === "#new") {
+        handleOpenChange(true)
+      } else {
+        handleOpenChange(false)
+      }
+    }
+
+    handleHashChange()
+    window.addEventListener("hashchange", handleHashChange)
+
+    return () => window.removeEventListener("hashchange", handleHashChange)
+  }, [handleOpenChange])
+
+  useEffect(() => {
+    if (!searchQuery.trim()) return
+
+    const timeout = setTimeout(() => {
+      searchUsers(searchQuery)
+    }, 300)
+
+    return () => clearTimeout(timeout)
+
+  }, [searchQuery])
+
+  const handleSelectUser = useCallback(
+    async (user: SearchableUser) => {
+      const existingConvId =
+        existingConversationMap[user._id?.toString()];
+
+      // Eagerly close the modal to clear the #new hash from the URL immediately,
+      // avoiding race conditions if the parent component unmounts during async creation.
+      handleOpenChange(false);
+
+      try {
+        if (existingConvId) {
+          selectedConversation(existingConvId);
+          onSelectUser(user, existingConvId);
+        } else {
+
+          const newConv = await createConversation(user._id);
+
+          const newConvId =
+            newConv?.conversationId ||
+            newConv?.conversation?._id ||
+            newConv?._id ||
+            "";
+
+          if (!newConvId) {
+            throw new Error("Conversation ID not found");
+          }
+          selectedConversation(newConvId);
+          onSelectUser(user, newConvId);
+        }
+      } catch (err) {
+        console.error("Failed to create/select conversation", err);
+      }
+    },
+    [existingConversationMap, onSelectUser, createConversation, selectedConversation, handleOpenChange]
+  );
+
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
@@ -218,7 +220,7 @@ export function NewChatModal({
           ) : (
             <div className="space-y-0.5 p-2">
               {searchedUsers.map((user) => {
-              const isExisting = existingConversationMap[user._id.toString()]
+                const isExisting = existingConversationMap[user._id.toString()]
                 return (
                   <button
                     key={user._id}

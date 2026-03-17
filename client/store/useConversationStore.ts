@@ -68,7 +68,6 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
     selectedConversation: (id: string) => {
         const { conversations } = get();
-
         const selectedConv = conversations.find(
             (conv: any) =>
                 conv.conversationId?.toString() === id?.toString()

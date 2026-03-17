@@ -3,13 +3,15 @@ import * as userService from "../services/user.service.js";
 
 export const searchUsers = async (req: Request, res: Response) => {
     try {
+        const currentUserId = (req as any).user.id;
         const query = req.query.q as string;
 
-        const users = await userService.searchUsers(query);
+        const users = await userService.searchUsers(query, currentUserId);
 
         res.json(users);
     } catch (error) {
-        res.status(500).json({ message: "Search failed" });
+        console.log(error)
+        res.status(500).json({ message: "Search failed", error: error });
     }
 };
 

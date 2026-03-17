@@ -26,7 +26,6 @@ export const getMessages = async (req: Request, res: Response) => {
 
     const { conversationId } = req.params;
     const userId = (req as any).user.id;
-console.log("Fetching messages for conversation:", conversationId, "and user:", userId);
     const messages = await messageService.getConversationMessages(conversationId, userId);
 
     res.json(messages);
