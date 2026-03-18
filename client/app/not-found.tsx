@@ -28,16 +28,20 @@ export default function NotFound() {
             404
           </h1>
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-border bg-card shadow-xl md:h-24 md:w-24">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card shadow-xl md:h-24 md:w-24">
               <Search className="h-8 w-8 text-muted-foreground md:h-10 md:w-10" />
             </div>
           </div>
         </div>
 
         {/* Message */}
+
         <h2 className="mb-3 text-2xl font-semibold text-foreground md:text-3xl">
           Page not found
         </h2>
+        <div className="pt-6 text-xs text-gray-600">
+          <p>error_code: ROUTE_NOT_FOUND</p>
+        </div>
         <p className="mb-8 max-w-md text-muted-foreground">
           Oops! The page you&apos;re looking for seems to have sparked away. 
           It might have been moved, deleted, or never existed.
@@ -47,9 +51,9 @@ export default function NotFound() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button
             asChild
-            className="h-11 gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/25 transition-all hover:bg-primary/90"
+            className=" flex h-11 gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/25 transition-all hover:bg-primary/90"
           >
-            <Link href="/chat">
+            <Link href="/chat" className="flex gap-1.5 justify-center items-center">
               <MessageSquare className="h-4 w-4" />
               Go to Chat
             </Link>
@@ -59,7 +63,7 @@ export default function NotFound() {
             variant="outline"
             className="h-11 gap-2 rounded-xl border-border px-6 text-sm font-medium text-foreground transition-all hover:bg-secondary"
           >
-            <Link href="/">
+            <Link href="/" >
               <Home className="h-4 w-4" />
               Back to Home
             </Link>

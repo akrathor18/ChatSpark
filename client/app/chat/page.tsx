@@ -6,7 +6,7 @@ import { ChatWindow, type Message, type ChatUser } from "@/components/chat/chat-
 import { NewChatModal, type SearchableUser } from "@/components/chat/new-chat-modal"
 import { useConversationStore } from "@/store/useConversationStore"
 import { useMessageStore } from "@/store/useMessageStore"
-import { useAuthStore } from "@/store/useAuthStore"
+import ChatSkeleton from "@/components/chat/chat-skeleton"
 import { useUserStore } from "@/store/useUserStore"
 // All searchable users (simulates a user directory)
 const allSearchableUsers: SearchableUser[] = [
@@ -51,8 +51,6 @@ export default function ChatPage() {
   //   if (!user) {
   //   return <div>Loading profile...</div>
   // }
-  isLoading && <div className="text-red-500">Loading...</div>
-  error && <div>Error: {error.message}</div>
 
   const CURRENT_USER_ID = user?._id || ""
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
@@ -109,8 +107,11 @@ export default function ChatPage() {
     }
     return acc;
   }, {});
-  if (isLoading) return <div className="text-red-500">Loading...</div>
-  if (error) return <div>Error: {error.message}</div>
+  
+if (isLoading ||!user) {
+  return <ChatSkeleton />
+}
+  error && <div>Error: {error}</div>
 
   return (
     <div className="relative flex h-[100dvh] w-screen overflow-hidden bg-background">
