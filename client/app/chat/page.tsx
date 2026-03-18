@@ -22,7 +22,7 @@ export default function ChatPage() {
   const { user, getProfile } = useUserStore()
 
   const { conversations, isLoading, error, fetchConversations, selectedConversation, selectedConversationUser } = useConversationStore()
-  const { messages, fetchMessages, sendMessage } = useMessageStore()
+  const { messages, fetchMessages,  addMessage } = useMessageStore()
 
   useEffect(() => {
     if (!user) {
@@ -53,7 +53,12 @@ useEffect(() => {
 
   const CURRENT_USER_ID = user?._id || ""
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
+useEffect(() => {
+  if (!selectedConversationId) return;
 
+  socket.emit("join_conversation", selectedConversationId);
+
+}, [selectedConversationId]);
   // ── Transform backend messages → UI Message shape ──────────────────────────
   const currentMessages: Message[] = useMemo(() => {
     if (!selectedConversationId || !messages) return []
@@ -85,15 +90,28 @@ useEffect(() => {
     setSelectedConversationId(null)
   }, [])
 
-  const handleSendMessage = useCallback(async (content: string) => {
-    if (!selectedConversationId) return
-    // Call your store's sendMessage (adjust params to match your store's API)
-    await sendMessage(selectedConversationId, content)
-    // Refresh messages and conversations after sending
-    fetchMessages(selectedConversationId)
-    fetchConversations()
-  }, [selectedConversationId, sendMessage, fetchMessages, fetchConversations])
+const handleSendMessage = useCallback((content: string) => {
+  if (!selectedConversationId || !user?._id) return;
 
+  socket.emit("send_message", {
+    conversationId: selectedConversationId,
+    senderId: user._id,
+    content,
+  });
+
+}, [selectedConversationId, user]);
+useEffect(() => {
+  socket.on("receive_message", (message) => {
+    console.log("Realtime message:", message);
+
+    // 🔥 IMPORTANT: update Zustand
+    useMessageStore.getState().addMessage(message);
+  });
+
+  return () => {
+    socket.off("receive_message");
+  };
+}, []);
   const handleNewChat = useCallback((user: SearchableUser, conversationId: string) => {
     if (conversationId) {
       setSelectedConversationId(conversationId)

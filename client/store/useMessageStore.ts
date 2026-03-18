@@ -2,39 +2,44 @@ import { create } from "zustand";
 import * as messageService from "@/services/message.service";
 
 interface MessageState {
-    messages: any[];
+    messages: Record<string, any[]>;
     isLoading: boolean;
     error: any;
     fetchMessages: (conversationId: string) => Promise<void>;
-    sendMessage: (conversationId: string, content: string) => Promise<void>;
+    addMessage: (msg: any) => void;
 }
 
 export const useMessageStore = create<MessageState>((set) => ({
-    messages: [],
+    messages: {},
     isLoading: false,
-    error: null,    
+    error: null,
     fetchMessages: async (conversationId) => {
         try {
             set({ isLoading: true, error: null });
-            const res: any = await messageService.fetchMessages(conversationId);
-            set({ messages: res, isLoading: false });
-        } catch (error: any) {
-            console.log(error);
-            set({ isLoading: false, error: error });
-            throw error;
-        }
-    },
-    sendMessage: async (conversationId, content) => {
-        try {
-            set({ isLoading: true, error: null });
-            const res: any = await messageService.sendMessage(conversationId, content);
-            set((state) => ({ messages: [...state.messages, res], isLoading: false }));
-        }
 
-        catch (error: any) {
-            console.log(error);
-            set({ isLoading: false, error: error });
-            throw error;
+            const res: any = await messageService.fetchMessages(conversationId);
+
+            set((state) => ({
+                messages: {
+                    ...state.messages,
+                    [conversationId]: res
+                },
+                isLoading: false
+            }));
+
+        } catch (error: any) {
+            set({ isLoading: false, error });
         }
     },
+
+    addMessage: (msg: any) =>
+        set((state) => ({
+            messages: {
+                ...state.messages,
+                [msg.conversationId]: [
+                    ...(state.messages[msg.conversationId] || []),
+                    msg
+                ]
+            }
+        }))
 }));
