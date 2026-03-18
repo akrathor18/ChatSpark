@@ -23,14 +23,12 @@ export interface SearchableUser {
 }
 
 interface NewChatModalProps {
-  users: SearchableUser[]
   existingConversationMap: Record<string, string>
   onSelectUser: (user: SearchableUser, conversationId: string) => void
   trigger?: React.ReactNode
 }
 
 export function NewChatModal({
-  users,
   existingConversationMap,
   onSelectUser,
   trigger,

@@ -4,15 +4,14 @@ import { log } from "console";
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
-
-    const userId = (req as any).user.id; // from auth middleware
+    const userId = (req as any).user.id;
     const { conversationId, content } = req.body;
 
-    const message = await messageService.createMessage(
+    const message = await messageService.createMessage({
       conversationId,
-      userId,
-      content
-    );
+      senderId: userId,
+      content,
+    });
 
     res.status(201).json(message);
 

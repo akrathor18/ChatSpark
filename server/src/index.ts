@@ -2,7 +2,7 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import db from "./config/db.js";
-
+import { initSocket } from "./socket/index.js";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.route.js";
 import conversationRoutes from "./routes/conversation.routes.js";
@@ -19,7 +19,8 @@ import cors from "cors";
 export const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true,
   }
 });
 app.use(
@@ -31,7 +32,7 @@ app.use(
     credentials: true,
   }),
 );
-app.get("/", (req, res) => {  
+app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
@@ -39,20 +40,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
-
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id)
-
-  socket.on("send_message", (data) => {
-    console.log(data)
-
-    io.emit("receive_message", data)
-  })
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected", socket.id)
-  })
-})
+initSocket(io);
 
 server.listen(5000, () => {
   console.log("Server running on port 5000")

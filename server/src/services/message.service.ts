@@ -1,27 +1,31 @@
 import { Message } from "../models/message.model.js";
 import { Conversation } from "../models/conversations.model.js";
 
-export const createMessage = async (
-  conversationId: string,
-  senderId: string,
-  content: string
-) => {
-
+export const createMessage = async ({
+  conversationId,
+  senderId,
+  content,
+}: {
+  conversationId: string;
+  senderId: string;
+  content: string;
+}) => {
   const message = await Message.create({
     conversationId,
     senderId,
-    content
+    content,
   });
 
   await Conversation.findByIdAndUpdate(conversationId, {
-    lastMessageId: message._id,
-    lastMessage: content,
-    lastMessageAt: new Date()
+    $set: {
+      lastMessageId: message._id,
+      lastMessage: content,
+      lastMessageAt: new Date(),
+    },
   });
 
   return message;
 };
-
 export const getConversationMessages = async (
   conversationId: string,
   userId: string
