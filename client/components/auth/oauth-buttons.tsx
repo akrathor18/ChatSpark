@@ -3,11 +3,16 @@ import { Button } from "@/components/ui/button"
 import { signIn } from "next-auth/react";
 import { Github } from "lucide-react"
 
+async function handleOAuth(provider: "google" | "github") {
+  // Sign in with NextAuth — this will redirect to provider and back
+  await signIn(provider, { callbackUrl: "/api/auth/sync-token?next=/chat" });
+}
+
 export default function OAuthButtons() {
   return (
   <div className="mb-6 flex flex-col gap-3">
           <Button
-            onClick={() => signIn("google")}
+            onClick={() => handleOAuth("google")}
             variant="outline"
             className="h-11 w-full gap-2 rounded-xl border-border bg-secondary/50 text-foreground transition-all duration-200 hover:bg-secondary hover:border-muted-foreground/30"
           >
@@ -32,7 +37,7 @@ export default function OAuthButtons() {
             Continue with Google
           </Button>
           <Button
-            onClick={() => signIn("github")}
+            onClick={() => handleOAuth("github")}
             variant="outline"
             className="h-11 w-full gap-2 rounded-xl border-border bg-secondary/50 text-foreground transition-all duration-200 hover:bg-secondary hover:border-muted-foreground/30"
           >
@@ -42,4 +47,3 @@ export default function OAuthButtons() {
         </div>
   )
 }
-

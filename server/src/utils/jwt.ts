@@ -9,10 +9,14 @@ interface JwtUser {
     _id: string;
     email: string;
 }
-export const generateToken = (user: JwtUser) => {
-    return jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-};
 
+export const generateToken = (userId: string) => {
+    return jwt.sign(
+        { userId },
+        process.env.JWT_SECRET as string,
+        { expiresIn: "7d" }
+    );
+};
 export const verifyToken = (token: string) => {
     try {
         return jwt.verify(token, JWT_SECRET);
