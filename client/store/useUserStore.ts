@@ -19,9 +19,10 @@ export const useUserStore = create<UserState>((set) => ({
         try {
             set({ isLoading: true, error: null });
             const res: any = await userService.getProfile();
+            console.log("Get Profile Response:", res);
             set({ user: res, isLoading: false });
         } catch (error: any) {
-            console.log(error);
+            console.error("Get Profile Error:", error);
             set({ isLoading: false, error });
         }
     },

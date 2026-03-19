@@ -10,9 +10,9 @@ interface JwtUser {
     email: string;
 }
 
-export const generateToken = (userId: string) => {
+export const generateToken = (id: string) => {
     return jwt.sign(
-        { userId },
+        { id },
         process.env.JWT_SECRET as string,
         { expiresIn: "7d" }
     );
