@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import * as conversationService from "@/services/conversation.service";
+import * as conversationService from "@/features/chat/services/conversation.service";
 
 interface ConversationState {
     conversations: any[];

@@ -1,141 +1,100 @@
-"use client"
+"use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react"
-import { ConversationList, type Conversation } from "@/components/chat/conversation-list"
-import { ChatWindow, type Message, type ChatUser } from "@/components/chat/chat-window"
-import { NewChatModal, type SearchableUser } from "@/components/chat/new-chat-modal"
-import { useConversationStore } from "@/store/useConversationStore"
-import { useMessageStore } from "@/store/useMessageStore"
-import ChatSkeleton from "@/components/chat/chat-skeleton"
-import { useUserStore } from "@/store/useUserStore"
-import { getSocket } from "@/lib/socket";
-// Define expected backend message shape
-interface BackendMessage {
-  _id: string
-  content: string
-  createdAt: string
-  senderId: string
-  status?: "sent" | "delivered" | "read"
-}
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { ConversationList } from "@/features/chat/components/conversation-list";
+import { ChatWindow } from "@/features/chat/components/chat-window";
+import { NewChatModal } from "@/features/chat/components/new-chat-modal";
+import { useConversationStore } from "@/features/chat/store/useConversationStore";
+import { useMessageStore } from "@/features/chat/store/useMessageStore";
+import { useUserStore } from "@/store/useUserStore";
+import ChatSkeleton from "@/features/chat/components/chat-skeleton";
+
+import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
+import { mapMessages } from "@/features/chat/utils/messageMapper";
 
 export default function ChatPage() {
-  const { user, getProfile } = useUserStore()
+  const { user, getProfile } = useUserStore();
+  const {
+    conversations,
+    isLoading,
+    error,
+    fetchConversations,
+    selectedConversation,
+    selectedConversationUser,
+  } = useConversationStore();
 
-  const { conversations, isLoading, error, fetchConversations, selectedConversation, selectedConversationUser } = useConversationStore()
-  const { messages, fetchMessages,  addMessage } = useMessageStore()
+  const { messages, fetchMessages } = useMessageStore();
 
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+
+  //  Fetch user
   useEffect(() => {
-    if (!user) {
-      getProfile()
-    }
-  }, [])
+    if (!user) getProfile();
+  }, []);
 
+  // 🔹 Fetch conversations
   useEffect(() => {
-    if (user) {
-      fetchConversations()
-    }
-  }, [user])
-  //   if (!user) {
-  //   return <div>Loading profile...</div>
-  // }
-  const socket = getSocket();
+    if (user) fetchConversations();
+  }, [user]);
 
-useEffect(() => {
-  console.log("useeffect run")
-  socket.on("connect", () => {
-    console.log("Connected:", socket.id);
-  });
+  const CURRENT_USER_ID = user?._id || "";
 
-  return () => {
-    socket.off("connect");
-  };
-}, []);
+  //  Socket Hook
+  const { sendMessage } = useChatSocket(selectedConversationId, user?._id);
 
-  const CURRENT_USER_ID = user?._id || ""
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
-useEffect(() => {
-  if (!selectedConversationId) return;
+  //  Transform messages
+  const currentMessages = useMemo(() => {
+    return mapMessages(messages, selectedConversationId, CURRENT_USER_ID);
+  }, [messages, selectedConversationId, CURRENT_USER_ID]);
 
-  socket.emit("join_conversation", selectedConversationId);
-
-}, [selectedConversationId]);
-  // ── Transform backend messages → UI Message shape ──────────────────────────
-  const currentMessages: Message[] = useMemo(() => {
-    if (!selectedConversationId || !messages) return []
-
-    const raw: BackendMessage[] = Array.isArray(messages)
-      ? messages
-      : ((messages as Record<string, BackendMessage[]>)[selectedConversationId] ?? [])
-
-    return raw.map((msg) => ({
-      id: msg._id,
-      content: msg.content,
-      timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      isSent: msg.senderId === CURRENT_USER_ID,
-      status: msg.status ?? "sent",
-    }))
-  }, [messages, selectedConversationId, CURRENT_USER_ID])
-  // ──────────────────────────────────────────────────────────────────────────
-
+  //  Handlers
   const handleSelectConversation = useCallback((id: string) => {
-    setSelectedConversationId(id)
-    selectedConversation(id)
-    fetchMessages(id)
-  }, [fetchMessages, selectedConversation])
+    setSelectedConversationId(id);
+    selectedConversation(id);
+    fetchMessages(id);
+  }, []);
 
   const handleBack = useCallback(() => {
-    setSelectedConversationId(null)
-  }, [])
+    setSelectedConversationId(null);
+  }, []);
 
-const handleSendMessage = useCallback((content: string) => {
-  if (!selectedConversationId || !user?._id) return;
+  const handleSendMessage = useCallback((content: string) => {
+    sendMessage(content);
+  }, [sendMessage]);
 
-  socket.emit("send_message", {
-    conversationId: selectedConversationId,
-    senderId: user._id,
-    content,
-  });
-
-}, [selectedConversationId, user]);
-useEffect(() => {
-  socket.on("receive_message", (message) => {
-    console.log("Realtime message:", message);
-
-    // 🔥 IMPORTANT: update Zustand
-    useMessageStore.getState().addMessage(message);
-  });
-
-  return () => {
-    socket.off("receive_message");
-  };
-}, []);
-  const handleNewChat = useCallback((user: SearchableUser, conversationId: string) => {
+  const handleNewChat = useCallback((user: any, conversationId: string) => {
     if (conversationId) {
-      setSelectedConversationId(conversationId)
-      fetchMessages(conversationId)
+      setSelectedConversationId(conversationId);
+      fetchMessages(conversationId);
     }
-  }, [fetchMessages])
-  const existingConversationMap = conversations.reduce((acc: any, c: any) => {
-    if (c.user && c.user._id) {
-      acc[c.user._id.toString()] = c.conversationId;
-    }
-    return acc;
-  }, {});
-  
-if (isLoading ||!user) {
-  return <ChatSkeleton />
-}
-  error && <div>Error: {error}</div>
+  }, []);
+
+  const existingConversationMap = useMemo(() => {
+    return conversations.reduce((acc: any, c: any) => {
+      if (c.user?._id) {
+        acc[c.user._id.toString()] = c.conversationId;
+      }
+      return acc;
+    }, {});
+  }, [conversations]);
+
+  // 🔹 Loading state
+  if (isLoading || !user) {
+    return <ChatSkeleton />;
+  }
+
+  // 🔹 Error state
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="relative flex h-[100dvh] w-screen overflow-hidden bg-background">
+      {/* Sidebar */}
       <aside
         className={[
           "h-full flex-shrink-0",
-          "max-md:absolute max-md:inset-0 max-md:z-20 max-md:w-full max-md:transition-transform max-md:duration-300 max-md:ease-in-out",
+          "max-md:absolute max-md:inset-0 max-md:z-20 max-md:w-full transition-transform duration-300",
           selectedConversationId ? "max-md:-translate-x-full" : "max-md:translate-x-0",
           "md:relative md:w-80 lg:w-96",
         ].join(" ")}
@@ -154,10 +113,11 @@ if (isLoading ||!user) {
         />
       </aside>
 
+      {/* Chat Window */}
       <main
         className={[
           "flex flex-col flex-1 min-w-0 h-full",
-          "max-md:absolute max-md:inset-0 max-md:z-20 max-md:transition-transform max-md:duration-300 max-md:ease-in-out",
+          "max-md:absolute max-md:inset-0 max-md:z-20 transition-transform duration-300",
           selectedConversationId ? "max-md:translate-x-0" : "max-md:translate-x-full",
         ].join(" ")}
       >
@@ -169,5 +129,5 @@ if (isLoading ||!user) {
         />
       </main>
     </div>
-  )
+  );
 }

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Search, Plus, Mail, Loader2, UserPlus, Sparkles } from "lucide-react"
 import { useUserStore } from "@/store/useUserStore"
-import { useConversationStore } from "@/store/useConversationStore"
+import { useConversationStore } from "@/features/chat/store/useConversationStore"
 export interface SearchableUser {
   _id: string
   name: string

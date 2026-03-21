@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import * as messageService from "@/services/message.service";
+import * as messageService from "@/features/chat/services/message.service";
 
 interface MessageState {
     messages: Record<string, any[]>;
