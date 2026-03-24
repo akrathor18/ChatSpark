@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { ConversationList } from "@/features/chat/components/conversation-list";
-import { ChatWindow } from "@/features/chat/components/chat-window";
+import { ChatContainer } from "@/features/chat/containers/ChatContainer";
 import { NewChatModal } from "@/features/chat/components/new-chat-modal";
 import { useConversationStore } from "@/features/chat/store/useConversationStore";
 import { useMessageStore } from "@/features/chat/store/useMessageStore";
@@ -121,7 +121,7 @@ export default function ChatPage() {
           selectedConversationId ? "max-md:translate-x-0" : "max-md:translate-x-full",
         ].join(" ")}
       >
-        <ChatWindow
+        <ChatContainer
           user={selectedConversationUser?.user}
           messages={currentMessages}
           onSendMessage={handleSendMessage}

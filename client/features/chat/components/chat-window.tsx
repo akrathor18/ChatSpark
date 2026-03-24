@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useRef } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,66 +17,33 @@ import {
   ArrowLeft,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { Message, ChatUser } from "../containers/ChatContainer"
 
-export interface Message {
-  id: string
-  content: string
-  timestamp: string
-  isSent: boolean
-  status?: "sent" | "delivered" | "read"
-}
-
-export interface ChatUser {
-  id: string
-  name: string
-  avatar: string
-  isOnline: boolean
-  lastSeen?: string
-}
-
-interface ChatWindowProps {
+interface ChatWindowLayoutProps {
   user: ChatUser | null
   messages: Message[]
-  onSendMessage: (content: string) => void
+  inputValue: string
+  scrollContainerRef: React.RefObject<HTMLDivElement | null>
+  messagesEndRef: React.RefObject<HTMLDivElement | null>
+  inputRef: React.RefObject<HTMLTextAreaElement | null>
+  onSend: () => void
+  onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  onKeyDown: (e: React.KeyboardEvent) => void
   onBack?: () => void
 }
 
-export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindowProps) {
-
-  const [inputValue, setInputValue] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (container) {
-      container.scrollTop = container.scrollHeight
-    }
-  }, [messages])
-
-  const handleSend = () => {
-    if (inputValue.trim()) {
-      onSendMessage(inputValue.trim())
-      setInputValue("")
-      inputRef.current?.focus()
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
-
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const el = e.target
-    el.style.height = "auto"
-    el.style.height = `${Math.min(el.scrollHeight, 128)}px`
-    setInputValue(el.value)
-  }
-
+export function ChatWindow({
+  user,
+  messages,
+  inputValue,
+  scrollContainerRef,
+  messagesEndRef,
+  inputRef,
+  onSend,
+  onInputChange,
+  onKeyDown,
+  onBack,
+}: ChatWindowLayoutProps) {
   if (!user) {
     return (
       <div className="flex h-full flex-col items-center justify-center">
@@ -160,8 +127,6 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
         className="flex-1 overflow-y-auto overscroll-contain px-4 py-4"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
-        {/* FIX: justify-end pushes messages to bottom when few exist.
-            NO w-full here — that was causing bubbles to span full width */}
         <div className="flex min-h-full flex-col justify-end gap-2">
           {messages.map((message, index) => {
             const prevSame = index > 0 && messages[index - 1].isSent === message.isSent
@@ -177,16 +142,10 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
                   prevSame ? "mt-0.5" : "mt-3"
                 )}
               >
-                {/* FIX: removed w-full — it was making every bubble stretch
-                    full width regardless of isSent alignment.
-                    min-w-0 allows the flex child to shrink below content size
-                    so max-w-[78%] is actually respected. */}
                 <div className={cn(
                   "flex min-w-0 max-w-[78%] flex-col sm:max-w-[65%]",
                   message.isSent ? "items-end" : "items-start"
                 )}>
-                  {/* FIX: overflow-hidden clips any content that escapes the
-                      bubble. break-words wraps long unbroken strings. */}
                   <div
                     className={cn(
                       "w-full break-words px-4 py-2.5 text-[14px] leading-relaxed shadow-sm",
@@ -244,8 +203,8 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
           <textarea
             ref={inputRef}
             value={inputValue}
-            onChange={handleInput}
-            onKeyDown={handleKeyDown}
+            onChange={onInputChange}
+            onKeyDown={onKeyDown}
             placeholder="Type a message..."
             rows={1}
             className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -257,7 +216,7 @@ export function ChatWindow({ user, messages, onSendMessage, onBack }: ChatWindow
               <span className="sr-only">Add emoji</span>
             </Button>
             <Button
-              onClick={handleSend}
+              onClick={onSend}
               disabled={!inputValue.trim()}
               size="icon"
               className="h-8 w-8 rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/30 transition-all duration-200 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/40 disabled:opacity-40 disabled:shadow-none"
