@@ -33,13 +33,24 @@ export const useMessageStore = create<MessageState>((set) => ({
     },
 
     addMessage: (msg: any) =>
-        set((state) => ({
-            messages: {
-                ...state.messages,
-                [msg.conversationId]: [
-                    ...(state.messages[msg.conversationId] || []),
-                    msg
-                ]
-            }
-        }))
+        set((state) => {
+            const conversationId = msg.conversationId?.toString();
+            if (!conversationId) return state;
+
+            const conversationMessages = state.messages[conversationId] || [];
+            
+            // Deduplicate by _id
+            const isDuplicate = conversationMessages.some(
+                (m) => m._id?.toString() === msg._id?.toString()
+            );
+
+            if (isDuplicate) return state;
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: [...conversationMessages, msg]
+                }
+            };
+        })
 }));

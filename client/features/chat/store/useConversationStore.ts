@@ -9,6 +9,7 @@ interface ConversationState {
     fetchConversations: () => Promise<void>;
     createConversation: (userId: string) => Promise<any>;
     selectedConversation: (userId: string) => any;
+    updateConversationFromMessage: (message: any) => void;
 }
 
 export const useConversationStore = create<ConversationState>((set, get) => ({
@@ -86,6 +87,32 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
             });
         } else {
             set({ selectedConversationUser: null });
+        }
+    },
+
+    updateConversationFromMessage: (message: any) => {
+        const { conversations, fetchConversations } = get();
+        
+        const convIndex = conversations.findIndex(
+            (c: any) => c.conversationId?.toString() === message.conversationId?.toString()
+        );
+
+        if (convIndex !== -1) {
+            const updatedConversations = [...conversations];
+            const updatedConv = {
+                ...updatedConversations[convIndex],
+                lastMessage: message.content,
+                lastMessageAt: message.createdAt || new Date().toISOString(),
+            };
+
+            // Remove and push to top
+            updatedConversations.splice(convIndex, 1);
+            set({
+                conversations: [updatedConv, ...updatedConversations]
+            });
+        } else {
+            // New conversation or not in list - refresh
+            fetchConversations();
         }
     }
 }));
