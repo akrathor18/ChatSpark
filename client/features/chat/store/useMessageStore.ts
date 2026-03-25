@@ -7,6 +7,7 @@ interface MessageState {
     error: any;
     fetchMessages: (conversationId: string) => Promise<void>;
     addMessage: (msg: any) => void;
+    updateMessage: (conversationId: string, messageId: string, updates: any) => void;
 }
 
 export const useMessageStore = create<MessageState>((set) => ({
@@ -39,7 +40,28 @@ export const useMessageStore = create<MessageState>((set) => ({
 
             const conversationMessages = state.messages[conversationId] || [];
             
-            // Deduplicate by _id
+            // 1. Check if we have an optimistic message with the same tempId
+            const optimisticIndex = msg.tempId 
+                ? conversationMessages.findIndex((m) => m.tempId === msg.tempId)
+                : -1;
+
+            if (optimisticIndex !== -1) {
+                // Replace optimistic message with confirmed one
+                const updatedMessages = [...conversationMessages];
+                updatedMessages[optimisticIndex] = {
+                    ...updatedMessages[optimisticIndex],
+                    ...msg,
+                    status: msg.status || "sent"
+                };
+                return {
+                    messages: {
+                        ...state.messages,
+                        [conversationId]: updatedMessages
+                    }
+                };
+            }
+
+            // 2. Otherwise check for duplicate by _id
             const isDuplicate = conversationMessages.some(
                 (m) => m._id?.toString() === msg._id?.toString()
             );
@@ -50,6 +72,25 @@ export const useMessageStore = create<MessageState>((set) => ({
                 messages: {
                     ...state.messages,
                     [conversationId]: [...conversationMessages, msg]
+                }
+            };
+        }),
+
+    updateMessage: (conversationId, messageId, updates) =>
+        set((state) => {
+            const conversationMessages = state.messages[conversationId] || [];
+            const updatedMessages = conversationMessages.map((m) => {
+                const idMatch = m._id?.toString() === messageId.toString() || m.tempId === messageId;
+                if (idMatch) {
+                    return { ...m, ...updates };
+                }
+                return m;
+            });
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: updatedMessages
                 }
             };
         })

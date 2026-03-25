@@ -15,6 +15,8 @@ import {
   CheckCheck,
   Sparkles,
   ArrowLeft,
+  Clock,
+  AlertCircle,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Message, ChatUser } from "../containers/ChatContainer"
@@ -135,7 +137,7 @@ export function ChatWindow({
 
             return (
               <div
-                key={message.id}
+                key={message.id || index}
                 className={cn(
                   "flex",
                   message.isSent ? "justify-end" : "justify-start",
@@ -156,6 +158,7 @@ export function ChatWindow({
                       prevSame && !message.isSent && "rounded-tl-md",
                       nextSame && message.isSent && "rounded-br-md",
                       nextSame && !message.isSent && "rounded-bl-md",
+                      message.status === "failed" && "bg-destructive/10 ring-1 ring-destructive/20 text-destructive-foreground dark:text-destructive"
                     )}
                   >
                     {message.content}
@@ -169,9 +172,16 @@ export function ChatWindow({
                     >
                       <span>{message.timestamp}</span>
                       {message.isSent && (
-                        <span className={cn(message.status === "read" ? "text-primary" : "text-muted-foreground")}>
+                        <span className={cn(
+                            message.status === "read" ? "text-primary" : "text-muted-foreground",
+                            message.status === "failed" && "text-destructive"
+                        )}>
                           {message.status === "read" ? (
                             <CheckCheck className="h-3.5 w-3.5" />
+                          ) : message.status === "sending" ? (
+                             <Clock className="h-3.2 w-3.2 animate-pulse" />
+                          ) : message.status === "failed" ? (
+                             <AlertCircle className="h-3.5 w-3.5" />
                           ) : (
                             <Check className="h-3.5 w-3.5" />
                           )}

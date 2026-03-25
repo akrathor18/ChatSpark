@@ -12,7 +12,7 @@ export interface Message {
     content: string
     timestamp: string
     isSent: boolean
-    status?: "sent" | "delivered" | "read"
+    status?: "sending" | "sent" | "read" | "failed"
 }
 
 export interface ChatUser {
