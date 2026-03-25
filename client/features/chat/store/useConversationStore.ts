@@ -7,11 +7,19 @@ interface ConversationState {
     selectedConversationUser: any | null;
     isLoading: boolean;
     error: any;
+    userStatus: {
+        [userId: string]: {
+            online: boolean;
+            lastSeen?: string;
+        };
+    };
     fetchConversations: () => Promise<void>;
     createConversation: (userId: string) => Promise<any>;
     setSelectedConversationId: (id: string | null) => void;
     markAsRead: (id: string) => Promise<void>;
     updateConversationFromMessage: (message: any) => void;
+    resetOnlineUsers: () => void;
+    setUserOnline: (userId: string, isOnline: boolean, lastSeen?: string) => void;
 }
 
 export const useConversationStore = create<ConversationState>((set, get) => ({
@@ -20,6 +28,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     selectedConversationUser: null,
     isLoading: false,
     error: null,
+    userStatus: {},
 
     fetchConversations: async () => {
         try {
@@ -72,8 +81,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     },
 
     setSelectedConversationId: (id: string | null) => {
-        const { conversations } = get();
-        
+        const { conversations, userStatus } = get();
         if (!id) {
             set({ selectedConversationId: null, selectedConversationUser: null });
             return;
@@ -91,12 +99,14 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
                     user: {
                         id: selectedConv.user._id,
                         name: selectedConv.user.name,
+                        email: selectedConv.user.email,
                         avatar: selectedConv.user.avatar || "",
-                        isOnline: true,
+                        isOnline: userStatus[selectedConv.user._id]?.online || false,
+                        lastSeen: userStatus[selectedConv.user._id]?.lastSeen,
                     },
                 },
             });
-            
+
             // Mark as read when selected
             get().markAsRead(id);
         } else {
@@ -123,7 +133,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
     updateConversationFromMessage: (message: any) => {
         const { conversations, selectedConversationId, fetchConversations, markAsRead } = get();
-        
+
         const convIndex = conversations.findIndex(
             (c: any) => c.conversationId?.toString() === message.conversationId?.toString()
         );
@@ -133,7 +143,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
         if (convIndex !== -1) {
             const updatedConversations = [...conversations];
             const conversation = updatedConversations[convIndex];
-            
+
             const updatedConv = {
                 ...conversation,
                 lastMessage: message.content,
@@ -155,5 +165,21 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
             // New conversation or not in list - refresh
             fetchConversations();
         }
-    }
+    },
+
+    setUserOnline: (userId, isOnline, lastSeen) => {
+        set((state) => ({
+            userStatus: {
+                ...state.userStatus,
+                [userId]: {
+                    online: isOnline,
+                    lastSeen,
+                },
+            },
+        }));
+    },
+
+    resetOnlineUsers: () => {
+        set({ userStatus: {} });
+    },
 }));

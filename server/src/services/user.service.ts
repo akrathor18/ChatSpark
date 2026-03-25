@@ -17,6 +17,6 @@ export const searchUsers = async (query: string, currentUserId: string) => {
 };
 
 export const getUserProfile = async (userId: string) => {
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId).select('-password -__v -provider');
     return user;
 }

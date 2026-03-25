@@ -83,7 +83,10 @@ export function ConversationList({ conversations, selectedId, onSelect, newChatB
         <div className="space-y-0.5 pb-4">
           {conversations.map((conversation) => {
             // Destructure API fields
-            const { conversationId, user, lastMessage, lastMessageAt, unreadCount = 0, isOnline = false } = conversation
+            const { conversationId, user, lastMessage, lastMessageAt, unreadCount = 0,  } = conversation
+            const isOnline = conversation.isOnline || false;
+            console.log(conversation)
+            console.log("is online ",isOnline)
             const name = user?.name ?? "Unknown"
             const avatar = user?.avatar ?? ""
             const timestamp = lastMessageAt

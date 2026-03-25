@@ -95,6 +95,7 @@ export function ChatWindow({
           </div>
           <div>
             <h2 className="text-sm font-semibold text-foreground">{user.name}</h2>
+            <h5 className="text-sm font-semibold text-muted-foreground">{user.email}</h5>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               {user.isOnline ? (
                 <>
