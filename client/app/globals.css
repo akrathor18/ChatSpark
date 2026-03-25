@@ -191,3 +191,17 @@
   animation: shimmer 1.4s infinite linear;
   border-radius: 0.5rem;
 }
+  @keyframes typing-dot {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+          30% { transform: translateY(-4px); opacity: 1; }
+        }
+        .typing-dot {
+          display: inline-block;
+          width: 5px;
+          height: 5px;
+          background-color: currentColor;
+          border-radius: 50%;
+          animation: typing-dot 1s infinite;
+        }
+        .delay-150 { animation-delay: 0.15s; }
+        .delay-300 { animation-delay: 0.3s; }

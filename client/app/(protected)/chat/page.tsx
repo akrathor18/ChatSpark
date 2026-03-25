@@ -39,7 +39,7 @@ export default function ChatPage() {
   const CURRENT_USER_ID = user?._id || "";
 
   // 🔹 Socket Hook
-  const { sendMessage } = useChatSocket(selectedConversationId, user?._id);
+  const { sendMessage, startTyping } = useChatSocket(selectedConversationId, user?._id);
 
   // 🔹 Transform messages
   const currentMessages = useMemo(() => {
@@ -59,6 +59,10 @@ export default function ChatPage() {
   const handleSendMessage = useCallback((content: string) => {
     sendMessage(content);
   }, [sendMessage]);
+
+  const handleTyping = useCallback(() => {
+    startTyping();
+  }, [startTyping]);
 
   const handleNewChat = useCallback((user: any, conversationId: string) => {
     if (conversationId) {
@@ -123,6 +127,7 @@ export default function ChatPage() {
           user={selectedConversationUser?.user}
           messages={currentMessages}
           onSendMessage={handleSendMessage}
+          onTyping={handleTyping}
           onBack={handleBack}
         />
       </main>

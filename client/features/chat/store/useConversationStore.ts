@@ -13,6 +13,11 @@ interface ConversationState {
             lastSeen?: string;
         };
     };
+    typingUsers: {
+        [conversationId: string]: {
+            [userId: string]: boolean;
+        };
+    }
     fetchConversations: () => Promise<void>;
     createConversation: (userId: string) => Promise<any>;
     setSelectedConversationId: (id: string | null) => void;
@@ -20,6 +25,7 @@ interface ConversationState {
     updateConversationFromMessage: (message: any) => void;
     resetOnlineUsers: () => void;
     setUserOnline: (userId: string, isOnline: boolean, lastSeen?: string) => void;
+    setTyping: (conversationId: string, userId: string, isTyping: boolean) => void;
 }
 
 export const useConversationStore = create<ConversationState>((set, get) => ({
@@ -29,6 +35,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     isLoading: false,
     error: null,
     userStatus: {},
+    typingUsers: {},
 
     fetchConversations: async () => {
         try {
@@ -181,5 +188,35 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
     resetOnlineUsers: () => {
         set({ userStatus: {} });
+    },
+    setTyping: (conversationId, userId, isTyping) => {
+        set((state) => {
+            const current = state.typingUsers[conversationId] || {};
+
+            if (!isTyping) {
+                const { [userId]: _, ...rest } = current;
+
+                return {
+                    typingUsers: {
+                        ...state.typingUsers,
+                        [conversationId]: rest,
+                    },
+                };
+            }
+
+            return {
+                typingUsers: {
+                    ...state.typingUsers,
+                    [conversationId]: {
+                        ...current,
+                        [userId]: true,
+                    },
+                },
+            };
+        });
+    },
+
+    resetTyping: () => {
+        set({ typingUsers: {} });
     },
 }));

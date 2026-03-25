@@ -1,8 +1,9 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+
 import {
   Phone,
   Video,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Message, ChatUser } from "../containers/ChatContainer"
+import { useConversationStore } from "../store/useConversationStore"
 
 interface ChatWindowLayoutProps {
   user: ChatUser | null
@@ -46,6 +48,14 @@ export function ChatWindow({
   onKeyDown,
   onBack,
 }: ChatWindowLayoutProps) {
+  const { typingUsers, selectedConversationId } = useConversationStore();
+
+  const isOtherTyping = useMemo(() => {
+    if (!selectedConversationId) return false;
+    const typers = typingUsers[selectedConversationId] || {};
+    return Object.keys(typers).length > 0;
+  }, [typingUsers, selectedConversationId]);
+
   if (!user) {
     return (
       <div className="flex h-full flex-col items-center justify-center">
@@ -68,7 +78,7 @@ export function ChatWindow({
 
   return (
     <div className="flex h-full flex-col bg-background">
-      {/* Header */}
+    {/* Header */}
       <header className="flex shrink-0 items-center justify-between border-b border-border bg-card/50 px-4 py-3">
         <div className="flex items-center gap-3">
           {onBack && (
@@ -94,8 +104,10 @@ export function ChatWindow({
             )}
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-foreground">{user.name}</h2>
-            <h5 className="text-sm font-semibold text-muted-foreground">{user.email}</h5>
+            <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-foreground">{user.name}</h2>
+                <span className="text-[10px] text-muted-foreground/60">• {user.email}</span>
+            </div>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               {user.isOnline ? (
                 <>
@@ -103,7 +115,7 @@ export function ChatWindow({
                   Active now
                 </>
               ) : (
-                user.lastSeen ?? "Offline"
+                user.lastSeen ? `Last seen ${new Date(user.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "Offline"
               )}
             </p>
           </div>
@@ -149,6 +161,7 @@ export function ChatWindow({
                   "flex min-w-0 max-w-[78%] flex-col sm:max-w-[65%]",
                   message.isSent ? "items-end" : "items-start"
                 )}>
+
                   <div
                     className={cn(
                       "w-full break-words px-4 py-2.5 text-[14px] leading-relaxed shadow-sm",
@@ -174,15 +187,15 @@ export function ChatWindow({
                       <span>{message.timestamp}</span>
                       {message.isSent && (
                         <span className={cn(
-                            message.status === "read" ? "text-primary" : "text-muted-foreground",
-                            message.status === "failed" && "text-destructive"
+                          message.status === "read" ? "text-primary" : "text-muted-foreground",
+                          message.status === "failed" && "text-destructive"
                         )}>
                           {message.status === "read" ? (
                             <CheckCheck className="h-3.5 w-3.5" />
                           ) : message.status === "sending" ? (
-                             <Clock className="h-3.2 w-3.2 animate-pulse" />
+                            <Clock className="h-3.2 w-3.2 animate-pulse" />
                           ) : message.status === "failed" ? (
-                             <AlertCircle className="h-3.5 w-3.5" />
+                            <AlertCircle className="h-3.5 w-3.5" />
                           ) : (
                             <Check className="h-3.5 w-3.5" />
                           )}
@@ -194,6 +207,22 @@ export function ChatWindow({
               </div>
             )
           })}
+          
+          {/* Typing Indicator */}
+          {isOtherTyping && (
+            <div className="flex justify-start mt-1">
+              <div className="flex flex-col items-start">
+                <div className="rounded-2xl rounded-bl-md bg-[var(--message-received)] px-4 py-2.5 shadow-sm ring-1 ring-border/40">
+                  <div className="flex items-center gap-1">
+                    <span className="typing-dot" />
+                    <span className="typing-dot delay-150" />
+                    <span className="typing-dot delay-300" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <div ref={messagesEndRef} />
         </div>
       </div>

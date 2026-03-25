@@ -3,13 +3,17 @@ import { createMessage } from "../services/message.service.js";
 import { ConversationMember } from "../models/conversationMembers.model.js";
 import { Message } from "../models/message.model.js";
 import { User } from "../models/user.model.js";
+
 const onlineUsers = new Map<string, Set<string>>();
+
 export const registerHandlers = (io: Server, socket: Socket) => {
+
   //  Register user room for personal notifications
   socket.on("register_user", (userId: string) => {
     if (userId) {
       socket.join(`user_${userId}`);
       console.log(`Socket ${socket.id} registered to user_${userId}`);
+
       //  Track multiple sockets
       const isFirstConnection = !onlineUsers.has(userId);
 
@@ -141,6 +145,16 @@ export const registerHandlers = (io: Server, socket: Socket) => {
   socket.on("get_online_users", () => {
     const users = Array.from(onlineUsers.keys());
     socket.emit("online_users", users);
-  })
+  });
+
+  socket.on("typing", (data) => {
+    const { conversationId, userId } = data;
+    socket.to(conversationId).emit("typing", { conversationId, userId });
+  });
+
+  socket.on("stop_typing", (data) => {
+    const { conversationId, userId } = data;
+    socket.to(conversationId).emit("stop_typing", { conversationId, userId });
+  });
 
 };  

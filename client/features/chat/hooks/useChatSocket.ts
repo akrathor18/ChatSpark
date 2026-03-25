@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { getSocket } from "@/lib/socket";
 import { useMessageStore } from "@/features/chat/store/useMessageStore";
 import { useConversationStore } from "@/features/chat/store/useConversationStore";
 
 export const useChatSocket = (conversationId: string | null, userId?: string) => {
   const socket = getSocket();
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const onConnect = () => {
@@ -43,7 +44,6 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       }
     };
 
-    // 🔥 PRESENCE EVENTS
     const onUserOnline = ({ userId }: any) => {
       useConversationStore.getState().setUserOnline(userId, true);
     };
@@ -62,7 +62,15 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       useConversationStore.getState().resetOnlineUsers();
     };
 
-    // 🔹 REGISTER EVENTS
+    const onTyping = ({ conversationId: convId, userId: uid }: any) => {
+      useConversationStore.getState().setTyping(convId, uid, true);
+    };
+
+    const onStopTyping = ({ conversationId: convId, userId: uid }: any) => {
+      useConversationStore.getState().setTyping(convId, uid, false);
+    };
+
+    // REGISTER EVENTS
     socket.on("connect", onConnect);
     socket.on("receive_message", onReceiveMessage);
     socket.on("messages_read", onMessagesRead);
@@ -72,6 +80,8 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     socket.on("user_offline", onUserOffline);
     socket.on("online_users", onOnlineUsers);
     socket.on("disconnect", onDisconnect);
+    socket.on("typing", onTyping);
+    socket.on("stop_typing", onStopTyping);
 
     if (socket.connected) {
       onConnect();
@@ -91,6 +101,9 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       socket.off("user_offline", onUserOffline);
       socket.off("online_users", onOnlineUsers);
       socket.off("disconnect", onDisconnect);
+
+      socket.off("typing", onTyping);
+      socket.off("stop_typing", onStopTyping);
     };
 
   }, [conversationId, userId]);
@@ -103,6 +116,9 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
 
   const sendMessage = (content: string) => {
     if (!conversationId || !userId) return;
+
+    // Stop typing immediately when sending
+    stopTyping();
 
     const tempId = `optimistic_${Date.now()}`;
 
@@ -126,5 +142,29 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     });
   };
 
-  return { sendMessage };
+  const startTyping = () => {
+    if (!conversationId || !userId) return;
+
+    if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+    } else {
+        socket.emit("typing", { conversationId, userId });
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+        stopTyping();
+    }, 3000);
+  };
+
+  const stopTyping = () => {
+    if (!conversationId || !userId) return;
+
+    if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+        typingTimeoutRef.current = null;
+        socket.emit("stop_typing", { conversationId, userId });
+    }
+  };
+
+  return { sendMessage, startTyping };
 };

@@ -2,10 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import { ChatWindow as ChatWindowLayout } from "../components/chat-window"
-
-// ─── Shared types ────────────────────────────────────────────────────────────
-// Exported so ChatWindowLayout (and any other consumer) can import them
-// from a single source of truth.
+import { useConversationStore } from "../store/useConversationStore"
 
 export interface Message {
     id: string
@@ -24,27 +21,27 @@ export interface ChatUser {
     lastSeen?: string
 }
 
-// ─── Container props ──────────────────────────────────────────────────────────
-
 interface ChatContainerProps {
     user: ChatUser | null
     messages: Message[]
     onSendMessage: (content: string) => void
+    onTyping?: () => void
     onBack?: () => void
 }
-
-// ─── Container ────────────────────────────────────────────────────────────────
-// Owns ALL stateful and side-effect logic.
-// Renders nothing itself — delegates every pixel to ChatWindowLayout.
 
 export function ChatContainer({
     user,
     messages,
     onSendMessage,
+    onTyping,
     onBack,
 }: ChatContainerProps) {
     // ── State ──────────────────────────────────────────────────────────────────
     const [inputValue, setInputValue] = useState("")
+    const { typingUsers, selectedConversationId } = useConversationStore();
+
+    // Calculate if others are typing to trigger scroll
+    const isOtherTyping = !!(selectedConversationId && Object.keys(typingUsers[selectedConversationId] || {}).length > 0);
 
     // ── Refs (passed down so the layout can attach them to DOM nodes) ──────────
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -53,13 +50,25 @@ export function ChatContainer({
 
     // ── Effects ────────────────────────────────────────────────────────────────
 
-    // Auto-scroll to the latest message whenever the list changes.
+    // Intelligent "Stick-to-bottom" scrolling
     useEffect(() => {
         const container = scrollContainerRef.current
         if (container) {
-            container.scrollTop = container.scrollHeight
+            // Check if user was near bottom (e.g., within 150px of the end)
+            // We use a small buffer to account for the typing indicator height
+            const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
+            
+            if (isNearBottom) {
+                // Use requestAnimationFrame to ensure the DOM has updated (indicator rendered)
+                requestAnimationFrame(() => {
+                    container.scrollTo({
+                        top: container.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                });
+            }
         }
-    }, [messages])
+    }, [messages, isOtherTyping])
 
     // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -67,7 +76,10 @@ export function ChatContainer({
         if (inputValue.trim()) {
             onSendMessage(inputValue.trim())
             setInputValue("")
-            inputRef.current?.focus()
+            if (inputRef.current) {
+                inputRef.current.style.height = "auto"
+                inputRef.current.focus()
+            }
         }
     }
 
@@ -78,16 +90,15 @@ export function ChatContainer({
         }
     }
 
-    // Auto-grow the textarea up to 8 lines (~128 px) as the user types.
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const el = e.target
         el.style.height = "auto"
         el.style.height = `${Math.min(el.scrollHeight, 128)}px`
         setInputValue(el.value)
+        
+        // Trigger typing indicator
+        if (onTyping) onTyping()
     }
-
-    // ── Render ─────────────────────────────────────────────────────────────────
-    // The container's only JSX is handing everything off to the layout.
 
     return (
         <ChatWindowLayout
