@@ -1,5 +1,6 @@
 import {Conversation} from "../models/conversations.model.js";
 import {ConversationMember} from "../models/conversationMembers.model.js";
+import {Message} from "../models/message.model.js";
 
 import mongoose from "mongoose";
 
@@ -112,17 +113,22 @@ export const createConversationService = async (
     throw error;
   }
 };
+
 export const getUserConversationsService = async (userId: string, page = 1, limit = 20) => {
   const skip = (page - 1) * limit;
 
   // Query 1: get conversation IDs the user belongs to
   const memberships = await ConversationMember.find({ userId })
-    .select("conversationId")
+    .select("conversationId lastReadAt")
     .lean();
 
   if (!memberships.length) return [];
 
   const conversationIds = memberships.map(m => m.conversationId);
+  const lastReadMap = memberships.reduce<Record<string, Date>>((acc, m) => {
+    acc[m.conversationId.toString()] = m.lastReadAt;
+    return acc;
+  }, {});
 
   // Query 2: get conversations + other members in parallel
   const [conversations, members] = await Promise.all([
@@ -147,14 +153,43 @@ export const getUserConversationsService = async (userId: string, page = 1, limi
     return acc;
   }, {});
 
+  // Query 3: Count unread messages for each conversation
+  const unreadCounts = await Promise.all(
+    conversations.map(async (conv) => {
+      const convId = conv._id.toString();
+      const lastRead = lastReadMap[convId] || new Date(0);
+      
+      const count = await Message.countDocuments({
+        conversationId: conv._id,
+        createdAt: { $gt: lastRead },
+        senderId: { $ne: userId }
+      });
+      
+      return { convId, count };
+    })
+  );
+
+  const unreadMap = unreadCounts.reduce<Record<string, number>>((acc, item) => {
+    acc[item.convId] = item.count;
+    return acc;
+  }, {});
+
   return conversations.map((conv) => ({
     conversationId: conv._id,
     type: conv.type,
-    // For DMs: single user. For groups: array of members
     user: conv.type === "direct"
       ? memberMap[conv._id.toString()]?.[0] ?? null
       : memberMap[conv._id.toString()] ?? [],
     lastMessage: conv.lastMessage,
     lastMessageAt: conv.lastMessageAt,
+    unreadCount: unreadMap[conv._id.toString()] || 0
   }));
+};
+
+export const markAsReadService = async (conversationId: string, userId: string) => {
+    return await ConversationMember.findOneAndUpdate(
+        { conversationId, userId },
+        { $set: { lastReadAt: new Date() } },
+        { new: true }
+    );
 };

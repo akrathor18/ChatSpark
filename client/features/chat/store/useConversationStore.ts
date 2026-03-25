@@ -3,17 +3,20 @@ import * as conversationService from "@/features/chat/services/conversation.serv
 
 interface ConversationState {
     conversations: any[];
+    selectedConversationId: string | null;
     selectedConversationUser: any | null;
     isLoading: boolean;
     error: any;
     fetchConversations: () => Promise<void>;
     createConversation: (userId: string) => Promise<any>;
-    selectedConversation: (userId: string) => any;
+    setSelectedConversationId: (id: string | null) => void;
+    markAsRead: (id: string) => Promise<void>;
     updateConversationFromMessage: (message: any) => void;
 }
 
 export const useConversationStore = create<ConversationState>((set, get) => ({
     conversations: [],
+    selectedConversationId: null,
     selectedConversationUser: null,
     isLoading: false,
     error: null,
@@ -52,6 +55,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
                 user: newConv?.user || null,
                 lastMessage: null,
                 lastMessageAt: null,
+                unreadCount: 0
             };
 
             set((state) => ({
@@ -67,12 +71,19 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
         }
     },
 
-    selectedConversation: (id: string) => {
+    setSelectedConversationId: (id: string | null) => {
         const { conversations } = get();
+        
+        if (!id) {
+            set({ selectedConversationId: null, selectedConversationUser: null });
+            return;
+        }
+
         const selectedConv = conversations.find(
-            (conv: any) =>
-                conv.conversationId?.toString() === id?.toString()
+            (conv: any) => conv.conversationId?.toString() === id.toString()
         );
+
+        set({ selectedConversationId: id });
 
         if (selectedConv && selectedConv.user) {
             set({
@@ -85,24 +96,49 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
                     },
                 },
             });
+            
+            // Mark as read when selected
+            get().markAsRead(id);
         } else {
             set({ selectedConversationUser: null });
         }
     },
 
+    markAsRead: async (id: string) => {
+        try {
+            // Optimistic update
+            set((state) => ({
+                conversations: state.conversations.map((c) =>
+                    c.conversationId?.toString() === id.toString()
+                        ? { ...c, unreadCount: 0 }
+                        : c
+                ),
+            }));
+
+            await conversationService.markAsRead(id);
+        } catch (error) {
+            console.error("Failed to mark as read:", error);
+        }
+    },
+
     updateConversationFromMessage: (message: any) => {
-        const { conversations, fetchConversations } = get();
+        const { conversations, selectedConversationId, fetchConversations, markAsRead } = get();
         
         const convIndex = conversations.findIndex(
             (c: any) => c.conversationId?.toString() === message.conversationId?.toString()
         );
 
+        const isCurrentChat = selectedConversationId?.toString() === message.conversationId?.toString();
+
         if (convIndex !== -1) {
             const updatedConversations = [...conversations];
+            const conversation = updatedConversations[convIndex];
+            
             const updatedConv = {
-                ...updatedConversations[convIndex],
+                ...conversation,
                 lastMessage: message.content,
                 lastMessageAt: message.createdAt || new Date().toISOString(),
+                unreadCount: isCurrentChat ? 0 : (conversation.unreadCount || 0) + 1,
             };
 
             // Remove and push to top
@@ -110,6 +146,11 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
             set({
                 conversations: [updatedConv, ...updatedConversations]
             });
+
+            // If it's the current chat, make sure the backend knows it's read
+            if (isCurrentChat) {
+                markAsRead(message.conversationId);
+            }
         } else {
             // New conversation or not in list - refresh
             fetchConversations();

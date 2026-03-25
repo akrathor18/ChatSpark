@@ -5,6 +5,7 @@ export interface IConversation extends Document {
     userId: Types.ObjectId;
     role: 'admin' | 'member';
     joinedAt: Date;
+    lastReadAt: Date;
 }
 
 const conversationMemberSchema = new Schema({
@@ -24,6 +25,10 @@ const conversationMemberSchema = new Schema({
         default: "member"
     },
     joinedAt: {
+        type: Date,
+        default: Date.now
+    },
+    lastReadAt: {
         type: Date,
         default: Date.now
     }

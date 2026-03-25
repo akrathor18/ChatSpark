@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import { ConversationList } from "@/features/chat/components/conversation-list";
 import { ChatContainer } from "@/features/chat/containers/ChatContainer";
 import { NewChatModal } from "@/features/chat/components/new-chat-modal";
@@ -19,15 +19,14 @@ export default function ChatPage() {
     isLoading,
     error,
     fetchConversations,
-    selectedConversation,
+    selectedConversationId,
+    setSelectedConversationId,
     selectedConversationUser,
   } = useConversationStore();
 
   const { messages, fetchMessages } = useMessageStore();
 
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
-
-  //  Fetch user
+  // 🔹 Fetch user
   useEffect(() => {
     if (!user) getProfile();
   }, []);
@@ -39,24 +38,23 @@ export default function ChatPage() {
 
   const CURRENT_USER_ID = user?._id || "";
 
-  //  Socket Hook
+  // 🔹 Socket Hook
   const { sendMessage } = useChatSocket(selectedConversationId, user?._id);
 
-  //  Transform messages
+  // 🔹 Transform messages
   const currentMessages = useMemo(() => {
     return mapMessages(messages, selectedConversationId, CURRENT_USER_ID);
   }, [messages, selectedConversationId, CURRENT_USER_ID]);
 
-  //  Handlers
+  // 🔹 Handlers
   const handleSelectConversation = useCallback((id: string) => {
     setSelectedConversationId(id);
-    selectedConversation(id);
     fetchMessages(id);
-  }, []);
+  }, [setSelectedConversationId, fetchMessages]);
 
   const handleBack = useCallback(() => {
     setSelectedConversationId(null);
-  }, []);
+  }, [setSelectedConversationId]);
 
   const handleSendMessage = useCallback((content: string) => {
     sendMessage(content);
@@ -67,7 +65,7 @@ export default function ChatPage() {
       setSelectedConversationId(conversationId);
       fetchMessages(conversationId);
     }
-  }, []);
+  }, [setSelectedConversationId, fetchMessages]);
 
   const existingConversationMap = useMemo(() => {
     return conversations.reduce((acc: any, c: any) => {

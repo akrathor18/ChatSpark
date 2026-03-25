@@ -1,5 +1,6 @@
-import { createConversationService, getUserConversationsService } from "../services/conversation.service.js";
+import { createConversationService, getUserConversationsService, markAsReadService } from "../services/conversation.service.js";
 import type { Request, Response } from "express";
+
 export const createConversationController = async (req: Request, res: Response) => {
     try {
         const currentUserId = (req as any).user.id;
@@ -36,6 +37,26 @@ export const getUserConversationsController = async (req: Request, res: Response
             success: true,
             data: conversations,
             pagination: { page, limit }
+        });
+
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+export const markAsReadController = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { id: conversationId } = req.params;
+
+        await markAsReadService(conversationId, userId);
+
+        res.status(200).json({
+            success: true,
+            message: "Conversation marked as read"
         });
 
     } catch (error: any) {
