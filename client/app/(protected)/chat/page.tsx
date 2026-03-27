@@ -22,6 +22,7 @@ export default function ChatPage() {
     selectedConversationId,
     setSelectedConversationId,
     selectedConversationUser,
+    userStatus,
   } = useConversationStore();
 
   const { messages, fetchMessages } = useMessageStore();
@@ -80,6 +81,14 @@ export default function ChatPage() {
     }, {});
   }, [conversations]);
 
+  // Merge reactive userStatus into conversations so online dots update in real-time
+  const conversationsWithStatus = useMemo(() => {
+    return conversations.map((c: any) => ({
+      ...c,
+      isOnline: c.user?._id ? (userStatus[c.user._id]?.online ?? false) : false,
+    }));
+  }, [conversations, userStatus]);
+
   // 🔹 Loading state
   if (isLoading || !user) {
     return <ChatSkeleton />;
@@ -102,7 +111,7 @@ export default function ChatPage() {
         ].join(" ")}
       >
         <ConversationList
-          conversations={conversations}
+          conversations={conversationsWithStatus}
           selectedId={selectedConversationId}
           onSelect={handleSelectConversation}
           user={user}

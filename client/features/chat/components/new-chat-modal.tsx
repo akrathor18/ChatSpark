@@ -38,7 +38,7 @@ export function NewChatModal({
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredUsers, setFilteredUsers] = useState<SearchableUser[]>([])
   const { searchedUsers, searchUsers, isLoading, isSearching } = useUserStore()
-  const { selectedConversation, createConversation } = useConversationStore()
+  const { setSelectedConversationId, createConversation } = useConversationStore()
 
   const handleOpenChange = useCallback((isOpen: boolean) => {
 
@@ -96,7 +96,7 @@ export function NewChatModal({
 
       try {
         if (existingConvId) {
-          selectedConversation(existingConvId);
+          setSelectedConversationId(existingConvId);
           onSelectUser(user, existingConvId);
         } else {
 
@@ -111,14 +111,14 @@ export function NewChatModal({
           if (!newConvId) {
             throw new Error("Conversation ID not found");
           }
-          selectedConversation(newConvId);
+          setSelectedConversationId(newConvId);
           onSelectUser(user, newConvId);
         }
       } catch (err) {
         console.error("Failed to create/select conversation", err);
       }
     },
-    [existingConversationMap, onSelectUser, createConversation, selectedConversation, handleOpenChange]
+    [existingConversationMap, onSelectUser, createConversation, setSelectedConversationId, handleOpenChange]
   );
 
 

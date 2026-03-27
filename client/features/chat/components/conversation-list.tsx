@@ -85,8 +85,7 @@ export function ConversationList({ conversations, selectedId, onSelect, newChatB
             // Destructure API fields
             const { conversationId, user, lastMessage, lastMessageAt, unreadCount = 0,  } = conversation
             const isOnline = conversation.isOnline || false;
-            console.log(conversation)
-            console.log("is online ",isOnline)
+
             const name = user?.name ?? "Unknown"
             const avatar = user?.avatar ?? ""
             const timestamp = lastMessageAt
