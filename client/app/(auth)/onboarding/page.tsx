@@ -31,6 +31,7 @@ export default function OnboardingPage() {
   const [status, setStatus] = useState<UsernameStatus>("idle")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [touched, setTouched] = useState(false)
+  console.log("user", user)
   if (!user) {
     redirect("/sign-up");
   }

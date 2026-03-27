@@ -59,7 +59,7 @@ export default function SignUpPage() {
 
     const success = await register(formData.name, formData.email, formData.password)
     if (success) {
-      router.push("/chat")
+      router.push("/onboarding")
     }
   }
 

@@ -6,7 +6,7 @@ interface AuthState {
     error: any
     login: (email: string, password: string) => Promise<boolean>;
     register: (name: string, email: string, password: string) => Promise<boolean>;
-    
+
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -14,34 +14,34 @@ export const useAuthStore = create<AuthState>((set) => ({
     error: null,
 
     login: async (email, password) => {
-    try {
-        set({ isLoading: true, error: null });
+        try {
+            set({ isLoading: true, error: null });
 
-        const res: any = await authService.login(email, password);
-        useUserStore.getState().setUser(res.user);
+            const res: any = await authService.login(email, password);
+            useUserStore.getState().setUser(res.user);
 
-        return true;
-    } catch (error: any) {
-        console.log(error);
+            return true;
+        } catch (error: any) {
+            console.log(error);
 
-        set({ isLoading: false, error: error });
-        return false;
-    }
-},
+            set({ isLoading: false, error: error });
+            return false;
+        }
+    },
     register: async (name, email, password) => {
-    try {
-        set({ isLoading: true, error: null });
-        const res: any = await authService.register(name, email, password);
-        useUserStore.getState().setUser(res.user);
+        try {
+            set({ isLoading: true, error: null });
+            const res: any = await authService.register(name, email, password);
+            useUserStore.getState().setUser(res.user);
 
-        return true;
-    } catch (error: any) {
-        console.log(error);
+            return true;
+        } catch (error: any) {
+            console.log(error);
 
-        set({ isLoading: false, error: error });
-        return false;
-    }
-},
+            set({ isLoading: false, error: error });
+            return false;
+        }
+    },
 
 
 }));
