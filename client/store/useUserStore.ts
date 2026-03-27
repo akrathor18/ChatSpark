@@ -27,6 +27,10 @@ export const useUserStore = create<UserState>((set) => ({
         }
     },
 
+    setUser: (user: any) => set({ user }),
+
+    clearUser: () => set({ user: null }),
+
     searchUsers: async (query: string) => {
         try {
             set({ isSearching: true, error: null });

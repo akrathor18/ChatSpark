@@ -1,8 +1,7 @@
 import { create } from "zustand";
 import * as authService from "@/services/auth.service";
-
+import { useUserStore } from "./useUserStore";
 interface AuthState {
-    user: any;
     isLoading: boolean;
     error: any
     login: (email: string, password: string) => Promise<boolean>;
@@ -11,37 +10,38 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-    user: null,
     isLoading: false,
     error: null,
 
     login: async (email, password) => {
-        try {
-            set({ isLoading: true, error: null });
+    try {
+        set({ isLoading: true, error: null });
 
-            const res: any = await authService.login(email, password);
-            set({ user: res.user, isLoading: false });
-            return true;
-        } catch (error: any) {
-            console.log(error);
+        const res: any = await authService.login(email, password);
+        useUserStore.getState().setUser(res.user);
 
-            set({ isLoading: false, error: error });
-            return false;
-        }
-    },
+        return true;
+    } catch (error: any) {
+        console.log(error);
+
+        set({ isLoading: false, error: error });
+        return false;
+    }
+},
     register: async (name, email, password) => {
-        try {
-            set({ isLoading: true, error:null });
-            const res: any = await authService.register(name, email, password);
-            set({ user: res.user, isLoading: false });
-            return true;
-        } catch (error: any) {
-            console.log(error);
-            
-            set({ isLoading: false, error: error });
-            return false;
-        }
-    },
+    try {
+        set({ isLoading: true, error: null });
+        const res: any = await authService.register(name, email, password);
+        useUserStore.getState().setUser(res.user);
+
+        return true;
+    } catch (error: any) {
+        console.log(error);
+
+        set({ isLoading: false, error: error });
+        return false;
+    }
+},
 
 
 }));
