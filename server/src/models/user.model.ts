@@ -5,13 +5,14 @@ export interface IUser extends Document {
     _id: Types.ObjectId;
     name: string;
     email: string;
+    username: string;
     password?: string;
     avatar?: string;
     provider: "local" | "google" | "github";
     isOnline: boolean;
     lastSeen?: Date;
     createdAt: Date;
-    updatedAt: Date;    
+    updatedAt: Date;
 
     comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -27,6 +28,15 @@ const userSchema = new Schema<IUser>(
             type: String,
             required: true,
             unique: true,
+        },
+        username: {
+            type: String,
+            required: true,
+            unique: true,
+            minlength: 3,
+            maxlength: 20,
+            lowercase: true,
+            trim: true,
         },
 
         password: {

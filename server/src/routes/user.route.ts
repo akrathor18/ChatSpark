@@ -5,5 +5,6 @@ const router = express.Router();
 
 router.get("/search", authMiddleware, userController.searchUsers);
 router.get("/profile", authMiddleware, userController.getProfile);
-
+router.put("/username", authMiddleware, userController.updateUsername);
+router.get("/check-username", userController.checkUsername);
 export default router;

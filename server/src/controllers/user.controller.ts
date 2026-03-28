@@ -25,3 +25,39 @@ export const getProfile = async (req: Request, res: Response) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+export const checkUsername = async (req: Request, res: Response) => {
+    try {
+        const { username } = req.query;
+
+        if (!username || typeof username !== "string") {
+            return res.status(400).json({ message: "Username required" });
+        }
+
+        const result = await userService.checkUsernameAvailabilityService(username);
+
+        res.json(result);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const updateUsername = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { username } = req.body;
+
+        if (!username) {
+            return res.status(400).json({ message: "Username required" });
+        }
+
+        const user = await userService.updateUsernameService(userId, username);
+
+        res.json({
+            message: "Username updated",
+            user,
+        });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
