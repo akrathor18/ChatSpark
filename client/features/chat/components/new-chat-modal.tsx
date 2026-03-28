@@ -239,7 +239,7 @@ export function NewChatModal({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="truncate text-sm font-medium text-foreground">
-                          {user.name}
+                          {user.username}
                         </span>
                         {isExisting && (
                           <span className="shrink-0 rounded-md bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
@@ -248,7 +248,7 @@ export function NewChatModal({
                         )}
                       </div>
                       <p className="truncate text-xs text-muted-foreground">
-                        {user.email}
+                        {user.name}
                       </p>
                     </div>
                     {/* FIX 8: Always show action icon on touch, hover-only on desktop */}

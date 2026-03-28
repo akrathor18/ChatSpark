@@ -8,14 +8,16 @@ import {
 export const searchUsers = async (query: string, currentUserId: string) => {
     if (!query) return [];
 
+    const normalizedQuery = query.trim().toLowerCase();
+
     const users = await User.find({
-        _id: { $ne: currentUserId }, // 👈 exclude current user
+        _id: { $ne: currentUserId },
         $or: [
-            { name: { $regex: query, $options: "i" } },
-            { email: { $regex: query, $options: "i" } }
+            { username: { $regex: `^${normalizedQuery}`, $options: "i" } },
+            { name: { $regex: `^${normalizedQuery}`, $options: "i" } },
         ]
     })
-        .select("_id name email avatar")
+        .select("_id username name avatar")
         .limit(10);
 
     return users;

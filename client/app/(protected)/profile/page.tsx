@@ -73,10 +73,10 @@ export default function ProfilePage() {
     formState: { errors },
   } = useForm<ProfileFormData>({
     defaultValues: {
-      name: user?.name || "Alex Developer",
-      username: user?.username || "alexdev",
-      email: user?.email || "alex@example.com",
-      bio: user?.bio || "Full-stack developer. Open source enthusiast. Coffee addict.",
+      name: user?.name || "User",
+      username: user?.username || "UserName",
+      email: user?.email || "user@example.com",
+      bio: user?.bio || "",
     },
   })
 
@@ -376,9 +376,9 @@ export default function ProfilePage() {
                 <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row">
                   <div className="group relative">
                     <Avatar className="h-20 w-20 ring-2 ring-border ring-offset-2 ring-offset-background md:h-24 md:w-24">
-                      <AvatarImage src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop" alt="Profile" />
+                      <AvatarImage src={user.avatar} alt={user.name}/>
                       <AvatarFallback className="bg-secondary text-lg font-semibold text-foreground">
-                        AD
+                        {user.name.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <button className="absolute inset-0 flex items-center justify-center rounded-full bg-background/80 opacity-0 transition-opacity group-hover:opacity-100">
