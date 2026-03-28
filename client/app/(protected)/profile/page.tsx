@@ -35,6 +35,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { useUserStore } from "@/store/useUserStore"
 
 // Navigation items
 const navItems = [
@@ -61,19 +62,50 @@ export default function ProfilePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
 
+  const { user, getProfile, checkUsername, updateUsername, isCheckingUsername, usernameAvailable } = useUserStore()
+  
   // Form setup with react-hook-form
   const {
     register,
     handleSubmit,
+    watch,
+    reset,
     formState: { errors },
   } = useForm<ProfileFormData>({
     defaultValues: {
-      name: "Alex Developer",
-      username: "alexdev",
-      email: "alex@example.com",
-      bio: "Full-stack developer. Open source enthusiast. Coffee addict.",
+      name: user?.name || "Alex Developer",
+      username: user?.username || "alexdev",
+      email: user?.email || "alex@example.com",
+      bio: user?.bio || "Full-stack developer. Open source enthusiast. Coffee addict.",
     },
   })
+
+  // Watch username for real-time validation
+  const watchedUsername = watch("username")
+
+  // Reset form when user data is loaded
+  useEffect(() => {
+    if (user) {
+      reset({
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        bio: user.bio || "",
+      })
+    } else {
+      getProfile()
+    }
+  }, [user, reset, getProfile])
+
+  // Debounced username check
+  useEffect(() => {
+    if (watchedUsername && watchedUsername !== user?.username) {
+      const timeout = setTimeout(() => {
+        checkUsername(watchedUsername)
+      }, 500)
+      return () => clearTimeout(timeout)
+    }
+  }, [watchedUsername, user?.username, checkUsername])
 
   // Settings state
   const [settings, setSettings] = useState({
@@ -132,12 +164,26 @@ export default function ProfilePage() {
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsSaving(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-    console.log("Saved:", data)
-    setIsSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    try {
+      if (data.username !== user?.username) {
+        const success = await updateUsername(data.username)
+        if (!success) {
+          setIsSaving(false)
+          return
+        }
+      }
+      
+      // Simulate other field saves if necessary (name, email, etc. would normally have their own APIs)
+      await new Promise((resolve) => setTimeout(resolve, 800))
+      
+      console.log("Saved:", data)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (error) {
+      console.error("Save failed:", error)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -340,8 +386,8 @@ export default function ProfilePage() {
                     </button>
                   </div>
                   <div className="text-center sm:text-left">
-                    <h3 className="text-lg font-semibold text-foreground">Alex Developer</h3>
-                    <p className="text-sm text-muted-foreground">@alexdev</p>
+                    <h3 className="text-lg font-semibold text-foreground">{user?.name || "Alex Developer"}</h3>
+                    <p className="text-sm text-muted-foreground">@{user?.username || "alexdev"}</p>
                     <Button
                       variant="outline"
                       size="sm"
@@ -386,15 +432,36 @@ export default function ProfilePage() {
                         {...register("username", {
                           required: "Username is required",
                           pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Only letters, numbers, and underscores" },
+                          validate: () => {
+                            if (watchedUsername !== user?.username && usernameAvailable === false) {
+                              return "Username is already taken"
+                            }
+                            return true
+                          }
                         })}
                         className={cn(
-                          "h-11 rounded-xl border-border bg-input pl-10 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary",
-                          errors.username && "border-destructive focus:border-destructive focus:ring-destructive"
+                          "h-11 rounded-xl border-border bg-input pl-10 pr-10 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary",
+                          errors.username && "border-destructive focus:border-destructive focus:ring-destructive",
+                          watchedUsername !== user?.username && usernameAvailable === true && "border-online focus:border-online focus:ring-online"
                         )}
                       />
+                      <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center">
+                        {isCheckingUsername ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        ) : watchedUsername !== user?.username && watchedUsername.length > 0 ? (
+                          usernameAvailable === true ? (
+                            <Check className="h-4 w-4 text-online" />
+                          ) : usernameAvailable === false ? (
+                            <X className="h-4 w-4 text-destructive" />
+                          ) : null
+                        ) : null}
+                      </div>
                     </div>
                     {errors.username && (
                       <p className="text-xs text-destructive">{errors.username.message}</p>
+                    )}
+                    {watchedUsername !== user?.username && usernameAvailable === true && !errors.username && (
+                      <p className="text-xs text-online">Username is available</p>
                     )}
                   </div>
 

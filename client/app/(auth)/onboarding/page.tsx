@@ -19,16 +19,12 @@ import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/store/useAuthStore"
 import { redirect } from 'next/navigation';
 import { useUserStore } from "@/store/useUserStore"
-// Simulated taken usernames for demo
-const TAKEN_USERNAMES = ["john", "admin", "chatspark", "user", "test", "demo"]
-
 type UsernameStatus = "idle" | "checking" | "available" | "taken" | "invalid"
 
 export default function OnboardingPage() {
-  const { user } = useUserStore()
+  const { user, checkUsername: checkUsernameStore, updateUsername, isCheckingUsername, usernameAvailable } = useUserStore()
   const router = useRouter()
   const [username, setUsername] = useState("")
-  const [status, setStatus] = useState<UsernameStatus>("idle")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [touched, setTouched] = useState(false)
   console.log("user", user)
@@ -53,30 +49,25 @@ export default function OnboardingPage() {
     validationRules.validChars &&
     validationRules.startsWithLetter
 
+  const status: UsernameStatus = isCheckingUsername 
+    ? "checking" 
+    : !username || !touched || username === user?.username
+      ? "idle"
+      : !isValidFormat
+        ? "invalid"
+        : usernameAvailable === true
+          ? "available"
+          : usernameAvailable === false
+            ? "taken"
+            : "idle"
+
   // Debounced username check
   const checkUsername = useCallback(async (value: string) => {
-    if (!value || value.length < 3) {
-      setStatus("idle")
-      return
-    }
+    if (!value || value.length < 3) return
+    if (!(/^[a-zA-Z][a-zA-Z0-9_]*$/.test(value))) return
 
-    // Check format first
-    if (!(/^[a-zA-Z][a-zA-Z0-9_]*$/.test(value))) {
-      setStatus("invalid")
-      return
-    }
-
-    setStatus("checking")
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    if (TAKEN_USERNAMES.includes(value.toLowerCase())) {
-      setStatus("taken")
-    } else {
-      setStatus("available")
-    }
-  }, [])
+    checkUsernameStore(value)
+  }, [checkUsernameStore])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -92,9 +83,6 @@ export default function OnboardingPage() {
     const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "")
     setUsername(value)
     if (!touched) setTouched(true)
-    if (status !== "idle" && status !== "checking") {
-      setStatus("idle")
-    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,10 +92,16 @@ export default function OnboardingPage() {
 
     setIsSubmitting(true)
 
-    // Simulate saving username
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    router.push("/chat")
+    try {
+      const success = await updateUsername(username)
+      if (success) {
+        router.push("/chat")
+      }
+    } catch (error) {
+      console.error("Failed to save username:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const getStatusMessage = () => {
@@ -264,7 +258,6 @@ export default function OnboardingPage() {
                     type="button"
                     onClick={() => {
                       setUsername(suggestion)
-                      setStatus("idle")
                     }}
                     className="rounded-lg border border-border bg-secondary/50 px-3 py-1.5 text-xs font-medium text-foreground transition-all hover:border-primary/40 hover:bg-secondary"
                   >
