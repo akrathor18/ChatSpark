@@ -6,12 +6,14 @@ interface UserState {
     isLoading: boolean;
     isSearching: boolean;
     isCheckingUsername: boolean;
+    isUploadingAvatar: boolean;
     usernameAvailable: boolean | null;
     error: any
     getProfile: () => Promise<void>;
     searchUsers: (query: string) => Promise<void>;
     checkUsername: (username: string) => Promise<void>;
     updateUsername: (username: string) => Promise<boolean>;
+    uploadProfilePic: (file: File) => Promise<boolean>;
     setUser: (user: any) => void;
     clearUser: () => void;
 }
@@ -20,6 +22,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     isLoading: false,
     isSearching: false,
     isCheckingUsername: false,
+    isUploadingAvatar: false,
     usernameAvailable: null,
     error: null,
     searchedUsers: [],
@@ -85,5 +88,28 @@ export const useUserStore = create<UserState>((set, get) => ({
             return false;
         }
     },
-}));
 
+    uploadProfilePic: async (file: File) => {
+        try {
+            set({ isUploadingAvatar: true, error: null });
+            const res: any = await userService.uploadProfilePic(file);
+
+            // Sync avatar into local user state
+            const currentUser = get().user;
+            if (currentUser && res?.data) {
+                set({
+                    user: { ...currentUser, avatar: res.data.avatar, avatarId: res.data.avatarId },
+                    isUploadingAvatar: false,
+                });
+            } else {
+                set({ isUploadingAvatar: false });
+            }
+
+            return true;
+        } catch (error: any) {
+            console.error("Upload Profile Pic Error:", error);
+            set({ isUploadingAvatar: false, error });
+            return false;
+        }
+    },
+}));

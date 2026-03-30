@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
 import {
+  AlertCircle,
   ArrowLeft,
   Camera,
   Sparkles,
@@ -26,6 +27,7 @@ import {
   Mail,
   User,
   AtSign,
+  ImagePlus,
   MessageSquare,
   Settings,
   Lock,
@@ -62,7 +64,7 @@ export default function ProfilePage() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
 
-  const { user, getProfile, checkUsername, updateUsername, isCheckingUsername, usernameAvailable } = useUserStore()
+  const { user, getProfile, checkUsername, updateUsername, uploadProfilePic, isCheckingUsername, isUploadingAvatar, usernameAvailable } = useUserStore()
   
   // Form setup with react-hook-form
   const {
@@ -96,6 +98,57 @@ export default function ProfilePage() {
       getProfile()
     }
   }, [user, reset, getProfile])
+
+  // --- Avatar upload state ---
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const [isDraggingAvatar, setIsDraggingAvatar] = useState(false)
+
+  // Sync existing avatar to preview
+  useEffect(() => {
+    if (user?.avatar && !avatarPreview) {
+      setAvatarPreview(user.avatar)
+    }
+  }, [user?.avatar, avatarPreview])
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024
+  const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+
+  const validateFile = (file: File): string | null => {
+    if (!ALLOWED_TYPES.includes(file.type)) return "Please upload a JPG, PNG, WebP, or GIF image"
+    if (file.size > MAX_FILE_SIZE) return "Image must be less than 5MB"
+    return null
+  }
+
+  const handleAvatarFileSelect = useCallback(async (file: File) => {
+    const error = validateFile(file)
+    if (error) {
+      setAvatarError(error)
+      return
+    }
+    setAvatarError(null)
+    setAvatarFile(file)
+
+    // Instant preview
+    const reader = new FileReader()
+    reader.onload = (e) => setAvatarPreview(e.target?.result as string)
+    reader.readAsDataURL(file)
+
+    // Upload immediately
+    const success = await uploadProfilePic(file)
+    if (!success) {
+      setAvatarError("Failed to upload. Please try again.")
+    }
+  }, [uploadProfilePic])
+
+  const removeAvatar = () => {
+    setAvatarPreview(null)
+    setAvatarFile(null)
+    setAvatarError(null)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
 
   // Debounced username check
   useEffect(() => {
@@ -372,30 +425,102 @@ export default function ProfilePage() {
                   Profile Information
                 </h2>
 
-                {/* Avatar */}
+                {/* Avatar Upload */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleAvatarFileSelect(file)
+                  }}
+                  className="hidden"
+                  id="profile-avatar-upload"
+                />
                 <div className="mb-6 flex flex-col items-center gap-4 sm:flex-row">
-                  <div className="group relative">
-                    <Avatar className="h-20 w-20 ring-2 ring-border ring-offset-2 ring-offset-background md:h-24 md:w-24">
-                      <AvatarImage src={user.avatar} alt={user.name}/>
-                      <AvatarFallback className="bg-secondary text-lg font-semibold text-foreground">
-                        {user.name.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <button className="absolute inset-0 flex items-center justify-center rounded-full bg-background/80 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Camera className="h-6 w-6 text-foreground" />
-                    </button>
+                  <div
+                    className="group relative cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingAvatar(true) }}
+                    onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingAvatar(false) }}
+                    onDrop={(e) => {
+                      e.preventDefault(); e.stopPropagation(); setIsDraggingAvatar(false)
+                      const file = e.dataTransfer.files?.[0]
+                      if (file) handleAvatarFileSelect(file)
+                    }}
+                  >
+                    <div className={cn(
+                      "flex h-20 w-20 items-center justify-center overflow-hidden rounded-full ring-2 ring-offset-2 ring-offset-background transition-all duration-300 md:h-24 md:w-24",
+                      avatarPreview
+                        ? "ring-border"
+                        : isDraggingAvatar
+                          ? "ring-primary border-2 border-dashed border-primary bg-primary/10"
+                          : "ring-border border-2 border-dashed border-border bg-secondary/50 hover:border-primary/50",
+                      isUploadingAvatar && "opacity-60"
+                    )}>
+                      {avatarPreview ? (
+                        <img src={avatarPreview} alt="Profile" className="h-full w-full object-cover" />
+                      ) : (
+                        <ImagePlus className={cn(
+                          "h-8 w-8 transition-colors",
+                          isDraggingAvatar ? "text-primary" : "text-muted-foreground"
+                        )} />
+                      )}
+                    </div>
+
+                    {/* Camera overlay on hover */}
+                    {!isUploadingAvatar && avatarPreview && (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                        <Camera className="h-6 w-6 text-white" />
+                      </div>
+                    )}
+
+                    {/* Upload spinner */}
+                    {isUploadingAvatar && (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40">
+                        <Loader2 className="h-6 w-6 animate-spin text-white" />
+                      </div>
+                    )}
                   </div>
+
                   <div className="text-center sm:text-left">
                     <h3 className="text-lg font-semibold text-foreground">{user?.name || "Alex Developer"}</h3>
                     <p className="text-sm text-muted-foreground">@{user?.username || "alexdev"}</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-2 h-8 gap-1.5 rounded-lg border-border text-xs transition-colors hover:bg-secondary"
-                    >
-                      <Camera className="h-3.5 w-3.5" />
-                      Change photo
-                    </Button>
+                    <div className="mt-2 flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isUploadingAvatar}
+                        onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click() }}
+                        className="h-8 gap-1.5 rounded-lg border-border text-xs transition-colors hover:bg-secondary"
+                      >
+                        {isUploadingAvatar ? (
+                          <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading...</>
+                        ) : (
+                          <><Camera className="h-3.5 w-3.5" /> Change photo</>
+                        )}
+                      </Button>
+                      {avatarPreview && !isUploadingAvatar && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); removeAvatar() }}
+                          className="h-8 gap-1.5 rounded-lg text-xs text-muted-foreground transition-colors hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                    {avatarError && (
+                      <p className="mt-1.5 flex items-center gap-1.5 text-xs text-destructive">
+                        <AlertCircle className="h-3 w-3" />
+                        {avatarError}
+                      </p>
+                    )}
+                    <p className="mt-1 text-[11px] text-muted-foreground">JPG, PNG, WebP, or GIF · Max 5MB</p>
                   </div>
                 </div>
 

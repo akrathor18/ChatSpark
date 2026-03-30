@@ -11,7 +11,7 @@ export const searchUsers = async (req: Request, res: Response) => {
         res.json(users);
     } catch (error) {
         console.log(error)
-        res.status(500).json({ message: "Search failed", error: error });
+        res.status(500).json({ message: "Search failed", error: error instanceof Error ? error.message : "Unknown error" });
     }
 };
 

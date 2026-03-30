@@ -40,6 +40,15 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/conversations", conversationRoutes);
 app.use("/api/messages", messageRoutes);
+
+// Global error handler — catches multer/middleware errors that bypass controllers
+app.use((err: any, _req: any, res: any, _next: any) => {
+  console.error("Global Error Handler:", err);
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Something went wrong";
+  res.status(status).json({ success: false, message });
+});
+
 initSocket(io);
 
 server.listen(5000, () => {
