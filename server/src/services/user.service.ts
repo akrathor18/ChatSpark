@@ -28,7 +28,6 @@ export const getUserProfile = async (userId: string) => {
     return user;
 }
 
-
 export const checkUsernameAvailabilityService = async (username: string) => {
     const normalized = normalizeUsername(username);
 
@@ -40,7 +39,12 @@ export const checkUsernameAvailabilityService = async (username: string) => {
         throw new Error("Username is reserved");
     }
 
-    const existing = await User.findOne({ username: normalized });
+    const existing = await User.findOne({
+        $or: [
+            { username: normalized },
+            { previousUsernames: normalized }
+        ]
+    });
 
     return {
         available: !existing,
@@ -61,17 +65,37 @@ export const updateUsernameService = async (
         throw new Error("Username is reserved");
     }
 
-    const existing = await User.findOne({ username: normalized });
+    const user = await User.findById(userId);
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    
+    if (user.username === normalized) {
+        return user;
+    }
+
+    const existing = await User.findOne({
+        _id: { $ne: userId },
+        $or: [
+            { username: normalized },
+            { previousUsernames: normalized }
+        ]
+    });
 
     if (existing) {
         throw new Error("Username already taken");
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { username: normalized },
-        { new: true }
-    );
+    // ✅ Save old username
+    if (user.username) {
+        user.previousUsernames.push(user.username);
+    }
 
-    return updatedUser;
+    user.username = normalized;
+
+    await user.save();
+
+    return user;
 };
