@@ -61,3 +61,61 @@ export const updateUsername = async (req: Request, res: Response) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+export const uploadProfilePicController = async (
+    req: Request,
+    res: Response
+) => {
+    console.log("🔥 Controller hit");
+    try {
+        const userId = (req as any).user?.id;
+        const file = req.file;
+
+        console.log("userId:", userId);
+        console.log("file:", file);
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized",
+            });
+        }
+
+        if (!file) {
+            return res.status(400).json({
+                success: false,
+                message: "File not received",
+            });
+        }
+
+        const result = await userService.uploadProfilePic({ userId, file });
+
+        if (result?.notFound) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        if (result?.error) {
+            return res.status(400).json({
+                success: false,
+                message: result.error,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile picture updated successfully",
+            data: result,
+        });
+    } catch (error: any) {
+        console.error("Upload Profile Error:", error.message);
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Something went wrong",
+        });
+    }
+};

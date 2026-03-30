@@ -1,3 +1,4 @@
+import cloudinary from "../config/cloudinary.js";
 import { User } from "../models/user.model.js";
 import {
     isValidUsername,
@@ -88,7 +89,6 @@ export const updateUsernameService = async (
         throw new Error("Username already taken");
     }
 
-    // ✅ Save old username
     if (user.username) {
         user.previousUsernames.push(user.username);
     }
@@ -98,4 +98,33 @@ export const updateUsernameService = async (
     await user.save();
 
     return user;
+};
+export const uploadProfilePic = async ({ userId, file }: { userId: string, file: Express.Multer.File & { filename: string; path: string } }) => {
+    if (!file) {
+        return { error: "No file uploaded" };
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return { notFound: true };
+
+    // Delete old image from Cloudinary
+    if (user.avatarId) {
+        try {
+            await cloudinary.uploader.destroy(user.avatarId);
+        } catch (err: any) {          // 👈 fix the unknown type error
+            console.warn("Cloudinary delete failed:", err.message);
+        }
+    }
+
+    // ✅ multer-storage-cloudinary puts the URL in file.path
+    // ✅ and the public_id in file.filename
+    user.avatar = file.path;
+    user.avatarId = file.filename;
+
+    await user.save();
+
+    return {
+        avatar: user.avatar,
+        avatarId: user.avatarId,
+    };
 };

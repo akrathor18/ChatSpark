@@ -9,6 +9,7 @@ export interface IUser extends Document {
     previousUsernames: [String];
     password?: string;
     avatar?: string;
+    avatarId?: string;
     provider: "local" | "google" | "github";
     isOnline: boolean;
     lastSeen?: Date;
@@ -52,6 +53,9 @@ const userSchema = new Schema<IUser>(
         },
 
         avatar: {
+            type: String,
+        },
+        avatarId: {
             type: String,
         },
 
