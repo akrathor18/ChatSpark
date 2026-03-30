@@ -85,9 +85,22 @@ export default function ChatPage() {
   const conversationsWithStatus = useMemo(() => {
     return conversations.map((c: any) => ({
       ...c,
-      isOnline: c.user?._id ? (userStatus[c.user._id]?.online ?? false) : false,
+      isOnline: c.user?._id ? (userStatus[c.user._id.toString()]?.online ?? false) : false,
     }));
   }, [conversations, userStatus]);
+
+  // Reactive selected user with real-time online status
+  const selectedUserWithStatus = useMemo(() => {
+    if (!selectedConversationUser?.user) return null;
+    const userId = selectedConversationUser.user.id.toString();
+    const status = userStatus[userId];
+    
+    return {
+      ...selectedConversationUser.user,
+      isOnline: status?.online ?? false,
+      lastSeen: status?.lastSeen,
+    };
+  }, [selectedConversationUser, userStatus]);
 
   // 🔹 Loading state
   if (isLoading || !user) {
@@ -133,7 +146,7 @@ export default function ChatPage() {
         ].join(" ")}
       >
         <ChatContainer
-          user={selectedConversationUser?.user}
+          user={selectedUserWithStatus}
           messages={currentMessages}
           onSendMessage={handleSendMessage}
           onTyping={handleTyping}
