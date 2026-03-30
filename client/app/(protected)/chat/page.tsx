@@ -6,14 +6,14 @@ import { ChatContainer } from "@/features/chat/containers/ChatContainer";
 import { NewChatModal } from "@/features/chat/components/new-chat-modal";
 import { useConversationStore } from "@/features/chat/store/useConversationStore";
 import { useMessageStore } from "@/features/chat/store/useMessageStore";
-import { useUserStore } from "@/store/useUserStore";
+import { useProfile } from "@/features/profile/hooks/useProfile";
 import ChatSkeleton from "@/features/chat/components/chat-skeleton";
 
 import { useChatSocket } from "@/features/chat/hooks/useChatSocket";
 import { mapMessages } from "@/features/chat/utils/messageMapper";
 
 export default function ChatPage() {
-  const { user, getProfile } = useUserStore();
+  const { user, getProfile } = useProfile();
   const {
     conversations,
     isLoading,

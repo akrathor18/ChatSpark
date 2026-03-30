@@ -37,7 +37,7 @@ export function NewChatModal({
   const [open, setOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredUsers, setFilteredUsers] = useState<SearchableUser[]>([])
-  const { searchedUsers, searchUsers, isLoading, isSearching } = useUserStore()
+  const { searchedUsers, searchUsers, isSearching } = useUserStore()
   const { setSelectedConversationId, createConversation } = useConversationStore()
 
   const handleOpenChange = useCallback((isOpen: boolean) => {

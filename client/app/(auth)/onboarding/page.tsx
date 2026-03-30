@@ -21,7 +21,7 @@ import {
 import { cn } from "@/lib/utils"
 import { useAuthStore } from "@/store/useAuthStore"
 import { redirect } from 'next/navigation';
-import { useUserStore } from "@/store/useUserStore"
+import { useProfile } from "@/features/profile/hooks/useProfile"
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken" | "invalid"
 
@@ -34,7 +34,7 @@ export default function OnboardingPage() {
     isCheckingUsername,
     isUploadingAvatar,
     usernameAvailable,
-  } = useUserStore()
+  } = useProfile()
   const router = useRouter()
   const [username, setUsername] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)

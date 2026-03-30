@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import * as authService from "@/services/auth.service";
-import { useUserStore } from "./useUserStore";
+import { useProfileStore } from "@/features/profile/store/useProfileStore";
 interface AuthState {
     isLoading: boolean;
     error: any
@@ -18,7 +18,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ isLoading: true, error: null });
 
             const res: any = await authService.login(email, password);
-            useUserStore.getState().setUser(res.user);
+            useProfileStore.getState().setUser(res.user);
 
             return true;
         } catch (error: any) {
@@ -32,7 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             set({ isLoading: true, error: null });
             const res: any = await authService.register(name, email, password);
-            useUserStore.getState().setUser(res.user);
+            useProfileStore.getState().setUser(res.user);
 
             return true;
         } catch (error: any) {
