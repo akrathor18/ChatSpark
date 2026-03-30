@@ -1,5 +1,6 @@
 import cloudinary from "../config/cloudinary.js";
 import { User } from "../models/user.model.js";
+import type { File } from "multer";
 import {
     isValidUsername,
     normalizeUsername,
@@ -99,7 +100,7 @@ export const updateUsernameService = async (
 
     return user;
 };
-export const uploadProfilePic = async ({ userId, file }: { userId: string, file: Express.Multer.File & { filename: string; path: string } }) => {
+export const uploadProfilePic = async ({ userId, file }: { userId: string, file: File & { filename: string; path: string } }) => {
     if (!file) {
         return { error: "No file uploaded" };
     }
