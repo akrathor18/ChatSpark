@@ -39,6 +39,7 @@ export function ProfileContainer() {
     checkUsername,
     updateUsername,
     uploadProfilePic,
+    removeProfilePic,
     isCheckingUsername,
     isUploadingAvatar,
     usernameAvailable,
@@ -115,10 +116,15 @@ export function ProfileContainer() {
     }
   }, [uploadProfilePic])
 
-  const removeAvatar = () => {
-    setAvatarPreview(null)
-    setAvatarError(null)
-    if (fileInputRef.current) fileInputRef.current.value = ""
+  const removeAvatar = async () => {
+    const success = await removeProfilePic()
+    if (success) {
+      setAvatarPreview(null)
+      setAvatarError(null)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    } else {
+      setAvatarError("Failed to remove profile picture. Please try again.")
+    }
   }
 
   // Username validation

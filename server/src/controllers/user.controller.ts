@@ -119,3 +119,39 @@ export const uploadProfilePicController = async (
         });
     }
 };
+
+export const removeProfilePicController = async (
+    req: Request,
+    res: Response
+) => {
+    try {
+        const userId = (req as any).user?.id;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized",
+            });
+        }
+
+        const result = await userService.removeProfilePic(userId);
+
+        if (result?.notFound) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile picture removed successfully",
+        });
+    } catch (error: any) {
+        console.error("Remove Profile Pic Error:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Something went wrong",
+        });
+    }
+};

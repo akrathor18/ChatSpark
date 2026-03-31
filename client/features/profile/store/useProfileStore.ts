@@ -12,6 +12,7 @@ interface ProfileState {
     checkUsername: (username: string) => Promise<void>;
     updateUsername: (username: string) => Promise<boolean>;
     uploadProfilePic: (file: File) => Promise<boolean>;
+    removeProfilePic: () => Promise<boolean>;
     setUser: (user: any) => void;
     clearUser: () => void;
 }
@@ -95,6 +96,30 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         } catch (error: any) {
             console.error("Upload Profile Pic Error:", error);
             set({ isUploadingAvatar: false, error });
+            return false;
+        }
+    },
+
+    removeProfilePic: async () => {
+        try {
+            set({ isLoading: true, error: null });
+            await profileService.removeProfilePic();
+
+            // Sync local user state
+            const currentUser = get().user;
+            if (currentUser) {
+                set({
+                    user: { ...currentUser, avatar: undefined, avatarId: undefined },
+                    isLoading: false,
+                });
+            } else {
+                set({ isLoading: false });
+            }
+
+            return true;
+        } catch (error: any) {
+            console.error("Remove Profile Pic Error:", error);
+            set({ isLoading: false, error });
             return false;
         }
     },

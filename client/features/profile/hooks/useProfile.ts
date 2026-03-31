@@ -12,6 +12,7 @@ export const useProfile = () => {
         checkUsername,
         updateUsername,
         uploadProfilePic,
+        removeProfilePic,
         setUser,
         clearUser,
     } = useProfileStore();
@@ -27,6 +28,7 @@ export const useProfile = () => {
         checkUsername,
         updateUsername,
         uploadProfilePic,
+        removeProfilePic,
         setUser,
         clearUser,
     };

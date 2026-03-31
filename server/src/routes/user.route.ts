@@ -14,4 +14,7 @@ router.post(
     upload.single("profile"),
     userController.uploadProfilePicController
 );
+
+router.delete("/profile-pic", authMiddleware, userController.removeProfilePicController);
+
 export default router;

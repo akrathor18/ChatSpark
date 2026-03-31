@@ -19,3 +19,7 @@ export const uploadProfilePic = async (file: File) => {
         headers: { "Content-Type": "multipart/form-data" },
     });
 }
+
+export const removeProfilePic = async () => {
+    return api.delete("/users/profile-pic");
+}

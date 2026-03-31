@@ -129,3 +129,28 @@ export const uploadProfilePic = async ({ userId, file }: { userId: string, file:
         avatarId: user.avatarId,
     };
 };
+
+export const removeProfilePic = async (userId: string) => {
+    const user = await User.findById(userId);
+    if (!user) return { notFound: true };
+
+    // Delete image from Cloudinary
+    if (user.avatarId) {
+        try {
+            await cloudinary.uploader.destroy(user.avatarId);
+        } catch (err: any) {
+            console.warn("Cloudinary delete failed:", err.message);
+        }
+    }
+
+    // Clear avatar fields in database
+    user.avatar = undefined;
+    user.avatarId = undefined;
+
+    await user.save();
+
+    return {
+        success: true,
+        message: "Profile picture removed successfully",
+    };
+};
