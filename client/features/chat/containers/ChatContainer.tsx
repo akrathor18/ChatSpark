@@ -53,20 +53,38 @@ export function ChatContainer({
     // Intelligent "Stick-to-bottom" scrolling
     useEffect(() => {
         const container = scrollContainerRef.current
-        if (container) {
-            // Check if user was near bottom (e.g., within 150px of the end)
-            // We use a small buffer to account for the typing indicator height
-            const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 150;
-            
-            if (isNearBottom) {
-                // Use requestAnimationFrame to ensure the DOM has updated (indicator rendered)
-                requestAnimationFrame(() => {
+        if (!container || messages.length === 0) return
+
+        const lastMessage = messages[messages.length - 1]
+        
+        // 1. If the message was sent by the user, always scroll to bottom
+        if (lastMessage.isSent) {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: 'smooth'
+            });
+            // Secondary check after rendering
+            setTimeout(() => {
+                container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+            }, 100);
+            return;
+        }
+
+        // 2. If it's a typing indicator or a received message
+        // Scroll only if the user was already near the bottom
+        const threshold = 200; // Increased threshold for better tolerance
+        const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + threshold;
+
+        if (isNearBottom) {
+            // Use requestAnimationFrame + setTimeout for robust rendering sync
+            requestAnimationFrame(() => {
+                setTimeout(() => {
                     container.scrollTo({
                         top: container.scrollHeight,
                         behavior: 'smooth'
                     });
-                });
-            }
+                }, 50);
+            });
         }
     }, [messages, isOtherTyping])
 

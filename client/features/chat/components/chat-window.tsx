@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils"
 import type { Message, ChatUser } from "../containers/ChatContainer"
 import { useConversationStore } from "../store/useConversationStore"
+import { MessageContent } from "./message-content"
 
 interface ChatWindowLayoutProps {
   user: ChatUser | null
@@ -48,13 +49,13 @@ export function ChatWindow({
   onKeyDown,
   onBack,
 }: ChatWindowLayoutProps) {
-  const { typingUsers, selectedConversationId } = useConversationStore();
+  const { typingUsers, selectedConversationId } = useConversationStore()
 
   const isOtherTyping = useMemo(() => {
-    if (!selectedConversationId) return false;
-    const typers = typingUsers[selectedConversationId] || {};
-    return Object.keys(typers).length > 0;
-  }, [typingUsers, selectedConversationId]);
+    if (!selectedConversationId) return false
+    const typers = typingUsers[selectedConversationId] || {}
+    return Object.keys(typers).length > 0
+  }, [typingUsers, selectedConversationId])
 
   if (!user) {
     return (
@@ -62,14 +63,20 @@ export function ChatWindow({
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
           <Sparkles className="h-9 w-9 text-primary" />
         </div>
-        <h2 className="mt-6 text-xl font-semibold text-foreground">Welcome to ChatSpark</h2>
+        <h2 className="mt-6 text-xl font-semibold text-foreground">
+          Welcome to ChatSpark
+        </h2>
         <p className="mt-2 max-w-xs text-center text-sm leading-relaxed text-muted-foreground">
           Select a conversation to start messaging with your team.
         </p>
         <div className="mt-8 flex items-center gap-2 rounded-lg bg-secondary/50 px-4 py-2 ring-1 ring-border/50">
-          <kbd className="rounded bg-secondary px-2 py-0.5 font-mono text-xs text-muted-foreground">Ctrl</kbd>
+          <kbd className="rounded bg-secondary px-2 py-0.5 font-mono text-xs text-muted-foreground">
+            Ctrl
+          </kbd>
           <span className="text-xs text-muted-foreground">+</span>
-          <kbd className="rounded bg-secondary px-2 py-0.5 font-mono text-xs text-muted-foreground">K</kbd>
+          <kbd className="rounded bg-secondary px-2 py-0.5 font-mono text-xs text-muted-foreground">
+            K
+          </kbd>
           <span className="text-xs text-muted-foreground">to search</span>
         </div>
       </div>
@@ -105,8 +112,12 @@ export function ChatWindow({
           </div>
           <div>
             <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-foreground">{user.name}</h2>
-                <span className="text-[10px] text-muted-foreground/60">• {user.email}</span>
+              <h2 className="text-sm font-semibold text-foreground">
+                {user.name}
+              </h2>
+              <span className="text-[10px] text-muted-foreground/60">
+                • {user.email}
+              </span>
             </div>
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               {user.isOnline ? (
@@ -114,22 +125,39 @@ export function ChatWindow({
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--online)]" />
                   Active now
                 </>
+              ) : user.lastSeen ? (
+                `Last seen ${new Date(user.lastSeen).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}`
               ) : (
-                user.lastSeen ? `Last seen ${new Date(user.lastSeen).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : "Offline"
+                "Offline"
               )}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground"
+          >
             <Phone className="h-4 w-4" />
             <span className="sr-only">Voice call</span>
           </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground"
+          >
             <Video className="h-4 w-4" />
             <span className="sr-only">Video call</span>
           </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground"
+          >
             <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">More options</span>
           </Button>
@@ -144,8 +172,11 @@ export function ChatWindow({
       >
         <div className="flex min-h-full flex-col justify-end gap-2">
           {messages.map((message, index) => {
-            const prevSame = index > 0 && messages[index - 1].isSent === message.isSent
-            const nextSame = index < messages.length - 1 && messages[index + 1].isSent === message.isSent
+            const prevSame =
+              index > 0 && messages[index - 1].isSent === message.isSent
+            const nextSame =
+              index < messages.length - 1 &&
+              messages[index + 1].isSent === message.isSent
             const isLast = index === messages.length - 1
 
             return (
@@ -157,11 +188,12 @@ export function ChatWindow({
                   prevSame ? "mt-0.5" : "mt-3"
                 )}
               >
-                <div className={cn(
-                  "flex min-w-0 max-w-[78%] flex-col sm:max-w-[65%]",
-                  message.isSent ? "items-end" : "items-start"
-                )}>
-
+                <div
+                  className={cn(
+                    "flex min-w-0 max-w-[78%] flex-col sm:max-w-[65%]",
+                    message.isSent ? "items-end" : "items-start"
+                  )}
+                >
                   <div
                     className={cn(
                       "w-full break-words px-4 py-2.5 text-[14px] leading-relaxed shadow-sm",
@@ -171,12 +203,15 @@ export function ChatWindow({
                       prevSame && message.isSent && "rounded-tr-md",
                       prevSame && !message.isSent && "rounded-tl-md",
                       nextSame && message.isSent && "rounded-br-md",
-                      nextSame && !message.isSent && "rounded-bl-md",
-                      message.status === "failed" && "bg-destructive/10 ring-1 ring-destructive/20 text-destructive-foreground dark:text-destructive"
+                      nextSame && !message.isSent && "rounded-bl-md"
                     )}
                   >
-                    {message.content}
+                    <MessageContent
+                      content={message.content}
+                      isSent={message.isSent}
+                    />
                   </div>
+
                   {(!nextSame || isLast) && (
                     <div
                       className={cn(
@@ -186,14 +221,18 @@ export function ChatWindow({
                     >
                       <span>{message.timestamp}</span>
                       {message.isSent && (
-                        <span className={cn(
-                          message.status === "read" ? "text-primary" : "text-muted-foreground",
-                          message.status === "failed" && "text-destructive"
-                        )}>
+                        <span
+                          className={cn(
+                            message.status === "read"
+                              ? "text-primary"
+                              : "text-muted-foreground",
+                            message.status === "failed" && "text-destructive"
+                          )}
+                        >
                           {message.status === "read" ? (
                             <CheckCheck className="h-3.5 w-3.5" />
                           ) : message.status === "sending" ? (
-                            <Clock className="h-3.2 w-3.2 animate-pulse" />
+                            <Clock className="h-3.5 w-3.5 animate-pulse" />
                           ) : message.status === "failed" ? (
                             <AlertCircle className="h-3.5 w-3.5" />
                           ) : (
@@ -207,13 +246,13 @@ export function ChatWindow({
               </div>
             )
           })}
-          
+
           {/* Typing Indicator */}
           {isOtherTyping && (
-            <div className="flex justify-start mt-1">
+            <div className="mt-1 flex justify-start">
               <div className="flex flex-col items-start">
-                <div className="rounded-2xl rounded-bl-md bg-[var(--message-received)] px-4 py-2.5 shadow-sm ring-1 ring-border/40">
-                  <div className="flex items-center gap-1">
+                <div className="rounded-2xl rounded-bl-md bg-[var(--message-received)] px-4 py-3 shadow-sm ring-1 ring-border/40 text-[var(--message-received-foreground)]">
+                  <div className="flex items-center gap-1.5">
                     <span className="typing-dot" />
                     <span className="typing-dot delay-150" />
                     <span className="typing-dot delay-300" />
@@ -222,7 +261,7 @@ export function ChatWindow({
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
       </div>
@@ -231,11 +270,19 @@ export function ChatWindow({
       <div className="shrink-0 border-t border-border bg-card/30 p-3 pb-safe">
         <div className="flex items-end gap-2 rounded-2xl bg-input px-3 py-2 ring-1 ring-border/50 transition-all duration-200 focus-within:ring-primary/40">
           <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground"
+            >
               <Paperclip className="h-4 w-4" />
               <span className="sr-only">Attach file</span>
             </Button>
-            <Button variant="ghost" size="icon" className="hidden h-8 w-8 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground sm:flex">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden h-8 w-8 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground sm:flex"
+            >
               <ImageIcon className="h-4 w-4" />
               <span className="sr-only">Send image</span>
             </Button>
@@ -251,7 +298,11 @@ export function ChatWindow({
             style={{ lineHeight: "1.5" }}
           />
           <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
-            <Button variant="ghost" size="icon" className="hidden h-8 w-8 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground sm:flex">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden h-8 w-8 rounded-lg text-muted-foreground transition-colors duration-200 hover:bg-secondary hover:text-foreground sm:flex"
+            >
               <Smile className="h-4 w-4" />
               <span className="sr-only">Add emoji</span>
             </Button>
@@ -268,8 +319,14 @@ export function ChatWindow({
         </div>
         <p className="mt-2 hidden text-center text-[11px] text-muted-foreground/60 sm:block">
           Press{" "}
-          <kbd className="rounded bg-secondary/80 px-1 py-0.5 font-mono text-[10px]">Enter</kbd> to send,{" "}
-          <kbd className="rounded bg-secondary/80 px-1 py-0.5 font-mono text-[10px]">Shift+Enter</kbd> for new line
+          <kbd className="rounded bg-secondary/80 px-1 py-0.5 font-mono text-[10px]">
+            Enter
+          </kbd>{" "}
+          to send,{" "}
+          <kbd className="rounded bg-secondary/80 px-1 py-0.5 font-mono text-[10px]">
+            Shift+Enter
+          </kbd>{" "}
+          for new line
         </p>
       </div>
     </div>
