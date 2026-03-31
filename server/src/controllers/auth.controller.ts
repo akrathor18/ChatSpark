@@ -66,7 +66,6 @@ export const logout = (req: Request, res: Response) => {
     res.status(200).json({ message: "Logged out successfully" });
 };
 
-
 export const forgotPassword = async (req: Request, res: Response) => {
     try {
         await authServices.forgotPasswordService(req.body.email);

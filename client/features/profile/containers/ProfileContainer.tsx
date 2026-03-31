@@ -17,6 +17,7 @@ import { PrivacySettings } from "../components/PrivacySettings"
 import { SecuritySettings } from "../components/SecuritySettings"
 import { NavItem, ProfileFormData, SettingsState } from "../types"
 
+import { useAuthStore } from "@/store/useAuthStore"
 const navItems: NavItem[] = [
   { id: "profile", label: "Profile", icon: UserIcon },
   { id: "notifications", label: "Notifications", icon: Bell },
@@ -27,6 +28,7 @@ const navItems: NavItem[] = [
 
 export function ProfileContainer() {
   const router = useRouter()
+  const {logout} = useAuthStore()
   const [activeSection, setActiveSection] = useState("profile")
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -218,7 +220,10 @@ export function ProfileContainer() {
     }
   }
 
-  const onSignOut = () => router.push("/sign-in")
+  const onSignOut = () => {
+    logout()
+    router.push("/")
+  }
   const onDeleteAccount = () => console.log("Delete account")
 
   return (

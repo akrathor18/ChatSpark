@@ -1,11 +1,12 @@
 import { create } from "zustand";
-import * as authService from "@/services/auth.service";
+import * as authService from "@/services/auth.service"
 import { useProfileStore } from "@/features/profile/store/useProfileStore";
 interface AuthState {
     isLoading: boolean;
     error: any
     login: (email: string, password: string) => Promise<boolean>;
     register: (name: string, email: string, password: string) => Promise<boolean>;
+    logout: () => Promise<boolean>;
 
 }
 
@@ -42,6 +43,20 @@ export const useAuthStore = create<AuthState>((set) => ({
             return false;
         }
     },
+
+    logout: async () => {
+        try {
+            set({ isLoading: true, error: null });
+            await authService.logout();
+            useProfileStore.getState().clearUser();
+            return true;
+        }
+        catch (error: any) {
+            console.log(error);
+            set({ isLoading: false, error: error });
+            return false;
+        }
+    }
 
 
 }));
