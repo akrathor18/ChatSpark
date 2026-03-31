@@ -1,6 +1,7 @@
 import { User } from "../models/user.model.js";
 import { generateToken } from "../utils/jwt.js";
-
+import crypto from "crypto";
+import { sendEmail } from "../utils/auth.utils.js";
 export const registerUser = async (
     email: string,
     password: string,
@@ -74,4 +75,61 @@ export const oauthLoginService = async (data: {
     const token = generateToken(user._id.toString());
 
     return { user, token };
+};
+
+
+export const forgotPasswordService = async (email: string) => {
+    const user = await User.findOne({ email });
+
+    // Don't reveal if user exists
+    if (!user) return;
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    const hashedToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    await user.save();
+
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
+
+    await sendEmail({
+        to: user.email,
+        subject: "Password Reset",
+        html: `
+            <p>You requested a password reset</p>
+            <a href="${resetUrl}">Reset Password</a>
+            <p>This link expires in 15 minutes</p>
+        `,
+    });
+};
+
+export const resetPasswordService = async (
+    token: string,
+    newPassword: string
+) => {
+    const hashedToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
+    const user = await User.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+        throw new Error("Invalid or expired token");
+    }
+
+    user.password = newPassword; // make sure hashing middleware runs
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+
+    await user.save();
 };

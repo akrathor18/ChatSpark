@@ -10,6 +10,8 @@ export interface IUser extends Document {
     password?: string;
     avatar?: string;
     avatarId?: string;
+    resetPasswordToken?: string;
+    resetPasswordExpires?: Date;
     provider: "local" | "google" | "github";
     isOnline: boolean;
     lastSeen?: Date;
@@ -71,6 +73,12 @@ const userSchema = new Schema<IUser>(
         },
 
         lastSeen: {
+            type: Date,
+        },
+        resetPasswordToken: {
+            type: String,
+        },
+        resetPasswordExpires: {
             type: Date,
         },
     },
