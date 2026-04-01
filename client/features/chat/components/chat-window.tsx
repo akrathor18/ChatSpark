@@ -1,6 +1,7 @@
 "use client"
 
-import { useRef, useMemo } from "react"
+import { useRef, useMemo, memo, useCallback } from "react"
+import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
@@ -165,105 +166,49 @@ export function ChatWindow({
       </header>
 
       {/* Messages */}
-      <div
-        ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto overscroll-contain px-4 py-4"
-        style={{ WebkitOverflowScrolling: "touch" }}
-      >
-        <div className="flex min-h-full flex-col justify-end gap-2">
-          {messages.map((message, index) => {
-            const prevSame =
-              index > 0 && messages[index - 1].isSent === message.isSent
-            const nextSame =
-              index < messages.length - 1 &&
-              messages[index + 1].isSent === message.isSent
+      <div className="flex-1 min-h-0 bg-background/50">
+        <Virtuoso
+          style={{ height: "100%" }}
+          data={messages}
+          initialTopMostItemIndex={messages.length - 1}
+          followOutput="smooth"
+          alignToBottom
+          itemContent={(index, message) => {
+            const prevSame = index > 0 && messages[index - 1].isSent === message.isSent
+            const nextSame = index < messages.length - 1 && messages[index + 1].isSent === message.isSent
             const isLast = index === messages.length - 1
 
             return (
-              <div
-                key={message.id || index}
-                className={cn(
-                  "flex",
-                  message.isSent ? "justify-end" : "justify-start",
-                  prevSame ? "mt-0.5" : "mt-3"
-                )}
-              >
-                <div
-                  className={cn(
-                    "flex min-w-0 max-w-[78%] flex-col sm:max-w-[65%]",
-                    message.isSent ? "items-end" : "items-start"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "w-full break-words px-4 py-2.5 text-[14px] leading-relaxed shadow-sm",
-                      message.isSent
-                        ? "rounded-2xl rounded-br-md bg-[var(--message-sent)] text-[var(--message-sent-foreground)]"
-                        : "rounded-2xl rounded-bl-md bg-[var(--message-received)] text-[var(--message-received-foreground)] ring-1 ring-border/40",
-                      prevSame && message.isSent && "rounded-tr-md",
-                      prevSame && !message.isSent && "rounded-tl-md",
-                      nextSame && message.isSent && "rounded-br-md",
-                      nextSame && !message.isSent && "rounded-bl-md"
-                    )}
-                  >
-                    <MessageContent
-                      content={message.content}
-                      isSent={message.isSent}
-                    />
-                  </div>
-
-                  {(!nextSame || isLast) && (
-                    <div
-                      className={cn(
-                        "mt-1 flex items-center gap-1 text-[11px] text-muted-foreground",
-                        message.isSent ? "justify-end pr-1" : "pl-1"
-                      )}
-                    >
-                      <span>{message.timestamp}</span>
-                      {message.isSent && (
-                        <span
-                          className={cn(
-                            message.status === "read"
-                              ? "text-primary"
-                              : "text-muted-foreground",
-                            message.status === "failed" && "text-destructive"
-                          )}
-                        >
-                          {message.status === "read" ? (
-                            <CheckCheck className="h-3.5 w-3.5" />
-                          ) : message.status === "sending" ? (
-                            <Clock className="h-3.5 w-3.5 animate-pulse" />
-                          ) : message.status === "failed" ? (
-                            <AlertCircle className="h-3.5 w-3.5" />
-                          ) : (
-                            <Check className="h-3.5 w-3.5" />
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <MessageItem
+                message={message}
+                prevSame={prevSame}
+                nextSame={nextSame}
+                isLast={isLast}
+              />
             )
-          })}
-
-          {/* Typing Indicator */}
-          {isOtherTyping && (
-            <div className="mt-1 flex justify-start">
-              <div className="flex flex-col items-start">
-                <div className="rounded-2xl rounded-bl-md bg-[var(--message-received)] px-4 py-3 shadow-sm ring-1 ring-border/40 text-[var(--message-received-foreground)]">
-                  <div className="flex items-center gap-1.5">
-                    <span className="typing-dot" />
-                    <span className="typing-dot delay-150" />
-                    <span className="typing-dot delay-300" />
+          }}
+          components={{
+            Header: () => <div className="h-4" />,
+            Footer: () => (
+              <div className="pb-4">
+                {isOtherTyping && (
+                  <div className="mt-1 px-4 flex justify-start">
+                    <div className="flex flex-col items-start">
+                      <div className="rounded-2xl rounded-bl-md bg-[var(--message-received)] px-4 py-3 shadow-sm ring-1 ring-border/40 text-[var(--message-received-foreground)]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="typing-dot" />
+                          <span className="typing-dot delay-150" />
+                          <span className="typing-dot delay-300" />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
+            ),
+          }}
+        />
       </div>
 
       {/* Input */}
@@ -332,3 +277,83 @@ export function ChatWindow({
     </div>
   )
 }
+
+const MessageItem = memo(({
+  message,
+  prevSame,
+  nextSame,
+  isLast
+}: {
+  message: Message;
+  prevSame: boolean;
+  nextSame: boolean;
+  isLast: boolean;
+}) => {
+  return (
+    <div
+      className={cn(
+        "flex px-4",
+        message.isSent ? "justify-end" : "justify-start",
+        prevSame ? "mt-0.5" : "mt-3"
+      )}
+    >
+      <div
+        className={cn(
+          "flex min-w-0 max-w-[78%] flex-col sm:max-w-[65%]",
+          message.isSent ? "items-end" : "items-start"
+        )}
+      >
+        <div
+          className={cn(
+            "w-full break-words px-4 py-2.5 text-[14px] leading-relaxed shadow-sm",
+            message.isSent
+              ? "rounded-2xl rounded-br-md bg-[var(--message-sent)] text-[var(--message-sent-foreground)]"
+              : "rounded-2xl rounded-bl-md bg-[var(--message-received)] text-[var(--message-received-foreground)] ring-1 ring-border/40",
+            prevSame && message.isSent && "rounded-tr-md",
+            prevSame && !message.isSent && "rounded-tl-md",
+            nextSame && message.isSent && "rounded-br-md",
+            nextSame && !message.isSent && "rounded-bl-md"
+          )}
+        >
+          <MessageContent
+            content={message.content}
+            isSent={message.isSent}
+          />
+        </div>
+
+        {(!nextSame || isLast) && (
+          <div
+            className={cn(
+              "mt-1 flex items-center gap-1 text-[11px] text-muted-foreground",
+              message.isSent ? "justify-end pr-1" : "pl-1"
+            )}
+          >
+            <span>{message.timestamp}</span>
+            {message.isSent && (
+              <span
+                className={cn(
+                  message.status === "read"
+                    ? "text-primary"
+                    : "text-muted-foreground",
+                  message.status === "failed" && "text-destructive"
+                )}
+              >
+                {message.status === "read" ? (
+                  <CheckCheck className="h-3.5 w-3.5" />
+                ) : message.status === "sending" ? (
+                  <Clock className="h-3.5 w-3.5 animate-pulse" />
+                ) : message.status === "failed" ? (
+                  <AlertCircle className="h-3.5 w-3.5" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+})
+
+MessageItem.displayName = "MessageItem"
