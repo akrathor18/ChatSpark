@@ -1,8 +1,10 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { ChatWindow as ChatWindowLayout } from "../components/chat-window"
 import { useConversationStore } from "../store/useConversationStore"
+import { useMessageStore } from "../store/useMessageStore"
+import { VirtuosoHandle } from "react-virtuoso"
 
 export interface Message {
     id: string
@@ -39,61 +41,37 @@ export function ChatContainer({
     // ── State ──────────────────────────────────────────────────────────────────
     const [inputValue, setInputValue] = useState("")
     const { typingUsers, selectedConversationId } = useConversationStore();
+    const { fetchOlderMessages, isLoadingOlder, hasMore, isLoading } = useMessageStore();
 
-    // Calculate if others are typing to trigger scroll
+    // Calculate if others are typing
     const isOtherTyping = !!(selectedConversationId && Object.keys(typingUsers[selectedConversationId] || {}).length > 0);
 
-    // ── Refs (passed down so the layout can attach them to DOM nodes) ──────────
-    const messagesEndRef = useRef<HTMLDivElement>(null)
-    const scrollContainerRef = useRef<HTMLDivElement>(null)
+    // ── Refs ───────────────────────────────────────────────────────────────────
+    const virtuosoRef = useRef<VirtuosoHandle>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
 
-    // ── Effects ────────────────────────────────────────────────────────────────
-
-    // Intelligent "Stick-to-bottom" scrolling
-    useEffect(() => {
-        const container = scrollContainerRef.current
-        if (!container || messages.length === 0) return
-
-        const lastMessage = messages[messages.length - 1]
-        
-        // 1. If the message was sent by the user, always scroll to bottom
-        if (lastMessage.isSent) {
-            container.scrollTo({
-                top: container.scrollHeight,
-                behavior: 'smooth'
-            });
-            // Secondary check after rendering
-            setTimeout(() => {
-                container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-            }, 100);
-            return;
-        }
-
-        // 2. If it's a typing indicator or a received message
-        // Scroll only if the user was already near the bottom
-        const threshold = 200; // Increased threshold for better tolerance
-        const isNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + threshold;
-
-        if (isNearBottom) {
-            // Use requestAnimationFrame + setTimeout for robust rendering sync
-            requestAnimationFrame(() => {
-                setTimeout(() => {
-                    container.scrollTo({
-                        top: container.scrollHeight,
-                        behavior: 'smooth'
-                    });
-                }, 50);
-            });
-        }
-    }, [messages, isOtherTyping])
-
     // ── Handlers ───────────────────────────────────────────────────────────────
+
+    const handleLoadOlder = useCallback(() => {
+        if (selectedConversationId) {
+            fetchOlderMessages(selectedConversationId);
+        }
+    }, [selectedConversationId, fetchOlderMessages]);
 
     const handleSend = () => {
         if (inputValue.trim()) {
             onSendMessage(inputValue.trim())
             setInputValue("")
+            
+            // Explicitly scroll to bottom on send
+            setTimeout(() => {
+                virtuosoRef.current?.scrollToIndex({
+                    index: messages.length,
+                    align: 'end',
+                    behavior: 'smooth'
+                })
+            }, 100)
+
             if (inputRef.current) {
                 inputRef.current.style.height = "auto"
                 inputRef.current.focus()
@@ -123,13 +101,16 @@ export function ChatContainer({
             user={user}
             messages={messages}
             inputValue={inputValue}
-            scrollContainerRef={scrollContainerRef}
-            messagesEndRef={messagesEndRef}
+            virtuosoRef={virtuosoRef}
             inputRef={inputRef}
             onSend={handleSend}
             onInputChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onBack={onBack}
+            onLoadOlder={handleLoadOlder}
+            isLoadingOlder={isLoadingOlder}
+            hasMore={!!(selectedConversationId && hasMore[selectedConversationId])}
+            isLoading={isLoading}
         />
     )
 }

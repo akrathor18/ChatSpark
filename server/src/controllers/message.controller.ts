@@ -25,7 +25,14 @@ export const getMessages = async (req: Request, res: Response) => {
 
     const { conversationId } = req.params;
     const userId = (req as any).user.id;
-    const messages = await messageService.getConversationMessages(conversationId, userId);
+    const { limit, before } = req.query;
+
+    const messages = await messageService.getConversationMessages(
+      conversationId,
+      userId,
+      limit ? parseInt(limit as string) : 20,
+      before as string
+    );
 
     res.json(messages);
 

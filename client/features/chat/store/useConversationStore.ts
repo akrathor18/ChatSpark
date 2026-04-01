@@ -41,14 +41,20 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
         try {
             set({ isLoading: true, error: null });
 
-            const res = await conversationService.fetchConversations("");
+            const res: any = await conversationService.fetchConversations("");
+            
+            // Handle both { data: [...] } and raw [...]
+            const conversationList = Array.isArray(res) 
+                ? res 
+                : (Array.isArray(res?.data) ? res.data : []);
+
             set({
-                conversations: res.data,
+                conversations: conversationList,
                 isLoading: false,
             });
 
         } catch (error: any) {
-            console.log(error);
+            console.error("ConversationStore: fetchConversations error", error);
             set({ isLoading: false, error });
             throw error;
         }

@@ -28,20 +28,20 @@ export const createMessage = async ({
 };
 export const getConversationMessages = async (
   conversationId: string,
-  userId: string
+  userId: string,
+  limit: number = 20,
+  before?: string
 ) => {
 
-  const conversation = await Conversation.findOne({
-    _id: conversationId,
-    members: userId
-  });
+  const query: any = { conversationId };
 
-  // if (!conversation) {
-  //   throw new Error("Unauthorized access");
-  // }
+  if (before) {
+    query.createdAt = { $lt: new Date(before) };
+  }
 
-  const messages = await Message.find({ conversationId })
-    .sort({ createdAt: 1 });
+  const messages = await Message.find(query)
+    .sort({ createdAt: -1 })
+    .limit(limit);
 
-  return messages;
+  return messages.reverse();
 };

@@ -24,7 +24,7 @@ SyntaxHighlighter.registerLanguage("python", python)
 SyntaxHighlighter.registerLanguage("json", json)
 SyntaxHighlighter.registerLanguage("css", css)
 SyntaxHighlighter.registerLanguage("markdown", markdown)
-SyntaxHighlighter.registerLanguage("HTMl", html)
+SyntaxHighlighter.registerLanguage("html", html)
 
 import hljs from "highlight.js"
 import { Copy, Check, Terminal } from "lucide-react"
@@ -36,7 +36,7 @@ interface MessageContentProps {
   isSent: boolean
 }
 
-function detectRawCode(text: string): { isCode: boolean; language: string } {
+export function detectRawCode(text: string): { isCode: boolean; language: string } {
   const trimmed = text.trim()
 
   if (!trimmed || trimmed.startsWith("```")) return { isCode: false, language: "" }

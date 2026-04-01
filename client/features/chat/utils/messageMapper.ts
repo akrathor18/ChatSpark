@@ -1,18 +1,37 @@
-export const mapMessages = (messages: any, conversationId: string | null, currentUserId: string) => {
-  if (!conversationId || !messages) return [];
+export const mapMessages = (messages: any, conversationId: any, currentUserId: string) => {
+  const idStr = conversationId?.toString();
+  if (!idStr || !messages) {
+    console.warn("mapMessages: missing idStr or messages record", { idStr, messagesExist: !!messages });
+    return [];
+  }
 
-  const raw = Array.isArray(messages)
-    ? messages
-    : messages[conversationId] ?? [];
+  // Robust lookup: conversationId in the messages record
+  const rawData = messages[idStr];
+  
+  if (!rawData) {
+    console.warn(`mapMessages: No messages found in record for key: "${idStr}". Available keys:`, Object.keys(messages));
+    return [];
+  }
+  // 🔥 Robustly extract the array from the rawData (could be raw array or envelope)
+  const raw = Array.isArray(rawData) ? rawData : (Array.isArray(rawData?.data) ? rawData.data : []);
 
-  return raw.map((msg: any) => ({
-    id: msg._id,
-    content: msg.content,
-    timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    isSent: msg.senderId === currentUserId,
-    status: msg.status ?? "sent",
-  }));
+  if (raw.length === 0) return [];
+
+  return raw.map((msg: any) => {
+    // senderId can be a populated object { _id, ... } or just a string ID
+    const senderRaw = msg.senderId?._id || msg.senderId;
+    const senderId = senderRaw?.toString();
+    const currentId = currentUserId?.toString();
+    console.log("Mapping message:", { msg, senderId, currentId });
+    return {
+      id: msg._id?.toString() || msg.id?.toString() || msg.tempId,
+      content: msg.content || "",
+      timestamp: new Date(msg.createdAt || Date.now()).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      isSent: senderId === currentId,
+      status: msg.status ?? "sent",
+    };
+  });
 };

@@ -19,11 +19,22 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     };
 
     const onReceiveMessage = (message: any) => {
-      useMessageStore.getState().addMessage(message);
-      useConversationStore.getState().updateConversationFromMessage(message);
+      const convId = message.conversationId?.toString();
+      const sendId = message.senderId?.toString();
+      const currentUserId = userId?.toString();
 
-      if (conversationId === message.conversationId && userId !== message.senderId) {
-        socket.emit("mark_read", { conversationId, userId });
+      // Ensure message IDs are clean strings before store update
+      const cleanMessage = {
+        ...message,
+        conversationId: convId,
+        senderId: sendId,
+      };
+
+      useMessageStore.getState().addMessage(cleanMessage);
+      useConversationStore.getState().updateConversationFromMessage(cleanMessage);
+
+      if (conversationId?.toString() === convId && currentUserId !== sendId) {
+        socket.emit("mark_read", { conversationId: convId, userId: currentUserId });
       }
     };
 
@@ -121,11 +132,13 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     stopTyping();
 
     const tempId = `optimistic_${Date.now()}`;
+    const convId = conversationId.toString();
+    const currentUserId = userId.toString();
 
     const optimisticMessage = {
       tempId,
-      conversationId,
-      senderId: userId,
+      conversationId: convId,
+      senderId: currentUserId,
       content,
       status: "sending",
       createdAt: new Date().toISOString(),
@@ -135,8 +148,8 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     useConversationStore.getState().updateConversationFromMessage(optimisticMessage);
 
     socket.emit("send_message", {
-      conversationId,
-      senderId: userId,
+      conversationId: convId,
+      senderId: currentUserId,
       content,
       tempId,
     });
