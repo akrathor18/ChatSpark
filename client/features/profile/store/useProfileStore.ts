@@ -13,6 +13,10 @@ interface ProfileState {
     updateUsername: (username: string) => Promise<boolean>;
     uploadProfilePic: (file: File) => Promise<boolean>;
     removeProfilePic: () => Promise<boolean>;
+    updateNotificationSettings: (settings: any) => Promise<boolean>;
+    updatePrivacySettings: (settings: any) => Promise<boolean>;
+    changePassword: (data: any) => Promise<boolean>;
+    deleteAccount: () => Promise<boolean>;
     setUser: (user: any) => void;
     clearUser: () => void;
 }
@@ -123,4 +127,79 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             return false;
         }
     },
+
+    updateNotificationSettings: async (settings: any) => {
+        try {
+            set({ isLoading: true, error: null });
+            const res: any = await profileService.updateNotificationSettings(settings);
+
+            // Sync local user state
+            const currentUser = get().user;
+            if (currentUser) {
+                set({
+                    user: { ...currentUser, notificationSettings: res.settings },
+                    isLoading: false,
+                });
+            } else {
+                set({ isLoading: false });
+            }
+
+            return true;
+        } catch (error: any) {
+            console.error("Update Notification Settings Error:", error);
+            set({ isLoading: false, error });
+            return false;
+        }
+    },
+
+    updatePrivacySettings: async (settings: any) => {
+        try {
+            set({ isLoading: true, error: null });
+            const res: any = await profileService.updatePrivacySettings(settings);
+
+            // Sync local user state
+            const currentUser = get().user;
+            if (currentUser) {
+                set({
+                    user: { ...currentUser, privacySettings: res.settings },
+                    isLoading: false,
+                });
+            } else {
+                set({ isLoading: false });
+            }
+
+            return true;
+        } catch (error: any) {
+            console.error("Update Privacy Settings Error:", error);
+            set({ isLoading: false, error });
+            return false;
+        }
+    },
+
+    changePassword: async (data: any) => {
+        try {
+            set({ isLoading: true, error: null });
+            await profileService.changePassword(data);
+            set({ isLoading: false });
+            return true;
+        } catch (error: any) {
+            console.error("Change Password Error:", error);
+            set({ isLoading: false, error: error.response?.data?.message || "Password update failed" });
+            return false;
+        }
+    },
+
+    deleteAccount: async () => {
+        try {
+            set({ isLoading: true, error: null });
+            await profileService.deleteAccount();
+            set({ user: null, isLoading: false });
+            return true;
+        } catch (error: any) {
+            console.error("Delete Account Error:", error);
+            set({ isLoading: false, error });
+            return false;
+        }
+    },
 }));
+

@@ -16,5 +16,9 @@ router.post(
 );
 
 router.delete("/profile-pic", authMiddleware, userController.removeProfilePicController);
+router.patch("/notifications", authMiddleware, userController.updateNotificationSettings);
+router.patch("/privacy", authMiddleware, userController.updatePrivacySettings);
+router.post("/change-password", authMiddleware, userController.changePassword);
+router.delete("/profile", authMiddleware, userController.deleteAccount);
 
-export default router;
+export default router;

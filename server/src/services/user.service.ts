@@ -1,6 +1,7 @@
 import cloudinary from "../config/cloudinary.js";
 import { User } from "../models/user.model.js";
 import type { File } from "multer";
+import bcrypt from "bcryptjs";
 import {
     isValidUsername,
     normalizeUsername,
@@ -154,3 +155,66 @@ export const removeProfilePic = async (userId: string) => {
         message: "Profile picture removed successfully",
     };
 };
+
+export const updateNotificationSettings = async (userId: string, settings: any) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    user.notificationSettings = {
+        ...user.notificationSettings,
+        ...settings
+    };
+
+    await user.save();
+    return user.notificationSettings;
+};
+
+export const updatePrivacySettings = async (userId: string, settings: any) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    user.privacySettings = {
+        ...user.privacySettings,
+        ...settings
+    };
+
+    await user.save();
+    return user.privacySettings;
+};
+
+export const changePassword = async (userId: string, currentPassword: string, newPassword: string) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    if (user.provider !== "local") {
+        throw new Error("Cannot change password for social login accounts");
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+        throw new Error("Incorrect current password");
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return { success: true, message: "Password updated successfully" };
+};
+
+export const deleteAccount = async (userId: string) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    // Cleanup: Delete profile pic from Cloudinary if exists
+    if (user.avatarId) {
+        try {
+            await cloudinary.uploader.destroy(user.avatarId);
+        } catch (err: any) {
+            console.warn("Cloudinary delete failed during account deletion:", err.message);
+        }
+    }
+
+    await User.findByIdAndDelete(userId);
+
+    return { success: true, message: "Account deleted successfully" };
+};

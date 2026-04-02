@@ -21,7 +21,6 @@ import { useAuthStore } from "@/store/useAuthStore"
 const navItems: NavItem[] = [
   { id: "profile", label: "Profile", icon: UserIcon },
   { id: "notifications", label: "Notifications", icon: Bell },
-  { id: "appearance", label: "Appearance", icon: Palette },
   { id: "privacy", label: "Privacy", icon: Shield },
   { id: "security", label: "Security", icon: Lock },
 ]
@@ -37,11 +36,16 @@ export function ProfileContainer() {
 
   const {
     user,
+    isLoading,
     getProfile,
     checkUsername,
     updateUsername,
     uploadProfilePic,
     removeProfilePic,
+    updateNotificationSettings,
+    updatePrivacySettings,
+    changePassword,
+    deleteAccount,
     isCheckingUsername,
     isUploadingAvatar,
     usernameAvailable,
@@ -65,7 +69,19 @@ export function ProfileContainer() {
 
   const watchedUsername = watch("username")
 
-  // Sync form with user data
+  // Settings state
+  const [settings, setSettings] = useState<SettingsState>({
+    notifications: true,
+    emailNotifications: true,
+    darkMode: true,
+    soundEnabled: true,
+    notificationVolume: [70],
+    showOnlineStatus: true,
+    readReceipts: true,
+    twoFactorAuth: false,
+  })
+
+  // Sync state with user data
   useEffect(() => {
     if (user) {
       reset({
@@ -74,6 +90,16 @@ export function ProfileContainer() {
         email: user.email,
         bio: user.bio || "",
       })
+
+      if (user.notificationSettings || user.privacySettings) {
+          setSettings(prev => ({
+              ...prev,
+              notifications: user.notificationSettings?.notifications ?? prev.notifications,
+              emailNotifications: user.notificationSettings?.emailNotifications ?? prev.emailNotifications,
+              showOnlineStatus: user.privacySettings?.showOnlineStatus ?? prev.showOnlineStatus,
+              readReceipts: user.privacySettings?.readReceipts ?? prev.readReceipts,
+          }))
+      }
     } else {
       getProfile()
     }
@@ -139,23 +165,28 @@ export function ProfileContainer() {
     }
   }, [watchedUsername, user?.username, checkUsername])
 
-  // Settings state
-  const [settings, setSettings] = useState<SettingsState>({
-    notifications: true,
-    emailNotifications: true,
-    darkMode: true,
-    soundEnabled: true,
-    notificationVolume: [70],
-    showOnlineStatus: true,
-    readReceipts: true,
-    twoFactorAuth: false,
-  })
+  const onUpdateNotificationSettings = async (newSettings: Partial<SettingsState>) => {
+      const updated = { ...settings, ...newSettings }
+      setSettings(updated)
+      await updateNotificationSettings({
+          notifications: updated.notifications,
+          emailNotifications: updated.emailNotifications,
+      })
+  }
+
+  const onUpdatePrivacySettings = async (newSettings: Partial<SettingsState>) => {
+      const updated = { ...settings, ...newSettings }
+      setSettings(updated)
+      await updatePrivacySettings({
+          showOnlineStatus: updated.showOnlineStatus,
+          readReceipts: updated.readReceipts,
+      })
+  }
 
   // Scrolling logic
   const sectionRefs = {
     profile: useRef<HTMLDivElement>(null),
     notifications: useRef<HTMLDivElement>(null),
-    appearance: useRef<HTMLDivElement>(null),
     privacy: useRef<HTMLDivElement>(null),
     security: useRef<HTMLDivElement>(null),
   }
@@ -224,7 +255,19 @@ export function ProfileContainer() {
     logout()
     router.push("/")
   }
-  const onDeleteAccount = () => console.log("Delete account")
+
+  const onDeleteAccount = async () => {
+    if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      const success = await deleteAccount()
+      if (success) {
+          logout()
+          router.push("/")
+      } else {
+          alert("Failed to delete account. Please try again.")
+      }
+    }
+  }
+
 
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
@@ -298,15 +341,7 @@ export function ProfileContainer() {
               title="Notifications"
               sectionRef={sectionRefs.notifications}
             >
-              <NotificationSettings settings={settings} setSettings={setSettings} />
-            </SettingsSection>
-
-            <SettingsSection
-              id="appearance"
-              title="Appearance"
-              sectionRef={sectionRefs.appearance}
-            >
-              <AppearanceSettings settings={settings} setSettings={setSettings} />
+              <NotificationSettings settings={settings} setSettings={onUpdateNotificationSettings} />
             </SettingsSection>
 
             <SettingsSection
@@ -314,7 +349,7 @@ export function ProfileContainer() {
               title="Privacy"
               sectionRef={sectionRefs.privacy}
             >
-              <PrivacySettings settings={settings} setSettings={setSettings} />
+              <PrivacySettings settings={settings} setSettings={onUpdatePrivacySettings} />
             </SettingsSection>
 
             <SettingsSection
@@ -324,9 +359,10 @@ export function ProfileContainer() {
             >
               <SecuritySettings
                 settings={settings}
-                setSettings={setSettings}
                 onSignOut={onSignOut}
                 onDeleteAccount={onDeleteAccount}
+                onPasswordSubmit={changePassword}
+                isLoading={isLoading}
               />
             </SettingsSection>
 

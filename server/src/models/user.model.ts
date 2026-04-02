@@ -15,6 +15,14 @@ export interface IUser extends Document {
     provider: "local" | "google" | "github";
     isOnline: boolean;
     lastSeen?: Date;
+    notificationSettings: {
+        notifications: boolean;
+        emailNotifications: boolean;
+    };
+    privacySettings: {
+        showOnlineStatus: boolean;
+        readReceipts: boolean;
+    };
     createdAt: Date;
     updatedAt: Date;
 
@@ -80,6 +88,26 @@ const userSchema = new Schema<IUser>(
         },
         resetPasswordExpires: {
             type: Date,
+        },
+        notificationSettings: {
+            notifications: {
+                type: Boolean,
+                default: true,
+            },
+            emailNotifications: {
+                type: Boolean,
+                default: true,
+            },
+        },
+        privacySettings: {
+            showOnlineStatus: {
+                type: Boolean,
+                default: true,
+            },
+            readReceipts: {
+                type: Boolean,
+                default: true,
+            },
         },
     },
     {

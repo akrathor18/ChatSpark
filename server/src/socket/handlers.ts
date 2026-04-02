@@ -4,29 +4,52 @@ import { ConversationMember } from "../models/conversationMembers.model.js";
 import { Message } from "../models/message.model.js";
 import { User } from "../models/user.model.js";
 
-const onlineUsers = new Map<string, Set<string>>();
+interface OnlineUser {
+  sockets: Set<string>;
+  showOnlineStatus: boolean;
+  readReceipts: boolean;
+}
+
+const onlineUsers = new Map<string, OnlineUser>();
 
 export const registerHandlers = (io: Server, socket: Socket) => {
 
   //  Register user room for personal notifications
-  socket.on("register_user", (userId: string) => {
+  socket.on("register_user", async (userId: string) => {
     if (userId) {
       socket.join(`user_${userId}`);
       console.log(`Socket ${socket.id} registered to user_${userId}`);
+
+      // Fetch user privacy settings
+      const user = await User.findById(userId).select("privacySettings");
+      const privacy = {
+        showOnlineStatus: user?.privacySettings?.showOnlineStatus !== false,
+        readReceipts: user?.privacySettings?.readReceipts !== false,
+      };
 
       //  Track multiple sockets
       const isFirstConnection = !onlineUsers.has(userId);
 
       if (!onlineUsers.has(userId)) {
-        onlineUsers.set(userId, new Set());
+        onlineUsers.set(userId, {
+          sockets: new Set(),
+          ...privacy,
+        });
       }
 
-      onlineUsers.get(userId)!.add(socket.id);
-
+      onlineUsers.get(userId)!.sockets.add(socket.id);
       socket.data.userId = userId;
+      socket.data.privacy = privacy;
 
-      if (isFirstConnection) {
-        io.emit("user_online", { userId });
+      if (isFirstConnection && privacy.showOnlineStatus) {
+        // Broadcast to others who have status enabled
+        const publicUsers = Array.from(onlineUsers.entries())
+          .filter(([id, data]) => id !== userId && data.showOnlineStatus)
+          .map(([id]) => id);
+
+        publicUsers.forEach(id => {
+          io.to(`user_${id}`).emit("user_online", { userId });
+        });
       }
     }
   });
@@ -89,6 +112,12 @@ export const registerHandlers = (io: Server, socket: Socket) => {
     const { conversationId, userId } = data;
     if (!conversationId || !userId) return;
 
+    // Reciprocity: If reader has read receipts off, don't update anything
+    const reader = onlineUsers.get(userId) || await User.findById(userId).select("privacySettings");
+    const readerHasReceipts = (reader as any).readReceipts ?? (reader as any).privacySettings?.readReceipts !== false;
+
+    if (!readerHasReceipts) return;
+
     // Find messages sent to this user in this conversation that are not read
     const messages = await Message.find({
       conversationId,
@@ -97,36 +126,74 @@ export const registerHandlers = (io: Server, socket: Socket) => {
     });
 
     if (messages.length > 0) {
-      // Update statuses in DB
-      await Message.updateMany(
-        { _id: { $in: messages.map(m => m._id) } },
-        { $set: { status: "read" } }
-      );
+      // Group messages by sender and check their privacy settings
+      const senders = [...new Set(messages.map(m => m.senderId.toString()))];
+      const publicSenderIds: string[] = [];
 
-      // Notify each sender that their message was read
-      // For simplicity, we can just notify the entire conversation room or specific senders
-      // Notifying the conversation room is sufficient if participants filter locally
-      io.to(conversationId).emit("messages_read", {
-        conversationId,
-        readerId: userId,
-        messageIds: messages.map(m => m._id)
-      });
+      for (const senderId of senders) {
+        let senderHasReceipts = true;
+        const onlineSender = onlineUsers.get(senderId);
+
+        if (onlineSender) {
+          senderHasReceipts = onlineSender.readReceipts;
+        } else {
+          const senderUser = await User.findById(senderId).select("privacySettings");
+          senderHasReceipts = senderUser?.privacySettings?.readReceipts !== false;
+        }
+
+        if (senderHasReceipts) {
+          publicSenderIds.push(senderId);
+        }
+      }
+
+      // Only update messages from senders who have read receipts ON
+      const messagesToMark = messages.filter(m => publicSenderIds.includes(m.senderId.toString()));
+
+      if (messagesToMark.length > 0) {
+        const messageIds = messagesToMark.map(m => m._id);
+
+        // Update statuses in DB
+        await Message.updateMany(
+          { _id: { $in: messageIds } },
+          { $set: { status: "read" } }
+        );
+
+        // Notify each public sender
+        for (const senderId of publicSenderIds) {
+          const senderMessages = messagesToMark.filter(m => m.senderId.toString() === senderId).map(m => m._id);
+          if (senderMessages.length > 0) {
+            io.to(`user_${senderId}`).emit("messages_read", {
+              conversationId,
+              readerId: userId,
+              messageIds: senderMessages
+            });
+          }
+        }
+
+        // Notify the reader (to sync multiple devices)
+        socket.emit("messages_read", {
+          conversationId,
+          readerId: userId,
+          messageIds: messageIds
+        });
+      }
     }
   });
 
   //  Handle disconnect
   socket.on("disconnect", async () => {
     const userId = socket.data.userId;
+    const privacy = socket.data.privacy;
 
     if (!userId) return;
 
-    const userSockets = onlineUsers.get(userId);
+    const userData = onlineUsers.get(userId);
 
-    if (userSockets) {
-      userSockets.delete(socket.id);
+    if (userData) {
+      userData.sockets.delete(socket.id);
 
       //  Only if NO sockets left
-      if (userSockets.size === 0) {
+      if (userData.sockets.size === 0) {
         onlineUsers.delete(userId);
 
         console.log(`User ${userId} is offline`);
@@ -137,24 +204,67 @@ export const registerHandlers = (io: Server, socket: Socket) => {
           lastSeen,
         });
 
-        io.emit("user_offline", { userId, lastSeen });
+        if (privacy?.showOnlineStatus) {
+          // Only notify users who have status enabled
+          const publicUsers = Array.from(onlineUsers.entries())
+            .filter(([id, data]) => data.showOnlineStatus)
+            .map(([id]) => id);
+
+          publicUsers.forEach(id => {
+            io.to(`user_${id}`).emit("user_offline", { userId, lastSeen });
+          });
+        }
       }
     }
   });
 
   socket.on("get_online_users", () => {
-    const users = Array.from(onlineUsers.keys());
-    socket.emit("online_users", users);
+    const userId = socket.data.userId;
+    const privacy = socket.data.privacy;
+
+    if (!userId || !privacy?.showOnlineStatus) {
+      socket.emit("online_users", []);
+      return;
+    }
+
+    // Only return users who also have status enabled
+    const publicUsers = Array.from(onlineUsers.entries())
+      .filter(([id, data]) => data.showOnlineStatus)
+      .map(([id]) => id);
+
+    socket.emit("online_users", publicUsers);
   });
 
   socket.on("typing", (data) => {
     const { conversationId, userId } = data;
-    socket.to(conversationId).emit("typing", { conversationId, userId });
+    const privacy = socket.data.privacy;
+
+    // Reciprocity: If I hide my status, I don't send typing indicators
+    if (!privacy?.showOnlineStatus) return;
+
+    // Only broadcast to users who have status enabled
+    const publicUsers = Array.from(onlineUsers.entries())
+      .filter(([id, d]) => id !== userId && d.showOnlineStatus)
+      .map(([id]) => id);
+
+    publicUsers.forEach(id => {
+      io.to(`user_${id}`).emit("typing", { conversationId, userId });
+    });
   });
 
   socket.on("stop_typing", (data) => {
     const { conversationId, userId } = data;
-    socket.to(conversationId).emit("stop_typing", { conversationId, userId });
+    const privacy = socket.data.privacy;
+
+    if (!privacy?.showOnlineStatus) return;
+
+    const publicUsers = Array.from(onlineUsers.entries())
+      .filter(([id, d]) => id !== userId && d.showOnlineStatus)
+      .map(([id]) => id);
+
+    publicUsers.forEach(id => {
+      io.to(`user_${id}`).emit("stop_typing", { conversationId, userId });
+    });
   });
 
 };  

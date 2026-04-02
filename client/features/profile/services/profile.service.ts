@@ -23,3 +23,20 @@ export const uploadProfilePic = async (file: File) => {
 export const removeProfilePic = async () => {
     return api.delete("/users/profile-pic");
 }
+
+export const updateNotificationSettings = async (settings: any) => {
+    return api.patch("/users/notifications", settings);
+}
+
+export const updatePrivacySettings = async (settings: any) => {
+    return api.patch("/users/privacy", settings);
+}
+
+export const changePassword = async (data: any) => {
+    return api.post("/users/change-password", data);
+}
+
+export const deleteAccount = async () => {
+    return api.delete("/users/profile");
+}
+

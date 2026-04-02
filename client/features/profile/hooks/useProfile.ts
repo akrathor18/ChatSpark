@@ -13,6 +13,10 @@ export const useProfile = () => {
         updateUsername,
         uploadProfilePic,
         removeProfilePic,
+        updateNotificationSettings,
+        updatePrivacySettings,
+        changePassword,
+        deleteAccount,
         setUser,
         clearUser,
     } = useProfileStore();
@@ -29,7 +33,12 @@ export const useProfile = () => {
         updateUsername,
         uploadProfilePic,
         removeProfilePic,
+        updateNotificationSettings,
+        updatePrivacySettings,
+        changePassword,
+        deleteAccount,
         setUser,
         clearUser,
     };
+
 };

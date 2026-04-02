@@ -151,3 +151,64 @@ export const removeProfilePicController = async (
         });
     }
 };
+
+export const updateNotificationSettings = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const settings = req.body;
+
+        const updateSettings = await userService.updateNotificationSettings(userId, settings);
+
+        res.json({
+            message: "Notification settings updated",
+            settings: updateSettings,
+        });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const updatePrivacySettings = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const settings = req.body;
+
+        const updateSettings = await userService.updatePrivacySettings(userId, settings);
+
+        res.json({
+            message: "Privacy settings updated",
+            settings: updateSettings,
+        });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const changePassword = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ message: "Current and new password are required" });
+        }
+
+        const result = await userService.changePassword(userId, currentPassword, newPassword);
+
+        res.json(result);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const deleteAccount = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+
+        const result = await userService.deleteAccount(userId);
+
+        res.json(result);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
