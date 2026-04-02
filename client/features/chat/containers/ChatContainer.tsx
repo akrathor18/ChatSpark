@@ -101,6 +101,7 @@ export function ChatContainer({
             user={user}
             messages={messages}
             inputValue={inputValue}
+            setInputValue={setInputValue}
             virtuosoRef={virtuosoRef}
             inputRef={inputRef}
             onSend={handleSend}

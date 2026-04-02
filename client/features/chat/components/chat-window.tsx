@@ -25,11 +25,12 @@ import { cn } from "@/lib/utils"
 import type { Message, ChatUser } from "../containers/ChatContainer"
 import { useConversationStore } from "../store/useConversationStore"
 import { MessageContent, detectRawCode } from "./message-content"
-
+import NoMessage from "./no-message"
 interface ChatWindowLayoutProps {
   user: ChatUser | null
   messages: Message[]
   inputValue: string
+  setInputValue: (value: string) => void
   virtuosoRef: React.RefObject<VirtuosoHandle | null>
   inputRef: React.RefObject<HTMLTextAreaElement | null>
   onSend: () => void
@@ -55,7 +56,8 @@ export function ChatWindow({
   onLoadOlder,
   isLoadingOlder,
   hasMore,
-  isLoading, // Destructure loading state
+  isLoading,
+  setInputValue,
 }: ChatWindowLayoutProps) {
   const { typingUsers, selectedConversationId } = useConversationStore()
 
@@ -133,12 +135,7 @@ export function ChatWindow({
             </div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-muted-foreground mb-3 opacity-50">
-              <MessageSquare className="h-6 w-6" />
-            </div>
-            <p className="text-sm text-muted-foreground">No messages yet. Say hello!</p>
-          </div>
+          <NoMessage user={user} onSendMessage={setInputValue} />
         ) : (
           <Virtuoso
             ref={virtuosoRef}
