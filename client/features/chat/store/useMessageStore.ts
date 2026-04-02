@@ -13,7 +13,7 @@ interface MessageState {
     updateMessage: (conversationId: string, messageId: string, updates: any) => void;
 }
 
-const MESSAGES_LIMIT = 2000;
+const MESSAGES_LIMIT = 50;
 
 export const useMessageStore = create<MessageState>((set, get) => ({
     messages: {},
@@ -29,7 +29,7 @@ export const useMessageStore = create<MessageState>((set, get) => ({
         try {
             set({ isLoading: true, error: null });
 
-            // Axios interceptor unwraps response.data, so 'res' IS the payload
+            
             const res: any = await messageService.fetchMessages(conversationId, { limit: MESSAGES_LIMIT });
             
             console.log(`Store: Fetched ${res?.length || 0} initial messages for ${conversationId}`, res);

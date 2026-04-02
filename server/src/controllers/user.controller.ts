@@ -66,13 +66,9 @@ export const uploadProfilePicController = async (
     req: Request,
     res: Response
 ) => {
-    console.log("🔥 Controller hit");
     try {
         const userId = (req as any).user?.id;
         const file = req.file;
-
-        console.log("userId:", userId);
-        console.log("file:", file);
 
         if (!userId) {
             return res.status(401).json({

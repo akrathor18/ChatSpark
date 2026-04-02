@@ -9,7 +9,6 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
 
   useEffect(() => {
     const onConnect = () => {
-      console.log("Socket Connected:", socket.id);
 
       if (userId) {
         socket.emit("register_user", userId);

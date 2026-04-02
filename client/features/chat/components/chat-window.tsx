@@ -39,7 +39,7 @@ interface ChatWindowLayoutProps {
   onLoadOlder?: () => void
   isLoadingOlder?: boolean
   hasMore?: boolean
-  isLoading?: boolean // Added for empty state safety
+  isLoading?: boolean
 }
 
 export function ChatWindow({
@@ -127,10 +127,10 @@ export function ChatWindow({
       <div className="flex-1 min-h-0 bg-background/50 relative">
         {isLoading && messages.length === 0 ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-             <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
-                <Clock className="h-4 w-4 animate-spin" />
-                <span>Loading messages...</span>
-             </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
+              <Clock className="h-4 w-4 animate-spin" />
+              <span>Loading messages...</span>
+            </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
@@ -144,25 +144,27 @@ export function ChatWindow({
             ref={virtuosoRef}
             style={{ height: "100%" }}
             data={messages}
+            increaseViewportBy={{ top: 300, bottom: 300 }}
             initialTopMostItemIndex={Math.max(0, messages.length - 1)}
             followOutput="smooth"
             alignToBottom
-            startReached={onLoadOlder}
+            startReached={() => {
+              onLoadOlder?.();
+            }}
             itemContent={(index, message) => {
-              const prevSame = index > 0 && messages[index - 1].isSent === message.isSent
-              const nextSame = index < messages.length - 1 && messages[index + 1].isSent === message.isSent
-              const isLast = index === messages.length - 1
+              const prev = messages[index - 1]
+              const next = messages[index + 1]
 
               return (
                 <MessageItem
-                  key={message.id}
                   message={message}
-                  prevSame={prevSame}
-                  nextSame={nextSame}
-                  isLast={isLast}
+                  prevSame={prev?.isSent === message.isSent}
+                  nextSame={next?.isSent === message.isSent}
+                  isLast={index === messages.length - 1}
                 />
               )
             }}
+
             components={{
               Header: () => (
                 <div className="flex h-10 items-center justify-center">
@@ -190,6 +192,7 @@ export function ChatWindow({
                 </div>
               ),
             }}
+            firstItemIndex={100000 - messages.length}
           />
         )}
       </div>

@@ -22,7 +22,6 @@ export const mapMessages = (messages: any, conversationId: any, currentUserId: s
     const senderRaw = msg.senderId?._id || msg.senderId;
     const senderId = senderRaw?.toString();
     const currentId = currentUserId?.toString();
-    console.log("Mapping message:", { msg, senderId, currentId });
     return {
       id: msg._id?.toString() || msg.id?.toString() || msg.tempId,
       content: msg.content || "",
