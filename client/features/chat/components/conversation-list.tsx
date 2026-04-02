@@ -3,8 +3,9 @@
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Search, Sparkles, Plus, Settings } from "lucide-react"
+import { Search, Sparkles, Plus, Settings, X } from "lucide-react"
 import Link from "next/link"
+import { useState, useMemo } from "react"
 
 // Updated to match API response shape
 export interface Conversation {
@@ -31,6 +32,18 @@ interface ConversationListProps {
 }
 
 export function ConversationList({ conversations, selectedId, onSelect, newChatButton, user }: ConversationListProps) {
+  const [searchTerm, setSearchTerm] = useState("")
+
+  const filteredConversations = useMemo(() => {
+    const term = searchTerm.toLowerCase().trim()
+    if (!term) return conversations
+
+    return conversations.filter((conv) => {
+      const name = conv.user?.name?.toLowerCase() ?? ""
+      return name.includes(term)
+    })
+  }, [conversations, searchTerm])
+
   return (
     <div className="flex h-full flex-col bg-sidebar">
       {/* Header */}
@@ -63,11 +76,22 @@ export function ConversationList({ conversations, selectedId, onSelect, newChatB
           <input
             type="text"
             placeholder="Search conversations..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
           />
-          <kbd className="hidden rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-block">
-            /
-          </kbd>
+          {searchTerm ? (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="rounded-md p-0.5 hover:bg-secondary"
+            >
+              <X className="h-3 w-3 text-muted-foreground" />
+            </button>
+          ) : (
+            <kbd className="hidden rounded-md bg-secondary px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-block">
+              /
+            </kbd>
+          )}
         </div>
       </div>
 
@@ -81,73 +105,80 @@ export function ConversationList({ conversations, selectedId, onSelect, newChatB
       {/* Conversations */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-2" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className="space-y-0.5 pb-4">
-          {conversations.map((conversation) => {
-            // Destructure API fields
-            const { conversationId, user, lastMessage, lastMessageAt, unreadCount = 0,  } = conversation
-            const isOnline = conversation.isOnline || false;
+          {filteredConversations.length > 0 ? (
+            filteredConversations.map((conversation) => {
+              // Destructure API fields
+              const { conversationId, user, lastMessage, lastMessageAt, unreadCount = 0,  } = conversation
+              const isOnline = conversation.isOnline || false;
 
-            const name = user?.name ?? "Unknown"
-            const avatar = user?.avatar ?? ""
-            const timestamp = lastMessageAt
-              ? new Date(lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-              : ""
+              const name = user?.name ?? "Unknown"
+              const avatar = user?.avatar ?? ""
+              const timestamp = lastMessageAt
+                ? new Date(lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                : ""
 
-            return (
-              <button
-                key={conversationId}
-                onClick={() => onSelect(conversationId)}
-                className={cn(
-                  "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
-                  selectedId === conversationId
-                    ? "bg-sidebar-accent shadow-sm"
-                    : "hover:bg-sidebar-accent/50"
-                )}
-              >
-                <div className="relative shrink-0">
-                  <Avatar className="h-11 w-11 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
-                    <AvatarImage src={avatar} alt={name} />
-                    <AvatarFallback className="bg-secondary text-sm font-medium text-foreground">
-                      {name.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  {isOnline && (
-                    <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-sidebar bg-online shadow-sm shadow-online/50" />
+              return (
+                <button
+                  key={conversationId}
+                  onClick={() => onSelect(conversationId)}
+                  className={cn(
+                    "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all duration-200",
+                    selectedId === conversationId
+                      ? "bg-sidebar-accent shadow-sm"
+                      : "hover:bg-sidebar-accent/50"
                   )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={cn(
-                      "truncate text-sm transition-colors duration-200",
-                      selectedId === conversationId || unreadCount > 0
-                        ? "font-semibold text-foreground"
-                        : "font-medium text-foreground/90"
-                    )}>
-                      {name}
-                    </span>
-                    <span className={cn(
-                      "shrink-0 text-[11px] transition-colors duration-200",
-                      unreadCount > 0 ? "font-medium text-primary" : "text-muted-foreground"
-                    )}>
-                      {timestamp}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 flex items-center justify-between gap-2">
-                    <p className={cn(
-                      "truncate text-[13px] transition-colors duration-200",
-                      unreadCount > 0 ? "text-foreground/80" : "text-muted-foreground"
-                    )}>
-                      {lastMessage ?? "No messages yet"}
-                    </p>
-                    {unreadCount > 0 && (
-                      <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm shadow-primary/30">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </span>
+                >
+                  <div className="relative shrink-0">
+                    <Avatar className="h-11 w-11 ring-2 ring-transparent transition-all duration-200 group-hover:ring-primary/20">
+                      <AvatarImage src={avatar} alt={name} />
+                      <AvatarFallback className="bg-secondary text-sm font-medium text-foreground">
+                        {name.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    {isOnline && (
+                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-sidebar bg-online shadow-sm shadow-online/50" />
                     )}
                   </div>
-                </div>
-              </button>
-            )
-          })}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={cn(
+                        "truncate text-sm transition-colors duration-200",
+                        selectedId === conversationId || unreadCount > 0
+                          ? "font-semibold text-foreground"
+                          : "font-medium text-foreground/90"
+                      )}>
+                        {name}
+                      </span>
+                      <span className={cn(
+                        "shrink-0 text-[11px] transition-colors duration-200",
+                        unreadCount > 0 ? "font-medium text-primary" : "text-muted-foreground"
+                      )}>
+                        {timestamp}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 flex items-center justify-between gap-2">
+                      <p className={cn(
+                        "truncate text-[13px] transition-colors duration-200",
+                        unreadCount > 0 ? "text-foreground/80" : "text-muted-foreground"
+                      )}>
+                        {lastMessage ?? "No messages yet"}
+                      </p>
+                      {unreadCount > 0 && (
+                        <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground shadow-sm shadow-primary/30">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              )
+            })
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-sm font-medium text-muted-foreground">No conversations found</p>
+              <p className="text-xs text-muted-foreground/70">Try a different search term</p>
+            </div>
+          )}
         </div>
       </div>
 
