@@ -8,6 +8,10 @@ export const updateUsername = async (username: string) => {
     return api.put("/users/username", { username });
 }
 
+export const updateProfile = async (data: { name: string, bio: string }) => {
+    return api.patch("/users/profile", data);
+}
+
 export const checkUsername = async (username: string) => {
     return api.get(`/users/check-username?username=${username}`);
 }

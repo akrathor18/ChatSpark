@@ -40,6 +40,7 @@ export function ProfileContainer() {
     getProfile,
     checkUsername,
     updateUsername,
+    updateProfile,
     uploadProfilePic,
     removeProfilePic,
     updateNotificationSettings,
@@ -231,6 +232,18 @@ export function ProfileContainer() {
   const onSubmit = async (data: ProfileFormData) => {
     setIsSaving(true)
     try {
+      // 1. Update Name and Bio
+      const profileSuccess = await updateProfile({
+        name: data.name,
+        bio: data.bio || "",
+      })
+
+      if (!profileSuccess) {
+        setIsSaving(false)
+        return
+      }
+
+      // 2. Update Username if changed
       if (data.username !== user?.username) {
         const success = await updateUsername(data.username)
         if (!success) {
@@ -238,9 +251,6 @@ export function ProfileContainer() {
           return
         }
       }
-      
-      // Simulate other field saves
-      await new Promise((resolve) => setTimeout(resolve, 800))
       
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)

@@ -23,6 +23,7 @@ export interface IUser extends Document {
         showOnlineStatus: boolean;
         readReceipts: boolean;
     };
+    bio?: string;
     createdAt: Date;
     updatedAt: Date;
 
@@ -108,6 +109,11 @@ const userSchema = new Schema<IUser>(
                 type: Boolean,
                 default: true,
             },
+        },
+        bio: {
+            type: String,
+            default: "",
+            maxlength: 200,
         },
     },
     {

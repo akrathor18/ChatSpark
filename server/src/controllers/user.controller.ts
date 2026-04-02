@@ -184,6 +184,22 @@ export const updatePrivacySettings = async (req: Request, res: Response) => {
     }
 };
 
+export const updateProfile = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { name, bio } = req.body;
+
+        const updatedUser = await userService.updateProfileService(userId, { name, bio });
+
+        res.json({
+            message: "Profile updated successfully",
+            user: updatedUser,
+        });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 export const changePassword = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;

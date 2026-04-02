@@ -11,6 +11,7 @@ interface ProfileState {
     getProfile: () => Promise<void>;
     checkUsername: (username: string) => Promise<void>;
     updateUsername: (username: string) => Promise<boolean>;
+    updateProfile: (data: { name: string, bio: string }) => Promise<boolean>;
     uploadProfilePic: (file: File) => Promise<boolean>;
     removeProfilePic: () => Promise<boolean>;
     updateNotificationSettings: (settings: any) => Promise<boolean>;
@@ -75,6 +76,27 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             return true;
         } catch (error: any) {
             console.error("Update Username Error:", error);
+            set({ isLoading: false, error });
+            return false;
+        }
+    },
+
+    updateProfile: async (data: { name: string, bio: string }) => {
+        try {
+            set({ isLoading: true, error: null });
+            const res: any = await profileService.updateProfile(data);
+            
+            // Sync the local user state
+            const currentUser = get().user;
+            if (currentUser) {
+                set({ user: { ...currentUser, name: data.name, bio: data.bio }, isLoading: false });
+            } else {
+                set({ user: res.user, isLoading: false });
+            }
+            
+            return true;
+        } catch (error: any) {
+            console.error("Update Profile Error:", error);
             set({ isLoading: false, error });
             return false;
         }

@@ -201,6 +201,17 @@ export const changePassword = async (userId: string, currentPassword: string, ne
     return { success: true, message: "Password updated successfully" };
 };
 
+export const updateProfileService = async (userId: string, data: { name?: string; bio?: string }) => {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    if (data.name) user.name = data.name;
+    if (data.bio !== undefined) user.bio = data.bio;
+
+    await user.save();
+    return user;
+};
+
 export const deleteAccount = async (userId: string) => {
     const user = await User.findById(userId);
     if (!user) throw new Error("User not found");
