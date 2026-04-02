@@ -228,4 +228,15 @@ export const deleteAccount = async (userId: string) => {
     await User.findByIdAndDelete(userId);
 
     return { success: true, message: "Account deleted successfully" };
-};
+};
+
+export const getUserByUsernameService = async (username: string) => {
+    const user = await User.findOne({ username: username.toLowerCase() })
+        .select("_id username name avatar bio isOnline lastSeen createdAt privacySettings");
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return user;
+};

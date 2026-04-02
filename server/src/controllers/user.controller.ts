@@ -227,4 +227,20 @@ export const deleteAccount = async (req: Request, res: Response) => {
     } catch (error: any) {
         res.status(400).json({ message: error.message });
     }
-};
+};
+
+export const getUserByUsername = async (req: Request, res: Response) => {
+    try {
+        const { username } = req.params;
+
+        if (!username) {
+            return res.status(400).json({ message: "Username required" });
+        }
+
+        const user = await userService.getUserByUsernameService(username);
+
+        res.json(user);
+    } catch (error: any) {
+        res.status(404).json({ message: error.message || "User not found" });
+    }
+};
