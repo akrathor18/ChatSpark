@@ -25,7 +25,7 @@ export function ProfileCard({
   showOnlineStatus,
   onMessage,
 }: Props) {
-  const isOnline = user.isOnline
+  const isOnline = user?.isOnline || false
 
   const presenceNode = showOnlineStatus ? (
     isOnline ? (

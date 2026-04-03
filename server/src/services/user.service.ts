@@ -1,6 +1,12 @@
 import cloudinary from "../config/cloudinary.js";
 import { User } from "../models/user.model.js";
 import type { File } from "multer";
+// services/user.service.ts
+import mongoose from "mongoose";
+import { Message } from "../models/message.model.js";
+import { Conversation } from "../models/conversations.model.js";
+import { ConversationMember } from "../models/conversationMembers.model.js";
+import { AppError } from "../utils/AppError.js";
 import bcrypt from "bcryptjs";
 import {
     isValidUsername,
@@ -212,22 +218,69 @@ export const updateProfileService = async (userId: string, data: { name?: string
     return user;
 };
 
+
+
 export const deleteAccount = async (userId: string) => {
-    const user = await User.findById(userId);
-    if (!user) throw new Error("User not found");
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Cleanup: Delete profile pic from Cloudinary if exists
-    if (user.avatarId) {
-        try {
-            await cloudinary.uploader.destroy(user.avatarId);
-        } catch (err: any) {
-            console.warn("Cloudinary delete failed during account deletion:", err.message);
+    try {
+        const user = await User.findById(userId).session(session);
+        if (!user) {
+            throw new AppError("User not found", 404);
         }
+
+        // Delete avatar (external service, not transactional)
+        if (user.avatarId) {
+            try {
+                await cloudinary.uploader.destroy(user.avatarId);
+            } catch (err: any) {
+                console.warn("Cloudinary delete failed:", err.message);
+            }
+        }
+
+        // Cleanup related data (parallel)
+
+        // 1. Find all conversations the user is a member of
+        const userConversations = await ConversationMember.find({ userId }).session(session);
+
+        for (const memberRecord of userConversations) {
+            const conversationId = memberRecord.conversationId;
+            const conversation = await Conversation.findById(conversationId).session(session);
+
+            if (conversation) {
+                if (conversation.type === "direct") {
+                    // Delete entire 1:1 conversation
+                    await Promise.all([
+                        Conversation.findByIdAndDelete(conversationId).session(session),
+                        Message.deleteMany({ conversationId }).session(session),
+                        ConversationMember.deleteMany({ conversationId }).session(session),
+                    ]);
+                } else {
+                    // Group chat: just remove the member mapping
+                    await ConversationMember.deleteOne({ _id: memberRecord._id }).session(session);
+                }
+            }
+        }
+
+        // 2. Global Message cleanup: Delete all messages sent by this user (including in groups)
+        await Message.deleteMany({ senderId: userId }).session(session);
+
+        // 3. Delete user
+        await User.findByIdAndDelete(userId).session(session);
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return {
+            success: true,
+            message: "Account deleted successfully",
+        };
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
     }
-
-    await User.findByIdAndDelete(userId);
-
-    return { success: true, message: "Account deleted successfully" };
 };
 
 export const getUserByUsernameService = async (username: string) => {

@@ -20,7 +20,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
             const res: any = await authService.login(email, password);
             useProfileStore.getState().setUser(res.user);
-
+            set({ isLoading: false, error: null });
             return true;
         } catch (error: any) {
             console.log(error);
@@ -34,7 +34,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ isLoading: true, error: null });
             const res: any = await authService.register(name, email, password);
             useProfileStore.getState().setUser(res.user);
-
+            set({ isLoading: false, error: null });
             return true;
         } catch (error: any) {
             console.log(error);
@@ -49,6 +49,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ isLoading: true, error: null });
             await authService.logout();
             useProfileStore.getState().clearUser();
+            set({ isLoading: false, error: null });
             return true;
         }
         catch (error: any) {
