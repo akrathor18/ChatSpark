@@ -80,7 +80,7 @@ export const updateUsernameService = async (
         throw new Error("User not found");
     }
 
-    
+
     if (user.username === normalized) {
         return user;
     }
@@ -292,4 +292,20 @@ export const getUserByUsernameService = async (username: string) => {
     }
 
     return user;
+};
+
+
+export const getMe = async (userId: string) => {
+    const user = await User.findById(userId).select("username email");
+
+    if (!user) {
+        throw new Error("User not found");
+    }
+
+    return {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        isOnboarded: Boolean(user.username && user.username.trim().length > 0),
+    };
 };

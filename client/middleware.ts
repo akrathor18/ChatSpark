@@ -3,6 +3,8 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
     const token = request.cookies.get("token")?.value;
+    const nextAuthSession = request.cookies.get("next-auth.session-token")?.value;
+    const secureNextAuthSession = request.cookies.get("__Secure-next-auth.session-token")?.value;
 
     const protectedRoutes = ["/chat", "/profile"];
 
@@ -10,10 +12,11 @@ export function middleware(request: NextRequest) {
         request.nextUrl.pathname.startsWith(route)
     );
 
-    if (isProtected && !token) {
+    const isAuth = !!(token || nextAuthSession || secureNextAuthSession);
+
+    if (isProtected && !isAuth) {
         return NextResponse.redirect(new URL("/sign-in", request.url));
     }
-
     return NextResponse.next();
 }
 

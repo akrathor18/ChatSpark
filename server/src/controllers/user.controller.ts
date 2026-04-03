@@ -244,3 +244,14 @@ export const getUserByUsername = async (req: Request, res: Response) => {
         res.status(404).json({ message: error.message || "User not found" });
     }
 };
+
+export const getMeController = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id; 
+        const data = await userService.getMe(userId);
+
+        res.json(data);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};

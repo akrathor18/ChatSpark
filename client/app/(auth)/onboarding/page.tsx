@@ -28,6 +28,8 @@ type UsernameStatus = "idle" | "checking" | "available" | "taken" | "invalid"
 export default function OnboardingPage() {
   const {
     user,
+    isLoading,
+    getProfile,
     checkUsername: checkUsernameStore,
     updateUsername,
     uploadProfilePic,
@@ -48,13 +50,24 @@ export default function OnboardingPage() {
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  if (!user) {
-    redirect("/sign-up");
-  }
+  // Fetch profile if not already in store
+  useEffect(() => {
+    if (!user && !isLoading) {
+      getProfile()
+    }
+  }, [user, isLoading, getProfile])
 
-  if (user.username) {
-    redirect("/chat");
-  }
+  // Handles redirection after loading
+  // useEffect(() => {
+  //   if (!isLoading) {
+  //     if (!user) {
+  //       router.push("/sign-in")
+  //     } else if (user.username) {
+  //       router.push("/chat")
+  //     }
+  //   }
+  // }, [user, isLoading, router])
+
 
   // Set initial avatar from user if exists (e.g. OAuth avatar)
   useEffect(() => {
@@ -226,6 +239,17 @@ export default function OnboardingPage() {
 
   const statusMessage = getStatusMessage()
   const isFormBusy = isSubmitting || isUploadingAvatar
+
+  if (isLoading || !user || user.username) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground animate-pulse">Initializing your experience...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full max-w-md">

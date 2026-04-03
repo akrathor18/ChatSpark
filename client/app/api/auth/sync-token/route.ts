@@ -2,7 +2,6 @@ import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
-  // getToken reads the raw JWT from the session cookie — more reliable than getServerSession
   const jwtToken = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
@@ -10,17 +9,35 @@ export async function GET(req: NextRequest) {
 
   const backendToken = jwtToken?.backendToken as string | undefined;
 
-  // Determine where to redirect after syncing (default: /chat)
-  const next = req.nextUrl.searchParams.get("next") || "/chat";
-
   if (!backendToken) {
-    console.warn("[sync-token] No backendToken found in JWT. jwtToken:", jwtToken);
-    return NextResponse.redirect(new URL(next, req.url));
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const response = NextResponse.redirect(new URL(next, req.url));
+  // Fetch user from backend
+  let isOnboarded = false;
 
-  // Set the backend token as an httpOnly cookie on the BROWSER response
+  try {
+    const res = await fetch(`${process.env.BACKEND_URL}/api/user/me`, {
+      headers: {
+        Authorization: `Bearer ${backendToken}`,
+      },
+    });
+
+    const user = await res.json();
+
+    isOnboarded = Boolean(user?.username?.trim());
+  } catch (err) {
+    console.error("[sync-token] Failed to fetch user:", err);
+  }
+
+
+  const redirectPath = isOnboarded ? "/chat" : "/onboarding";
+  const response = NextResponse.redirect(new URL(redirectPath, req.url));
+
+  // Fix race condition: prevent browser/middleware from caching the unauthorized state
+  response.headers.set('Cache-Control', 'no-store, max-age=0');
+
+ 
   response.cookies.set("token", backendToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -31,4 +48,3 @@ export async function GET(req: NextRequest) {
 
   return response;
 }
-

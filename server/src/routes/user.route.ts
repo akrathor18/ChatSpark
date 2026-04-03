@@ -22,5 +22,5 @@ router.patch("/privacy", authMiddleware, userController.updatePrivacySettings);
 router.patch("/profile", authMiddleware, userController.updateProfile);
 router.post("/change-password", authMiddleware, userController.changePassword);
 router.delete("/profile", authMiddleware, userController.deleteAccount);
-
-export default router;
+router.get("/me", authMiddleware, userController.getMeController);
+export default router;
