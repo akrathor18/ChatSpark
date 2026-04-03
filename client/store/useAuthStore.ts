@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import * as authService from "@/services/auth.service"
 import { useProfileStore } from "@/features/profile/store/useProfileStore";
+import { signOut } from "next-auth/react"; // clear next-auth session on logout
 interface AuthState {
     isLoading: boolean;
     error: any
@@ -49,6 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ isLoading: true, error: null });
             await authService.logout();
             useProfileStore.getState().clearUser();
+            await signOut({ redirect: false });
             set({ isLoading: false, error: null });
             return true;
         }
