@@ -40,6 +40,7 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>
 type PageState = "validating" | "idle" | "loading" | "success" | "expired" | "error"
+type ErrorInfo = { message: string } | null
 
 // Password strength rules
 const strengthRules = [
@@ -70,6 +71,7 @@ export default function ResetPasswordPage({
 
     const decodedToken = decodeURIComponent(token)
     const [pageState, setPageState] = useState<PageState>("idle")
+    const [errorInfo, setErrorInfo] = useState<ErrorInfo>(null)
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
     const [watchedPassword, setWatchedPassword] = useState("")
@@ -89,15 +91,28 @@ export default function ResetPasswordPage({
 
     const onSubmit = async (data: FormValues) => {
         setPageState("loading")
+        setErrorInfo(null)
         try {
             await resetPassword(decodedToken, data.password)
             setPageState("success")
         } catch (error: any) {
             console.error("Reset password error:", error)
-            const errorMessage = typeof error === 'string' ? error.toLowerCase() : ""
-            if (errorMessage.includes("token") || errorMessage.includes("expired") || errorMessage.includes("invalid")) {
+
+            // The Axios interceptor rejects with a plain string message
+            const serverMessage: string =
+                typeof error === "string"
+                    ? error
+                    : error?.response?.data?.error ||
+                      error?.response?.data?.message ||
+                      error?.message ||
+                      "Something went wrong"
+
+            const msg = serverMessage.toLowerCase()
+
+            if (msg.includes("token") || msg.includes("expired") || msg.includes("invalid")) {
                 setPageState("expired")
             } else {
+                setErrorInfo({ message: serverMessage })
                 setPageState("error")
             }
         }
@@ -355,6 +370,19 @@ export default function ResetPasswordPage({
                             <p className="text-xs text-destructive">{errors.confirmPassword?.message}</p>
                         </div>
                     </div>
+
+                    {/* Inline error banner for generic errors */}
+                    {pageState === "error" && errorInfo && (
+                        <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 animate-in fade-in-0 slide-in-from-top-2 duration-300">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                            <div className="flex-1">
+                                <p className="text-sm font-medium text-destructive">Password reset failed</p>
+                                <p className="mt-0.5 text-xs text-muted-foreground">
+                                    {errorInfo.message}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     <Button
                         type="submit"
