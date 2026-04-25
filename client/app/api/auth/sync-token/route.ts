@@ -1,44 +1,48 @@
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export async function GET(req: NextRequest) {
-  const jwtToken = await getToken({
+  const sessionToken = await getToken({
     req,
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  const backendToken = jwtToken?.backendToken as string | undefined;
+  const apiToken = sessionToken?.backendToken as string | undefined;
 
-  if (!backendToken) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  if (!apiToken) {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
-  // Fetch user from backend
   let isOnboarded = false;
 
   try {
-    const res = await fetch(`${process.env.BACKEND_URL}/api/user/me`, {
+    // The server auth middleware reads tokens from cookies, not Authorization headers.
+    // Send the token as a cookie so the server can authenticate the request.
+    const res = await fetch(`${API_URL}/users/me`, {
       headers: {
-        Authorization: `Bearer ${backendToken}`,
+        Cookie: `token=${apiToken}`,
       },
     });
 
-    const user = await res.json();
+    if (!res.ok) {
+      throw new Error(`API responded with ${res.status}`);
+    }
 
+    const user = await res.json();
     isOnboarded = Boolean(user?.username?.trim());
   } catch (err) {
-    console.error("[sync-token] Failed to fetch user:", err);
+    console.error("[sync-token] Failed:", err);
+    return NextResponse.redirect(new URL("/sign-in", req.url));
   }
-
 
   const redirectPath = isOnboarded ? "/chat" : "/onboarding";
   const response = NextResponse.redirect(new URL(redirectPath, req.url));
 
-  // Fix race condition: prevent browser/middleware from caching the unauthorized state
-  response.headers.set('Cache-Control', 'no-store, max-age=0');
+  response.headers.set("Cache-Control", "no-store, max-age=0");
 
- 
-  response.cookies.set("token", backendToken, {
+  response.cookies.set("token", apiToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
@@ -47,4 +51,4 @@ export async function GET(req: NextRequest) {
   });
 
   return response;
-}
+}

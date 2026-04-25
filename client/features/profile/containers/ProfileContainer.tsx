@@ -261,8 +261,8 @@ export function ProfileContainer() {
     }
   }
 
-  const onSignOut = () => {
-    logout()
+  const onSignOut = async () => {
+    await logout()
     router.push("/")
   }
 
@@ -270,7 +270,7 @@ export function ProfileContainer() {
     if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
       const success = await deleteAccount()
       if (success) {
-          logout()
+          await logout()
           router.push("/")
       } else {
           alert("Failed to delete account. Please try again.")

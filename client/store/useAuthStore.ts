@@ -50,14 +50,18 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ isLoading: true, error: null });
             await authService.logout();
             useProfileStore.getState().clearUser();
-            await signOut({ redirect: false });
             set({ isLoading: false, error: null });
             return true;
         }
         catch (error: any) {
             console.log(error);
+            useProfileStore.getState().clearUser();
             set({ isLoading: false, error: error });
             return false;
+        }
+        finally {
+            // Always clear NextAuth session cookies, even if backend logout failed
+            await signOut({ redirect: false });
         }
     }
 
