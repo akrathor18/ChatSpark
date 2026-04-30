@@ -3,28 +3,8 @@
 import React, { useState, useMemo, memo } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
 import { atomDark as atomOneDark } from "react-syntax-highlighter/dist/esm/styles/prism"
-import js from "react-syntax-highlighter/dist/esm/languages/prism/javascript"
-import ts from "react-syntax-highlighter/dist/esm/languages/prism/typescript"
-import tsx from "react-syntax-highlighter/dist/esm/languages/prism/tsx"
-import jsx from "react-syntax-highlighter/dist/esm/languages/prism/jsx"
-import python from "react-syntax-highlighter/dist/esm/languages/prism/python"
-import json from "react-syntax-highlighter/dist/esm/languages/prism/json"
-import css from "react-syntax-highlighter/dist/esm/languages/prism/css"
-import markdown from "react-syntax-highlighter/dist/esm/languages/prism/markdown"
-import html from "react-syntax-highlighter/dist/esm/languages/prism/markup"
-// Register common languages for light build
-SyntaxHighlighter.registerLanguage("javascript", js)
-SyntaxHighlighter.registerLanguage("typescript", ts)
-SyntaxHighlighter.registerLanguage("ts", ts)
-SyntaxHighlighter.registerLanguage("tsx", tsx)
-SyntaxHighlighter.registerLanguage("jsx", jsx)
-SyntaxHighlighter.registerLanguage("python", python)
-SyntaxHighlighter.registerLanguage("json", json)
-SyntaxHighlighter.registerLanguage("css", css)
-SyntaxHighlighter.registerLanguage("markdown", markdown)
-SyntaxHighlighter.registerLanguage("html", html)
 
 import hljs from "highlight.js"
 import { Copy, Check, Terminal } from "lucide-react"
@@ -228,7 +208,7 @@ const CodeBlock = memo(({ language, value }: CodeBlockProps) => {
       >
         {isVisible ? (
           <SyntaxHighlighter
-            language={language || "text"}
+            language={language || "typescript"}
             style={atomOneDark}
             customStyle={{
               margin: 0,
