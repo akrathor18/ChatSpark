@@ -132,7 +132,10 @@ export const getUserConversationsService = async (userId: string, page = 1, limi
 
   // Query 2: get conversations + other members in parallel
   const [conversations, members] = await Promise.all([
-    Conversation.find({ _id: { $in: conversationIds } })
+    Conversation.find({
+      _id: { $in: conversationIds },
+      "deletedFor.user": { $ne: userId },
+    })
       .sort({ updatedAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -192,4 +195,34 @@ export const markAsReadService = async (conversationId: string, userId: string) 
         { $set: { lastReadAt: new Date() } },
         { new: true }
     );
+};
+
+export const deleteChatForUserService = async (conversationId: string, userId: string) => {
+    // Validate conversation exists
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) {
+        throw Object.assign(new Error("Conversation not found"), { status: 404 });
+    }
+
+    // Validate user is a participant
+    const membership = await ConversationMember.findOne({ conversationId, userId });
+    if (!membership) {
+        throw Object.assign(new Error("You are not a participant of this conversation"), { status: 403 });
+    }
+
+    // $addToSet prevents duplicate entries
+    await Conversation.findByIdAndUpdate(conversationId, {
+        $addToSet: {
+            deletedFor: { user: userId, deletedAt: new Date() },
+        },
+    });
+
+    return { success: true };
+};
+
+export const restoreChatForUsersService = async (conversationId: string) => {
+    // Remove all users from deletedFor — chat is restored for everyone
+    return await Conversation.findByIdAndUpdate(conversationId, {
+        $set: { deletedFor: [] },
+    });
 };

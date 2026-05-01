@@ -23,6 +23,7 @@ interface ConversationState {
     setSelectedConversationId: (id: string | null) => void;
     markAsRead: (id: string) => Promise<void>;
     updateConversationFromMessage: (message: any) => void;
+    deleteChatForUser: (conversationId: string) => Promise<void>;
     resetOnlineUsers: () => void;
     setUserOnline: (userId: string, isOnline: boolean, lastSeen?: string) => void;
     setTyping: (conversationId: string, userId: string, isTyping: boolean) => void;
@@ -141,6 +142,30 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
             await conversationService.markAsRead(id);
         } catch (error) {
             console.error("Failed to mark as read:", error);
+        }
+    },
+
+    deleteChatForUser: async (conversationId: string) => {
+        const { conversations, selectedConversationId, fetchConversations } = get();
+
+        // Optimistic: remove from state immediately
+        const backup = [...conversations];
+        set({
+            conversations: conversations.filter(
+                (c) => c.conversationId?.toString() !== conversationId.toString()
+            ),
+            // Clear selection if the deleted chat was selected
+            ...(selectedConversationId?.toString() === conversationId.toString()
+                ? { selectedConversationId: null, selectedConversationUser: null }
+                : {}),
+        });
+
+        try {
+            await conversationService.deleteChatForUser(conversationId);
+        } catch (error) {
+            console.error("Failed to delete chat:", error);
+            // Rollback on failure
+            set({ conversations: backup });
         }
     },
 

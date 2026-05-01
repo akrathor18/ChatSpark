@@ -1,4 +1,4 @@
-import { createConversationService, getUserConversationsService, markAsReadService } from "../services/conversation.service.js";
+import { createConversationService, getUserConversationsService, markAsReadService, deleteChatForUserService } from "../services/conversation.service.js";
 import type { Request, Response } from "express";
 
 export const createConversationController = async (req: Request, res: Response) => {
@@ -61,6 +61,27 @@ export const markAsReadController = async (req: Request, res: Response) => {
 
     } catch (error: any) {
         res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+export const deleteChatForUserController = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { id: conversationId } = req.params;
+
+        await deleteChatForUserService(conversationId, userId);
+
+        res.status(200).json({
+            success: true,
+            message: "Chat deleted successfully"
+        });
+
+    } catch (error: any) {
+        const status = error.status || 500;
+        res.status(status).json({
             success: false,
             message: error.message
         });

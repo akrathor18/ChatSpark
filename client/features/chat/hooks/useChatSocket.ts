@@ -80,6 +80,11 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       useConversationStore.getState().setTyping(convId, uid, false);
     };
 
+    const onChatRestored = ({ conversationId: convId }: any) => {
+      // Re-fetch conversations so the restored chat appears in sidebar
+      useConversationStore.getState().fetchConversations();
+    };
+
     // REGISTER EVENTS
     socket.on("connect", onConnect);
     socket.on("receive_message", onReceiveMessage);
@@ -92,6 +97,7 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     socket.on("disconnect", onDisconnect);
     socket.on("typing", onTyping);
     socket.on("stop_typing", onStopTyping);
+    socket.on("chatRestored", onChatRestored);
 
     if (socket.connected) {
       onConnect();
@@ -114,6 +120,7 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
 
       socket.off("typing", onTyping);
       socket.off("stop_typing", onStopTyping);
+      socket.off("chatRestored", onChatRestored);
     };
 
   }, [conversationId, userId]);

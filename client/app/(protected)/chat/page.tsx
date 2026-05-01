@@ -23,6 +23,7 @@ export default function ChatPage() {
     setSelectedConversationId,
     selectedConversationUser,
     userStatus,
+    deleteChatForUser,
   } = useConversationStore();
 
   const { messages, fetchMessages } = useMessageStore();
@@ -64,6 +65,16 @@ export default function ChatPage() {
   const handleTyping = useCallback(() => {
     startTyping();
   }, [startTyping]);
+
+  const handleDeleteChat = useCallback((conversationId: string) => {
+    deleteChatForUser(conversationId);
+  }, [deleteChatForUser]);
+
+  const handleDeleteCurrentChat = useCallback(() => {
+    if (selectedConversationId) {
+      deleteChatForUser(selectedConversationId);
+    }
+  }, [selectedConversationId, deleteChatForUser]);
 
   const handleNewChat = useCallback((user: any, conversationId: string) => {
     if (conversationId) {
@@ -127,6 +138,7 @@ export default function ChatPage() {
           conversations={conversationsWithStatus}
           selectedId={selectedConversationId}
           onSelect={handleSelectConversation}
+          onDelete={handleDeleteChat}
           user={user}
           newChatButton={
             <NewChatModal
@@ -151,6 +163,7 @@ export default function ChatPage() {
           onSendMessage={handleSendMessage}
           onTyping={handleTyping}
           onBack={handleBack}
+          onDeleteChat={handleDeleteCurrentChat}
         />
       </main>
     </div>

@@ -4,6 +4,12 @@ import { useRef, useMemo, memo, useCallback } from "react"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import {
   Phone,
@@ -19,7 +25,7 @@ import {
   ArrowLeft,
   Clock,
   AlertCircle,
-  MessageSquare,
+  Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Message, ChatUser } from "../containers/ChatContainer"
@@ -37,6 +43,7 @@ interface ChatWindowLayoutProps {
   onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   onKeyDown: (e: React.KeyboardEvent) => void
   onBack?: () => void
+  onDeleteChat?: () => void
   onLoadOlder?: () => void
   isLoadingOlder?: boolean
   hasMore?: boolean
@@ -53,6 +60,7 @@ export function ChatWindow({
   onInputChange,
   onKeyDown,
   onBack,
+  onDeleteChat,
   onLoadOlder,
   isLoadingOlder,
   hasMore,
@@ -121,7 +129,22 @@ export function ChatWindow({
         <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground"><Phone className="h-4 w-4" /></Button>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground"><Video className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground"><MoreHorizontal className="h-4 w-4" /></Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuItem
+                onClick={onDeleteChat}
+                className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Chat
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 

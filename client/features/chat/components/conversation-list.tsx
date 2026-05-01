@@ -3,7 +3,13 @@
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Search, Sparkles, Plus, Settings, X } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Search, Sparkles, Plus, Settings, X, MoreVertical, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useState, useMemo } from "react"
 
@@ -27,11 +33,12 @@ interface ConversationListProps {
   conversations: Conversation[]
   selectedId: string | null
   onSelect: (id: string) => void
+  onDelete: (id: string) => void
   newChatButton?: React.ReactNode
   user: any
 }
 
-export function ConversationList({ conversations, selectedId, onSelect, newChatButton, user }: ConversationListProps) {
+export function ConversationList({ conversations, selectedId, onSelect, onDelete, newChatButton, user }: ConversationListProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredConversations = useMemo(() => {
@@ -149,12 +156,36 @@ export function ConversationList({ conversations, selectedId, onSelect, newChatB
                       )}>
                         {name}
                       </span>
-                      <span className={cn(
-                        "shrink-0 text-[11px] transition-colors duration-200",
-                        unreadCount > 0 ? "font-medium text-primary" : "text-muted-foreground"
-                      )}>
-                        {timestamp}
-                      </span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className={cn(
+                          "text-[11px] transition-colors duration-200",
+                          unreadCount > 0 ? "font-medium text-primary" : "text-muted-foreground"
+                        )}>
+                          {timestamp}
+                        </span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-6 w-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-secondary"
+                            >
+                              <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(conversationId);
+                              }}
+                              className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Chat
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                     <div className="mt-0.5 flex items-center justify-between gap-2">
                       <p className={cn(

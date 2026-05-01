@@ -29,6 +29,7 @@ interface ChatContainerProps {
     onSendMessage: (content: string) => void
     onTyping?: () => void
     onBack?: () => void
+    onDeleteChat?: () => void
 }
 
 export function ChatContainer({
@@ -37,6 +38,7 @@ export function ChatContainer({
     onSendMessage,
     onTyping,
     onBack,
+    onDeleteChat,
 }: ChatContainerProps) {
     // ── State ──────────────────────────────────────────────────────────────────
     const [inputValue, setInputValue] = useState("")
@@ -108,6 +110,7 @@ export function ChatContainer({
             onInputChange={handleInputChange}
             onKeyDown={handleKeyDown}
             onBack={onBack}
+            onDeleteChat={onDeleteChat}
             onLoadOlder={handleLoadOlder}
             isLoadingOlder={isLoadingOlder}
             hasMore={!!(selectedConversationId && hasMore[selectedConversationId])}

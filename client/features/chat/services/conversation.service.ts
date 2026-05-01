@@ -11,3 +11,7 @@ export const createConversation = async (userId: string) => {
 export const markAsRead = async (conversationId: string) => {
     return api.patch(`/conversations/${conversationId}/read`);
 }
+
+export const deleteChatForUser = async (conversationId: string) => {
+    return api.delete(`/conversations/${conversationId}`);
+}

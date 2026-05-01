@@ -1,5 +1,10 @@
 import mongoose, { Document, Schema, Types } from 'mongoose';
 
+export interface IDeletedFor {
+    user: Types.ObjectId;
+    deletedAt: Date;
+}
+
 export interface IConversation extends Document {
     type: string;
     name: string;
@@ -7,6 +12,7 @@ export interface IConversation extends Document {
     lastMessageId?: Types.ObjectId;
     lastMessage?: string;
     lastMessageAt?: Date;
+    deletedFor: IDeletedFor[];
     updatedAt: Date;
 }
 
@@ -33,7 +39,19 @@ const conversationSchema = new Schema(
         
         lastMessageAt: {
             type: Date,
-        }
+        },
+
+        deletedFor: [{
+            user: {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+            },
+            deletedAt: {
+                type: Date,
+                default: Date.now,
+            },
+            _id: false,
+        }],
         
     },
     { timestamps: true }

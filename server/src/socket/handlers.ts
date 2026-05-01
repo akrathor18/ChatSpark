@@ -70,8 +70,8 @@ export const registerHandlers = (io: Server, socket: Socket) => {
         return;
       }
 
-      // ✅ save to DB
-      const message = await createMessage({
+      // ✅ save to DB (also restores chat if it was soft-deleted)
+      const { message, restoredChat } = await createMessage({
         conversationId,
         senderId,
         content,
@@ -98,6 +98,14 @@ export const registerHandlers = (io: Server, socket: Socket) => {
           io.to(`user_${memberId}`).emit("receive_message", finalMessage);
         }
       });
+
+      // ✅ If chat was restored from soft-delete, notify members to refresh
+      if (restoredChat) {
+        members.forEach((member) => {
+          const memberId = member.userId.toString();
+          io.to(`user_${memberId}`).emit("chatRestored", { conversationId });
+        });
+      }
 
     } catch (error) {
       console.error("Socket send_message error:", error);
