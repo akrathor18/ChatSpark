@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Search, Sparkles, Plus, Settings, X, MoreVertical, Trash2 } from "lucide-react"
+import { Search, Sparkles, Plus, Settings, X, MoreVertical, Trash2, ShieldBan } from "lucide-react"
 import Link from "next/link"
 import { useState, useMemo } from "react"
 
@@ -27,6 +27,7 @@ export interface Conversation {
   lastMessageAt?: string
   unreadCount?: number
   isOnline?: boolean
+  isBlocked?: boolean
 }
 
 interface ConversationListProps {
@@ -115,8 +116,9 @@ export function ConversationList({ conversations, selectedId, onSelect, onDelete
           {filteredConversations.length > 0 ? (
             filteredConversations.map((conversation) => {
               // Destructure API fields
-              const { conversationId, user, lastMessage, lastMessageAt, unreadCount = 0,  } = conversation
+              const { conversationId, user, lastMessage, lastMessageAt, unreadCount = 0, } = conversation
               const isOnline = conversation.isOnline || false;
+              const isBlocked = conversation.isBlocked || false;
 
               const name = user?.name ?? "Unknown"
               const avatar = user?.avatar ?? ""
@@ -156,6 +158,9 @@ export function ConversationList({ conversations, selectedId, onSelect, onDelete
                       )}>
                         {name}
                       </span>
+                      {isBlocked && (
+                        <ShieldBan className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+                      )}
                       <div className="flex items-center gap-1 shrink-0">
                         <span className={cn(
                           "text-[11px] transition-colors duration-200",

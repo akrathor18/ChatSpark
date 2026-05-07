@@ -85,6 +85,38 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       useConversationStore.getState().fetchConversations();
     };
 
+    const onUserBlocked = ({ blockerId, targetId }: any) => {
+      const currentUserId = userId?.toString();
+      if (blockerId === currentUserId) {
+        // I blocked someone
+        useConversationStore.getState().addBlockedByMe(targetId);
+      } else if (targetId === currentUserId) {
+        // Someone blocked me
+        useConversationStore.getState().addBlockedMe(blockerId);
+      }
+    };
+
+    const onUserUnblocked = ({ blockerId, targetId }: any) => {
+      const currentUserId = userId?.toString();
+      if (blockerId === currentUserId) {
+        // I unblocked someone
+        useConversationStore.getState().removeBlockedByMe(targetId);
+      } else if (targetId === currentUserId) {
+        // Someone unblocked me
+        useConversationStore.getState().removeBlockedMe(blockerId);
+      }
+    };
+
+    const onMessageBlocked = (data: any) => {
+      const { conversationId: convId, tempId } = data;
+      if (convId) {
+        useMessageStore.getState().updateMessage(convId, tempId, {
+          status: "failed",
+          error: "Message blocked",
+        });
+      }
+    };
+
     // REGISTER EVENTS
     socket.on("connect", onConnect);
     socket.on("receive_message", onReceiveMessage);
@@ -98,6 +130,9 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     socket.on("typing", onTyping);
     socket.on("stop_typing", onStopTyping);
     socket.on("chatRestored", onChatRestored);
+    socket.on("user_blocked", onUserBlocked);
+    socket.on("user_unblocked", onUserUnblocked);
+    socket.on("message_blocked", onMessageBlocked);
 
     if (socket.connected) {
       onConnect();
@@ -121,6 +156,9 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       socket.off("typing", onTyping);
       socket.off("stop_typing", onStopTyping);
       socket.off("chatRestored", onChatRestored);
+      socket.off("user_blocked", onUserBlocked);
+      socket.off("user_unblocked", onUserUnblocked);
+      socket.off("message_blocked", onMessageBlocked);
     };
 
   }, [conversationId, userId]);

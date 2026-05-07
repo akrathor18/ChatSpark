@@ -44,3 +44,14 @@ export const deleteAccount = async () => {
     return api.delete("/users/profile");
 }
 
+export const blockUser = async (targetId: string) => {
+    return api.post("/users/block", { targetId });
+}
+
+export const unblockUser = async (targetId: string) => {
+    return api.post("/users/unblock", { targetId });
+}
+
+export const getBlockedUsers = async () => {
+    return api.get("/users/blocked");
+}

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import * as conversationService from "@/features/chat/services/conversation.service";
+import * as profileService from "@/features/profile/services/profile.service";
 
 interface ConversationState {
     conversations: any[];
@@ -18,6 +19,8 @@ interface ConversationState {
             [userId: string]: boolean;
         };
     }
+    blockedByMe: string[];       // user IDs I have blocked
+    blockedMe: string[];         // user IDs who blocked me
     fetchConversations: () => Promise<void>;
     createConversation: (userId: string) => Promise<any>;
     setSelectedConversationId: (id: string | null) => void;
@@ -27,6 +30,14 @@ interface ConversationState {
     resetOnlineUsers: () => void;
     setUserOnline: (userId: string, isOnline: boolean, lastSeen?: string) => void;
     setTyping: (conversationId: string, userId: string, isTyping: boolean) => void;
+    blockUser: (targetId: string) => Promise<void>;
+    unblockUser: (targetId: string) => Promise<void>;
+    fetchBlockedUsers: () => Promise<void>;
+    addBlockedByMe: (targetId: string) => void;
+    removeBlockedByMe: (targetId: string) => void;
+    addBlockedMe: (targetId: string) => void;
+    removeBlockedMe: (targetId: string) => void;
+    isUserBlocked: (userId: string) => boolean;
 }
 
 export const useConversationStore = create<ConversationState>((set, get) => ({
@@ -37,6 +48,8 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     error: null,
     userStatus: {},
     typingUsers: {},
+    blockedByMe: [],
+    blockedMe: [],
 
     fetchConversations: async () => {
         try {
@@ -250,5 +263,82 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
 
     resetTyping: () => {
         set({ typingUsers: {} });
+    },
+
+    blockUser: async (targetId: string) => {
+        // Optimistic update
+        const backup = [...get().blockedByMe];
+        set((state) => ({
+            blockedByMe: [...state.blockedByMe, targetId],
+        }));
+
+        try {
+            await profileService.blockUser(targetId);
+        } catch (error) {
+            console.error("Failed to block user:", error);
+            set({ blockedByMe: backup });
+            throw error;
+        }
+    },
+
+    unblockUser: async (targetId: string) => {
+        // Optimistic update
+        const backup = [...get().blockedByMe];
+        set((state) => ({
+            blockedByMe: state.blockedByMe.filter((id) => id !== targetId),
+        }));
+
+        try {
+            await profileService.unblockUser(targetId);
+        } catch (error) {
+            console.error("Failed to unblock user:", error);
+            set({ blockedByMe: backup });
+            throw error;
+        }
+    },
+
+    fetchBlockedUsers: async () => {
+        try {
+            const res: any = await profileService.getBlockedUsers();
+            const blockedIds = Array.isArray(res)
+                ? res.map((u: any) => u._id?.toString())
+                : [];
+            set({ blockedByMe: blockedIds });
+        } catch (error) {
+            console.error("Failed to fetch blocked users:", error);
+        }
+    },
+
+    addBlockedByMe: (targetId: string) => {
+        set((state) => ({
+            blockedByMe: state.blockedByMe.includes(targetId)
+                ? state.blockedByMe
+                : [...state.blockedByMe, targetId],
+        }));
+    },
+
+    removeBlockedByMe: (targetId: string) => {
+        set((state) => ({
+            blockedByMe: state.blockedByMe.filter((id) => id !== targetId),
+        }));
+    },
+
+    addBlockedMe: (targetId: string) => {
+        set((state) => ({
+            blockedMe: state.blockedMe.includes(targetId)
+                ? state.blockedMe
+                : [...state.blockedMe, targetId],
+        }));
+    },
+
+    removeBlockedMe: (targetId: string) => {
+        set((state) => ({
+            blockedMe: state.blockedMe.filter((id) => id !== targetId),
+        }));
+    },
+
+    isUserBlocked: (userId: string) => {
+        const { blockedByMe, blockedMe } = get();
+        return blockedByMe.includes(userId) || blockedMe.includes(userId);
     },
 }));

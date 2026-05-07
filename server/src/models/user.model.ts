@@ -24,6 +24,7 @@ export interface IUser extends Document {
         readReceipts: boolean;
     };
     bio?: string;
+    blockedUsers: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 
@@ -115,6 +116,10 @@ const userSchema = new Schema<IUser>(
             default: "",
             maxlength: 200,
         },
+        blockedUsers: [{
+            type: Schema.Types.ObjectId,
+            ref: "User",
+        }],
     },
     {
         timestamps: true,

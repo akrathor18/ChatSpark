@@ -1,6 +1,7 @@
 import {Conversation} from "../models/conversations.model.js";
 import {ConversationMember} from "../models/conversationMembers.model.js";
 import {Message} from "../models/message.model.js";
+import { isBlockedService } from "./block.service.js";
 
 import mongoose from "mongoose";
 
@@ -14,6 +15,12 @@ export const createConversationService = async (
 
   if (currentUserId === userId) {
     throw new Error("Cannot create conversation with yourself");
+  }
+
+  // Check block status in both directions
+  const blockStatus = await isBlockedService(currentUserId, userId);
+  if (blockStatus.blockedByA || blockStatus.blockedByB) {
+    throw new Error("Cannot create conversation with this user");
   }
 
   //  Find user's conversations

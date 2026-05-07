@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import * as userService from "../services/user.service.js";
+import * as blockService from "../services/block.service.js";
+import { io } from "../index.js";
 
 export const searchUsers = async (req: Request, res: Response) => {
     try {
@@ -251,6 +253,59 @@ export const getMeController = async (req: Request, res: Response) => {
         const data = await userService.getMe(userId);
 
         res.json(data);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const blockUserController = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { targetId } = req.body;
+
+        if (!targetId) {
+            return res.status(400).json({ message: "Target user ID is required" });
+        }
+
+        const result = await blockService.blockUserService(userId, targetId);
+
+        // Emit real-time events to both users
+        io.to(`user_${userId}`).emit("user_blocked", { blockerId: userId, targetId });
+        io.to(`user_${targetId}`).emit("user_blocked", { blockerId: userId, targetId });
+
+        res.json(result);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const unblockUserController = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { targetId } = req.body;
+
+        if (!targetId) {
+            return res.status(400).json({ message: "Target user ID is required" });
+        }
+
+        const result = await blockService.unblockUserService(userId, targetId);
+
+        // Emit real-time events to both users
+        io.to(`user_${userId}`).emit("user_unblocked", { blockerId: userId, targetId });
+        io.to(`user_${targetId}`).emit("user_unblocked", { blockerId: userId, targetId });
+
+        res.json(result);
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const getBlockedUsersController = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const blockedUsers = await blockService.getBlockedUsersService(userId);
+
+        res.json(blockedUsers);
     } catch (error: any) {
         res.status(400).json({ message: error.message });
     }

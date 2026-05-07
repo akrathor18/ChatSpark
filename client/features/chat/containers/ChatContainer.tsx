@@ -30,6 +30,10 @@ interface ChatContainerProps {
     onTyping?: () => void
     onBack?: () => void
     onDeleteChat?: () => void
+    isBlockedByMe?: boolean
+    isBlockedMe?: boolean
+    onBlockUser?: () => void
+    onUnblockUser?: () => void
 }
 
 export function ChatContainer({
@@ -39,6 +43,10 @@ export function ChatContainer({
     onTyping,
     onBack,
     onDeleteChat,
+    isBlockedByMe,
+    isBlockedMe,
+    onBlockUser,
+    onUnblockUser,
 }: ChatContainerProps) {
     // ── State ──────────────────────────────────────────────────────────────────
     const [inputValue, setInputValue] = useState("")
@@ -115,6 +123,10 @@ export function ChatContainer({
             isLoadingOlder={isLoadingOlder}
             hasMore={!!(selectedConversationId && hasMore[selectedConversationId])}
             isLoading={isLoading}
+            isBlockedByMe={isBlockedByMe}
+            isBlockedMe={isBlockedMe}
+            onBlockUser={onBlockUser}
+            onUnblockUser={onUnblockUser}
         />
     )
 }

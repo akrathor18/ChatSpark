@@ -19,8 +19,17 @@ export const searchUsers = async (query: string, currentUserId: string) => {
 
     const normalizedQuery = query.trim().toLowerCase();
 
+    // Get the current user's blocked list
+    const currentUser = await User.findById(currentUserId).select("blockedUsers").lean();
+    const myBlockedIds = currentUser?.blockedUsers?.map((id: any) => id.toString()) || [];
+
+    // Combine exclusions: exclude self + users I've blocked
+    const excludeIds = [currentUserId, ...myBlockedIds];
+
     const users = await User.find({
-        _id: { $ne: currentUserId },
+        _id: { $nin: excludeIds },
+        // Also exclude users who have blocked me
+        blockedUsers: { $ne: currentUserId },
         $or: [
             { username: { $regex: `^${normalizedQuery}`, $options: "i" } },
             { name: { $regex: `^${normalizedQuery}`, $options: "i" } },

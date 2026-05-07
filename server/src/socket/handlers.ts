@@ -1,5 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { createMessage } from "../services/message.service.js";
+import { isBlockedService } from "../services/block.service.js";
 import { ConversationMember } from "../models/conversationMembers.model.js";
 import { Message } from "../models/message.model.js";
 import { User } from "../models/user.model.js";
@@ -68,6 +69,20 @@ export const registerHandlers = (io: Server, socket: Socket) => {
       // ✅ validate
       if (!conversationId || !senderId || !content) {
         return;
+      }
+
+      // ✅ Check block status before saving
+      const otherMember = await ConversationMember.findOne({
+        conversationId,
+        userId: { $ne: senderId },
+      });
+
+      if (otherMember) {
+        const blockStatus = await isBlockedService(senderId, otherMember.userId.toString());
+        if (blockStatus.blockedByA || blockStatus.blockedByB) {
+          socket.emit("message_blocked", { conversationId, tempId });
+          return;
+        }
       }
 
       // ✅ save to DB (also restores chat if it was soft-deleted)

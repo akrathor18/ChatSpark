@@ -23,4 +23,7 @@ router.patch("/profile", authMiddleware, userController.updateProfile);
 router.post("/change-password", authMiddleware, userController.changePassword);
 router.delete("/profile", authMiddleware, userController.deleteAccount);
 router.get("/me", authMiddleware, userController.getMeController);
+router.post("/block", authMiddleware, userController.blockUserController);
+router.post("/unblock", authMiddleware, userController.unblockUserController);
+router.get("/blocked", authMiddleware, userController.getBlockedUsersController);
 export default router;

@@ -24,6 +24,11 @@ export default function ChatPage() {
     selectedConversationUser,
     userStatus,
     deleteChatForUser,
+    blockedByMe,
+    blockedMe,
+    blockUser,
+    unblockUser,
+    fetchBlockedUsers,
   } = useConversationStore();
 
   const { messages, fetchMessages } = useMessageStore();
@@ -33,9 +38,12 @@ export default function ChatPage() {
     if (!user) getProfile();
   }, []);
 
-  // 🔹 Fetch conversations
+  // 🔹 Fetch conversations + blocked users
   useEffect(() => {
-    if (user) fetchConversations();
+    if (user) {
+      fetchConversations();
+      fetchBlockedUsers();
+    }
   }, [user]);
 
   const CURRENT_USER_ID = user?._id || "";
@@ -83,6 +91,31 @@ export default function ChatPage() {
     }
   }, [setSelectedConversationId, fetchMessages]);
 
+  // 🔹 Block handlers
+  const selectedUserId = useMemo(() => {
+    return selectedConversationUser?.user?.id?.toString() || "";
+  }, [selectedConversationUser]);
+
+  const isBlockedByMe = useMemo(() => {
+    return selectedUserId ? blockedByMe.includes(selectedUserId) : false;
+  }, [selectedUserId, blockedByMe]);
+
+  const isBlockedMe = useMemo(() => {
+    return selectedUserId ? blockedMe.includes(selectedUserId) : false;
+  }, [selectedUserId, blockedMe]);
+
+  const handleBlockUser = useCallback(() => {
+    if (selectedUserId) {
+      blockUser(selectedUserId);
+    }
+  }, [selectedUserId, blockUser]);
+
+  const handleUnblockUser = useCallback(() => {
+    if (selectedUserId) {
+      unblockUser(selectedUserId);
+    }
+  }, [selectedUserId, unblockUser]);
+
   const existingConversationMap = useMemo(() => {
     return conversations.reduce((acc: any, c: any) => {
       if (c.user?._id) {
@@ -97,8 +130,9 @@ export default function ChatPage() {
     return conversations.map((c: any) => ({
       ...c,
       isOnline: c.user?._id ? (userStatus[c.user._id.toString()]?.online ?? false) : false,
+      isBlocked: c.user?._id ? blockedByMe.includes(c.user._id.toString()) : false,
     }));
-  }, [conversations, userStatus]);
+  }, [conversations, userStatus, blockedByMe]);
 
   // Reactive selected user with real-time online status
   const selectedUserWithStatus = useMemo(() => {
@@ -164,6 +198,10 @@ export default function ChatPage() {
           onTyping={handleTyping}
           onBack={handleBack}
           onDeleteChat={handleDeleteCurrentChat}
+          isBlockedByMe={isBlockedByMe}
+          isBlockedMe={isBlockedMe}
+          onBlockUser={handleBlockUser}
+          onUnblockUser={handleUnblockUser}
         />
       </main>
     </div>

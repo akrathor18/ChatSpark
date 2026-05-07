@@ -26,6 +26,8 @@ import {
   Clock,
   AlertCircle,
   Trash2,
+  ShieldBan,
+  ShieldCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Message, ChatUser } from "../containers/ChatContainer"
@@ -48,6 +50,10 @@ interface ChatWindowLayoutProps {
   isLoadingOlder?: boolean
   hasMore?: boolean
   isLoading?: boolean
+  isBlockedByMe?: boolean
+  isBlockedMe?: boolean
+  onBlockUser?: () => void
+  onUnblockUser?: () => void
 }
 
 export function ChatWindow({
@@ -66,6 +72,10 @@ export function ChatWindow({
   hasMore,
   isLoading,
   setInputValue,
+  isBlockedByMe,
+  isBlockedMe,
+  onBlockUser,
+  onUnblockUser,
 }: ChatWindowLayoutProps) {
   const { typingUsers, selectedConversationId } = useConversationStore()
 
@@ -136,6 +146,23 @@ export function ChatWindow({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
+              {isBlockedByMe ? (
+                <DropdownMenuItem
+                  onClick={onUnblockUser}
+                  className="cursor-pointer"
+                >
+                  <ShieldCheck className="mr-2 h-4 w-4" />
+                  Unblock User
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={onBlockUser}
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                >
+                  <ShieldBan className="mr-2 h-4 w-4" />
+                  Block User
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={onDeleteChat}
                 className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
@@ -217,36 +244,66 @@ export function ChatWindow({
         )}
       </div>
 
-      {/* Input */}
-      <div className="shrink-0 border-t border-border bg-card/30 p-3 pb-safe z-10">
-        <div className="flex items-end gap-2 rounded-2xl bg-input px-3 py-2 ring-1 ring-border/50 focus-within:ring-primary/40 transition-all duration-200">
-          <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground"><Paperclip className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" className="hidden h-8 w-8 rounded-lg text-muted-foreground sm:flex"><ImageIcon className="h-4 w-4" /></Button>
-          </div>
-          <textarea
-            ref={inputRef}
-            value={inputValue}
-            onChange={onInputChange}
-            onKeyDown={onKeyDown}
-            placeholder="Type a message..."
-            rows={1}
-            className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground focus:outline-none"
-            style={{ lineHeight: "1.5" }}
-          />
-          <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
-            <Button variant="ghost" size="icon" className="hidden h-8 w-8 rounded-lg text-muted-foreground sm:flex"><Smile className="h-4 w-4" /></Button>
+      {/* Input / Blocked Banner */}
+      {isBlockedByMe ? (
+        <div className="shrink-0 border-t border-border bg-card/30 p-3 pb-safe z-10">
+          <div className="flex items-center justify-between gap-3 rounded-2xl bg-destructive/5 border border-destructive/20 px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <ShieldBan className="h-4 w-4 text-destructive shrink-0" />
+              <span className="text-sm text-muted-foreground">
+                You blocked this user
+              </span>
+            </div>
             <Button
-              onClick={onSend}
-              disabled={!inputValue.trim()}
-              size="icon"
-              className="h-8 w-8 rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/30 hover:bg-primary/90 hover:shadow-md transition-all duration-200 disabled:opacity-40"
+              onClick={onUnblockUser}
+              variant="ghost"
+              size="sm"
+              className="h-8 px-3 text-xs font-medium text-primary hover:bg-primary/10 hover:text-primary transition-all duration-200"
             >
-              <Send className="h-4 w-4" />
+              Unblock
             </Button>
           </div>
         </div>
-      </div>
+      ) : isBlockedMe ? (
+        <div className="shrink-0 border-t border-border bg-card/30 p-3 pb-safe z-10">
+          <div className="flex items-center gap-2.5 rounded-2xl bg-secondary/80 border border-border px-4 py-3">
+            <ShieldBan className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-sm text-muted-foreground">
+              You can&apos;t send messages to this user
+            </span>
+          </div>
+        </div>
+      ) : (
+        <div className="shrink-0 border-t border-border bg-card/30 p-3 pb-safe z-10">
+          <div className="flex items-end gap-2 rounded-2xl bg-input px-3 py-2 ring-1 ring-border/50 focus-within:ring-primary/40 transition-all duration-200">
+            <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground"><Paperclip className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" className="hidden h-8 w-8 rounded-lg text-muted-foreground sm:flex"><ImageIcon className="h-4 w-4" /></Button>
+            </div>
+            <textarea
+              ref={inputRef}
+              value={inputValue}
+              onChange={onInputChange}
+              onKeyDown={onKeyDown}
+              placeholder="Type a message..."
+              rows={1}
+              className="max-h-32 min-h-[36px] flex-1 resize-none bg-transparent py-1.5 text-sm text-foreground focus:outline-none"
+              style={{ lineHeight: "1.5" }}
+            />
+            <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
+              <Button variant="ghost" size="icon" className="hidden h-8 w-8 rounded-lg text-muted-foreground sm:flex"><Smile className="h-4 w-4" /></Button>
+              <Button
+                onClick={onSend}
+                disabled={!inputValue.trim()}
+                size="icon"
+                className="h-8 w-8 rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/30 hover:bg-primary/90 hover:shadow-md transition-all duration-200 disabled:opacity-40"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
