@@ -1,3 +1,5 @@
+import { formatMessageTime } from "./formatMessageTime";
+
 export const mapMessages = (messages: any, conversationId: any, currentUserId: string) => {
   const idStr = conversationId?.toString();
   if (!idStr || !messages) {
@@ -22,13 +24,13 @@ export const mapMessages = (messages: any, conversationId: any, currentUserId: s
     const senderRaw = msg.senderId?._id || msg.senderId;
     const senderId = senderRaw?.toString();
     const currentId = currentUserId?.toString();
+    const createdAt = msg.createdAt || new Date().toISOString();
+
     return {
       id: msg._id?.toString() || msg.id?.toString() || msg.tempId,
       content: msg.content || "",
-      timestamp: new Date(msg.createdAt || Date.now()).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      timestamp: formatMessageTime(createdAt),
+      createdAt,
       isSent: senderId === currentId,
       status: msg.status ?? "sent",
     };

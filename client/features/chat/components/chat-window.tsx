@@ -33,6 +33,8 @@ import { cn } from "@/lib/utils"
 import type { Message, ChatUser } from "../containers/ChatContainer"
 import { useConversationStore } from "../store/useConversationStore"
 import { MessageContent, detectRawCode } from "./message-content"
+import { DateSeparator } from "./date-separator"
+import { isDifferentDay, getDateLabel } from "../utils/formatMessageTime"
 import NoMessage from "./no-message"
 interface ChatWindowLayoutProps {
   user: ChatUser | null
@@ -199,16 +201,27 @@ export function ChatWindow({
               onLoadOlder?.();
             }}
             itemContent={(index, message) => {
-              const prev = messages[index - 1]
-              const next = messages[index + 1]
+              const firstIdx = 100000 - messages.length
+              const arrayIndex = index - firstIdx
+              const prev = messages[arrayIndex - 1]
+              const next = messages[arrayIndex + 1]
+              const showDateSeparator = isDifferentDay(
+                prev?.createdAt,
+                message.createdAt
+              )
 
               return (
-                <MessageItem
-                  message={message}
-                  prevSame={prev?.isSent === message.isSent}
-                  nextSame={next?.isSent === message.isSent}
-                  isLast={index === messages.length - 1}
-                />
+                <>
+                  {showDateSeparator && (
+                    <DateSeparator label={getDateLabel(message.createdAt)} />
+                  )}
+                  <MessageItem
+                    message={message}
+                    prevSame={!showDateSeparator && prev?.isSent === message.isSent}
+                    nextSame={next?.isSent === message.isSent && !isDifferentDay(message.createdAt, next?.createdAt)}
+                    isLast={arrayIndex === messages.length - 1}
+                  />
+                </>
               )
             }}
 

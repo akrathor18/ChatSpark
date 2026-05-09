@@ -10,6 +10,7 @@ export interface Message {
     id: string
     content: string
     timestamp: string
+    createdAt: string
     isSent: boolean
     status?: "sending" | "sent" | "read" | "failed"
 }
