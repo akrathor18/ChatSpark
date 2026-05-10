@@ -139,8 +139,8 @@ export function ChatWindow({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground"><Phone className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground"><Video className="h-4 w-4" /></Button>
+          {/* <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground"><Phone className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground"><Video className="h-4 w-4" /></Button> */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground">
