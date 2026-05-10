@@ -1,16 +1,16 @@
 import type { Request, Response } from "express";
 import * as messageService from "../services/message.service.js";
-import { log } from "console";
 
 export const sendMessage = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { conversationId, content } = req.body;
+    const { conversationId, content, replyTo } = req.body;
 
     const message = await messageService.createMessage({
       conversationId,
       senderId: userId,
       content,
+      replyTo,
     });
 
     res.status(201).json(message);
@@ -41,3 +41,46 @@ export const getMessages = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch messages" });
   }
 };
+
+export const unsendMessage = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { messageId } = req.params;
+
+    const message = await messageService.unsendMessage(messageId, userId);
+
+    res.json({ success: true, message });
+  } catch (error: any) {
+    const status = error.message === "Message not found" ? 404
+      : error.message === "You can only unsend your own messages" ? 403
+      : 400;
+    res.status(status).json({ message: error.message });
+  }
+};
+
+export const deleteMessageForMe = async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user.id;
+    const { messageId } = req.params;
+
+    await messageService.deleteMessageForUser(messageId, userId);
+
+    res.json({ success: true });
+  } catch (error: any) {
+    const status = error.message === "Message not found" ? 404 : 500;
+    res.status(status).json({ message: error.message });
+  }
+};
+
+export const getMessageInfo = async (req: Request, res: Response) => {
+  try {
+    const { messageId } = req.params;
+
+    const message = await messageService.getMessageInfo(messageId);
+
+    res.json(message);
+  } catch (error: any) {
+    const status = error.message === "Message not found" ? 404 : 500;
+    res.status(status).json({ message: error.message });
+  }
+};

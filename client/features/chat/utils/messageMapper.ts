@@ -26,13 +26,32 @@ export const mapMessages = (messages: any, conversationId: any, currentUserId: s
     const currentId = currentUserId?.toString();
     const createdAt = msg.createdAt || new Date().toISOString();
 
+    // Map replyTo if present
+    let replyTo = undefined;
+    if (msg.replyTo && typeof msg.replyTo === "object") {
+      const replySenderRaw = msg.replyTo.senderId;
+      const replySenderName = typeof replySenderRaw === "object"
+        ? replySenderRaw?.name
+        : undefined;
+
+      replyTo = {
+        id: msg.replyTo._id?.toString() || msg.replyTo.id?.toString(),
+        content: msg.replyTo.isUnsent ? "" : (msg.replyTo.content || ""),
+        senderName: replySenderName,
+        isUnsent: msg.replyTo.isUnsent || false,
+      };
+    }
+
     return {
       id: msg._id?.toString() || msg.id?.toString() || msg.tempId,
-      content: msg.content || "",
+      content: msg.isUnsent ? "" : (msg.content || ""),
       timestamp: formatMessageTime(createdAt),
       createdAt,
       isSent: senderId === currentId,
       status: msg.status ?? "sent",
+      isUnsent: msg.isUnsent || false,
+      replyTo,
+      senderId,
     };
   });
 };

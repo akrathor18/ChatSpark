@@ -21,6 +21,7 @@ interface ConversationState {
     }
     blockedByMe: string[];       // user IDs I have blocked
     blockedMe: string[];         // user IDs who blocked me
+    replyingTo: any | null;      // message being replied to
     fetchConversations: () => Promise<void>;
     createConversation: (userId: string) => Promise<any>;
     setSelectedConversationId: (id: string | null) => void;
@@ -38,6 +39,7 @@ interface ConversationState {
     addBlockedMe: (targetId: string) => void;
     removeBlockedMe: (targetId: string) => void;
     isUserBlocked: (userId: string) => boolean;
+    setReplyingTo: (message: any | null) => void;
 }
 
 export const useConversationStore = create<ConversationState>((set, get) => ({
@@ -50,6 +52,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     typingUsers: {},
     blockedByMe: [],
     blockedMe: [],
+    replyingTo: null,
 
     fetchConversations: async () => {
         try {
@@ -340,5 +343,9 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     isUserBlocked: (userId: string) => {
         const { blockedByMe, blockedMe } = get();
         return blockedByMe.includes(userId) || blockedMe.includes(userId);
+    },
+
+    setReplyingTo: (message: any | null) => {
+        set({ replyingTo: message });
     },
 }));

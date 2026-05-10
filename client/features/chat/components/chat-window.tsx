@@ -28,6 +28,8 @@ import {
   Trash2,
   ShieldBan,
   ShieldCheck,
+  Undo2,
+  Reply,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Message, ChatUser } from "../containers/ChatContainer"
@@ -36,6 +38,9 @@ import { MessageContent, detectRawCode } from "./message-content"
 import { DateSeparator } from "./date-separator"
 import { isDifferentDay, getDateLabel } from "../utils/formatMessageTime"
 import NoMessage from "./no-message"
+import { MessageContextMenu } from "./message-context-menu"
+import { ReplyPreviewBar } from "./reply-preview-bar"
+
 interface ChatWindowLayoutProps {
   user: ChatUser | null
   messages: Message[]
@@ -56,6 +61,13 @@ interface ChatWindowLayoutProps {
   isBlockedMe?: boolean
   onBlockUser?: () => void
   onUnblockUser?: () => void
+  replyingTo?: Message | null
+  onReply?: (message: Message) => void
+  onCancelReply?: () => void
+  onCopyMessage?: (content: string) => void
+  onUnsendMessage?: (messageId: string) => void
+  onDeleteMessage?: (messageId: string) => void
+  onMessageInfo?: (messageId: string) => void
 }
 
 export function ChatWindow({
@@ -78,6 +90,13 @@ export function ChatWindow({
   isBlockedMe,
   onBlockUser,
   onUnblockUser,
+  replyingTo,
+  onReply,
+  onCancelReply,
+  onCopyMessage,
+  onUnsendMessage,
+  onDeleteMessage,
+  onMessageInfo,
 }: ChatWindowLayoutProps) {
   const { typingUsers, selectedConversationId } = useConversationStore()
 
@@ -220,6 +239,11 @@ export function ChatWindow({
                     prevSame={!showDateSeparator && prev?.isSent === message.isSent}
                     nextSame={next?.isSent === message.isSent && !isDifferentDay(message.createdAt, next?.createdAt)}
                     isLast={arrayIndex === messages.length - 1}
+                    onReply={onReply}
+                    onCopy={onCopyMessage}
+                    onInfo={onMessageInfo}
+                    onUnsend={onUnsendMessage}
+                    onDelete={onDeleteMessage}
                   />
                 </>
               )
@@ -288,6 +312,13 @@ export function ChatWindow({
         </div>
       ) : (
         <div className="shrink-0 border-t border-border bg-card/30 p-3 pb-safe z-10">
+          {/* Reply preview bar */}
+          {replyingTo && (
+            <ReplyPreviewBar
+              message={replyingTo}
+              onCancel={() => onCancelReply?.()}
+            />
+          )}
           <div className="flex items-end gap-2 rounded-2xl bg-input px-3 py-2 ring-1 ring-border/50 focus-within:ring-primary/40 transition-all duration-200">
             <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
               <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground"><Paperclip className="h-4 w-4" /></Button>
@@ -325,14 +356,24 @@ const MessageItem = memo(({
   message,
   prevSame,
   nextSame,
-  isLast
+  isLast,
+  onReply,
+  onCopy,
+  onInfo,
+  onUnsend,
+  onDelete,
 }: {
   message: Message;
   prevSame: boolean;
   nextSame: boolean;
   isLast: boolean;
+  onReply?: (message: Message) => void;
+  onCopy?: (content: string) => void;
+  onInfo?: (messageId: string) => void;
+  onUnsend?: (messageId: string) => void;
+  onDelete?: (messageId: string) => void;
 }) => {
-  const { isCode } = useMemo(() => detectRawCode(message.content || ""), [message.content])
+  const { isCode } = useMemo(() => detectRawCode(message.isUnsent ? "" : (message.content || "")), [message.content, message.isUnsent])
 
   return (
     <div
@@ -348,24 +389,71 @@ const MessageItem = memo(({
           message.isSent ? "items-end" : "items-start"
         )}
       >
-        <div
-          className={cn(
-            "w-full break-words text-[14px] leading-relaxed transition-all duration-200",
-            !isCode && "px-4 py-2.5 shadow-sm",
-            !isCode && (message.isSent
-              ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground font-medium"
-              : "rounded-2xl rounded-bl-md bg-secondary text-foreground ring-1 ring-border/40"),
-            !isCode && prevSame && message.isSent && "rounded-tr-md",
-            !isCode && prevSame && !message.isSent && "rounded-tl-md",
-            !isCode && nextSame && message.isSent && "rounded-br-md",
-            !isCode && nextSame && !message.isSent && "rounded-bl-md"
-          )}
+        {/* Reply reference */}
+        {message.replyTo && (
+          <div
+            className={cn(
+              "mb-1 max-w-full rounded-lg px-3 py-1.5",
+              "border-l-2 border-l-primary/50",
+              "bg-accent/40 text-[12px] text-muted-foreground",
+              "line-clamp-1 truncate"
+            )}
+          >
+            <span className="font-medium text-primary/70">
+              {message.replyTo.senderName || "Reply"}
+            </span>
+            <span className="ml-1.5">
+              {message.replyTo.isUnsent
+                ? "This message was unsent"
+                : message.replyTo.content}
+            </span>
+          </div>
+        )}
+
+        {/* Message bubble wrapped in Context Menu */}
+        <MessageContextMenu
+          message={message}
+          onReply={onReply}
+          onCopy={onCopy}
+          onInfo={onInfo}
+          onUnsend={onUnsend}
+          onDelete={onDelete}
         >
-          <MessageContent
-            content={message.content}
-            isSent={message.isSent}
-          />
-        </div>
+          {message.isUnsent ? (
+            <div
+              className={cn(
+                "w-full break-words text-[14px] leading-relaxed px-4 py-2.5 shadow-sm",
+                message.isSent
+                  ? "rounded-2xl rounded-br-md bg-primary/20 ring-1 ring-primary/20"
+                  : "rounded-2xl rounded-bl-md bg-secondary/50 ring-1 ring-border/30",
+              )}
+            >
+              <span className="flex items-center gap-1.5 text-muted-foreground italic text-[13px]">
+                <Undo2 className="h-3 w-3" />
+                This message was unsent
+              </span>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "w-full break-words text-[14px] leading-relaxed transition-all duration-200",
+                !isCode && "px-4 py-2.5 shadow-sm",
+                !isCode && (message.isSent
+                  ? "rounded-2xl rounded-br-md bg-primary text-primary-foreground font-medium"
+                  : "rounded-2xl rounded-bl-md bg-secondary text-foreground ring-1 ring-border/40"),
+                !isCode && prevSame && message.isSent && "rounded-tr-md",
+                !isCode && prevSame && !message.isSent && "rounded-tl-md",
+                !isCode && nextSame && message.isSent && "rounded-br-md",
+                !isCode && nextSame && !message.isSent && "rounded-bl-md"
+              )}
+            >
+              <MessageContent
+                content={message.content}
+                isSent={message.isSent}
+              />
+            </div>
+          )}
+        </MessageContextMenu>
 
         {(!nextSame || isLast) && (
           <div
@@ -375,7 +463,7 @@ const MessageItem = memo(({
             )}
           >
             <span>{message.timestamp}</span>
-            {message.isSent && (
+            {message.isSent && !message.isUnsent && (
               <span className={cn(message.status === "read" ? "text-primary" : "text-muted-foreground")}>
                 {message.status === "read" ? (
                   <CheckCheck className="h-3 w-3" />
@@ -392,5 +480,6 @@ const MessageItem = memo(({
     </div>
   )
 })
+
 
 MessageItem.displayName = "MessageItem"

@@ -2,8 +2,11 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { ChatWindow as ChatWindowLayout } from "../components/chat-window"
+import { MessageInfoModal } from "../components/message-info-modal"
 import { useConversationStore } from "../store/useConversationStore"
 import { useMessageStore } from "../store/useMessageStore"
+import * as messageService from "../services/message.service"
+import { getSocket } from "@/lib/socket"
 import { VirtuosoHandle } from "react-virtuoso"
 
 export interface Message {
@@ -13,6 +16,14 @@ export interface Message {
     createdAt: string
     isSent: boolean
     status?: "sending" | "sent" | "read" | "failed"
+    isUnsent?: boolean
+    replyTo?: {
+        id: string
+        content: string
+        senderName?: string
+        isUnsent?: boolean
+    }
+    senderId?: string
 }
 
 export interface ChatUser {
@@ -27,7 +38,7 @@ export interface ChatUser {
 interface ChatContainerProps {
     user: ChatUser | null
     messages: Message[]
-    onSendMessage: (content: string) => void
+    onSendMessage: (content: string, replyToId?: string) => void
     onTyping?: () => void
     onBack?: () => void
     onDeleteChat?: () => void
@@ -51,8 +62,10 @@ export function ChatContainer({
 }: ChatContainerProps) {
     // ── State ──────────────────────────────────────────────────────────────────
     const [inputValue, setInputValue] = useState("")
-    const { typingUsers, selectedConversationId } = useConversationStore();
-    const { fetchOlderMessages, isLoadingOlder, hasMore, isLoading } = useMessageStore();
+    const [infoMessageId, setInfoMessageId] = useState<string | null>(null)
+    const [isInfoOpen, setIsInfoOpen] = useState(false)
+    const { typingUsers, selectedConversationId, replyingTo, setReplyingTo } = useConversationStore();
+    const { fetchOlderMessages, isLoadingOlder, hasMore, isLoading, removeMessage, markAsUnsent } = useMessageStore();
 
     // Calculate if others are typing
     const isOtherTyping = !!(selectedConversationId && Object.keys(typingUsers[selectedConversationId] || {}).length > 0);
@@ -71,9 +84,14 @@ export function ChatContainer({
 
     const handleSend = () => {
         if (inputValue.trim()) {
-            onSendMessage(inputValue.trim())
+            onSendMessage(inputValue.trim(), replyingTo?.id)
             setInputValue("")
             
+            // Clear reply state after sending
+            if (replyingTo) {
+                setReplyingTo(null)
+            }
+
             // Explicitly scroll to bottom on send
             setTimeout(() => {
                 virtuosoRef.current?.scrollToIndex({
@@ -107,27 +125,110 @@ export function ChatContainer({
         if (onTyping) onTyping()
     }
 
+    // ── Context Menu Handlers ──────────────────────────────────────────────────
+
+    const handleReply = useCallback((message: Message) => {
+        setReplyingTo(message)
+        // Focus input when replying
+        setTimeout(() => {
+            inputRef.current?.focus()
+        }, 100)
+    }, [setReplyingTo])
+
+    const handleCancelReply = useCallback(() => {
+        setReplyingTo(null)
+    }, [setReplyingTo])
+
+    const handleCopyMessage = useCallback(async (content: string) => {
+        try {
+            await navigator.clipboard.writeText(content)
+        } catch (err) {
+            // Fallback for older browsers
+            const textarea = document.createElement("textarea")
+            textarea.value = content
+            textarea.style.position = "fixed"
+            textarea.style.opacity = "0"
+            document.body.appendChild(textarea)
+            textarea.select()
+            document.execCommand("copy")
+            document.body.removeChild(textarea)
+        }
+    }, [])
+
+    const handleUnsendMessage = useCallback(async (messageId: string) => {
+        if (!selectedConversationId) return
+
+        try {
+            // Optimistic update
+            markAsUnsent(selectedConversationId, messageId)
+            
+            // Also emit via socket for real-time broadcast
+            const socket = getSocket()
+            const userId = useConversationStore.getState().selectedConversationUser?.user?.id
+            socket.emit("unsend_message", {
+                conversationId: selectedConversationId,
+                messageId,
+                senderId: userId,
+            })
+        } catch (err) {
+            console.error("Failed to unsend message:", err)
+        }
+    }, [selectedConversationId, markAsUnsent])
+
+    const handleDeleteMessage = useCallback(async (messageId: string) => {
+        if (!selectedConversationId) return
+
+        try {
+            // Optimistic update — remove from local state immediately
+            removeMessage(selectedConversationId, messageId)
+            
+            // Persist to backend
+            await messageService.deleteMessageForMe(messageId)
+        } catch (err) {
+            console.error("Failed to delete message:", err)
+        }
+    }, [selectedConversationId, removeMessage])
+
+    const handleMessageInfo = useCallback((messageId: string) => {
+        setInfoMessageId(messageId)
+        setIsInfoOpen(true)
+    }, [])
+
     return (
-        <ChatWindowLayout
-            user={user}
-            messages={messages}
-            inputValue={inputValue}
-            setInputValue={setInputValue}
-            virtuosoRef={virtuosoRef}
-            inputRef={inputRef}
-            onSend={handleSend}
-            onInputChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onBack={onBack}
-            onDeleteChat={onDeleteChat}
-            onLoadOlder={handleLoadOlder}
-            isLoadingOlder={isLoadingOlder}
-            hasMore={!!(selectedConversationId && hasMore[selectedConversationId])}
-            isLoading={isLoading}
-            isBlockedByMe={isBlockedByMe}
-            isBlockedMe={isBlockedMe}
-            onBlockUser={onBlockUser}
-            onUnblockUser={onUnblockUser}
-        />
+        <>
+            <ChatWindowLayout
+                user={user}
+                messages={messages}
+                inputValue={inputValue}
+                setInputValue={setInputValue}
+                virtuosoRef={virtuosoRef}
+                inputRef={inputRef}
+                onSend={handleSend}
+                onInputChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onBack={onBack}
+                onDeleteChat={onDeleteChat}
+                onLoadOlder={handleLoadOlder}
+                isLoadingOlder={isLoadingOlder}
+                hasMore={!!(selectedConversationId && hasMore[selectedConversationId])}
+                isLoading={isLoading}
+                isBlockedByMe={isBlockedByMe}
+                isBlockedMe={isBlockedMe}
+                onBlockUser={onBlockUser}
+                onUnblockUser={onUnblockUser}
+                replyingTo={replyingTo}
+                onReply={handleReply}
+                onCancelReply={handleCancelReply}
+                onCopyMessage={handleCopyMessage}
+                onUnsendMessage={handleUnsendMessage}
+                onDeleteMessage={handleDeleteMessage}
+                onMessageInfo={handleMessageInfo}
+            />
+            <MessageInfoModal
+                messageId={infoMessageId}
+                open={isInfoOpen}
+                onOpenChange={setIsInfoOpen}
+            />
+        </>
     )
 }

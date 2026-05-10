@@ -5,6 +5,9 @@ export interface IMessage extends Document {
     senderId: Types.ObjectId;
     content: string;
     status: "sent" | "delivered" | "read";
+    replyTo?: Types.ObjectId;
+    isUnsent: boolean;
+    deletedFor: Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -32,6 +35,19 @@ const messageSchema = new Schema<IMessage>(
             enum: ["sent", "delivered", "read"],
             default: "sent"
         },
+        replyTo: {
+            type: Schema.Types.ObjectId,
+            ref: "Message",
+            default: null,
+        },
+        isUnsent: {
+            type: Boolean,
+            default: false,
+        },
+        deletedFor: [{
+            type: Schema.Types.ObjectId,
+            ref: "User",
+        }],
 
     },
     {

@@ -64,7 +64,7 @@ export const registerHandlers = (io: Server, socket: Socket) => {
   //  Send message
   socket.on("send_message", async (data) => {
     try {
-      const { conversationId, senderId, content, tempId } = data;
+      const { conversationId, senderId, content, tempId, replyTo } = data;
 
       // ✅ validate
       if (!conversationId || !senderId || !content) {
@@ -90,6 +90,7 @@ export const registerHandlers = (io: Server, socket: Socket) => {
         conversationId,
         senderId,
         content,
+        replyTo,
       });
 
       // Convert message to plain object and add tempId
@@ -126,6 +127,41 @@ export const registerHandlers = (io: Server, socket: Socket) => {
       console.error("Socket send_message error:", error);
       // We could emit a "message_failed" event back to the sender here
       socket.emit("message_failed", { tempId: data.tempId, error: "Failed to save message" });
+    }
+  });
+
+  //  Unsend message (for everyone)
+  socket.on("unsend_message", async (data) => {
+    try {
+      const { conversationId, messageId, senderId } = data;
+
+      if (!conversationId || !messageId || !senderId) return;
+
+      // Validate ownership
+      const message = await Message.findById(messageId);
+      if (!message || message.senderId.toString() !== senderId) {
+        socket.emit("unsend_failed", { messageId, error: "Cannot unsend this message" });
+        return;
+      }
+
+      // Update in DB
+      message.isUnsent = true;
+      message.content = "";
+      await message.save();
+
+      // Broadcast to all members
+      const members = await ConversationMember.find({ conversationId });
+      members.forEach((member) => {
+        const memberId = member.userId.toString();
+        io.to(`user_${memberId}`).emit("message_unsent", { conversationId, messageId });
+      });
+
+      // Also emit to the conversation room
+      io.to(conversationId).emit("message_unsent", { conversationId, messageId });
+
+    } catch (error) {
+      console.error("Socket unsend_message error:", error);
+      socket.emit("unsend_failed", { messageId: data.messageId, error: "Failed to unsend message" });
     }
   });
 

@@ -66,8 +66,8 @@ export default function ChatPage() {
     setSelectedConversationId(null);
   }, [setSelectedConversationId]);
 
-  const handleSendMessage = useCallback((content: string) => {
-    sendMessage(content);
+  const handleSendMessage = useCallback((content: string, replyToId?: string) => {
+    sendMessage(content, replyToId);
   }, [sendMessage]);
 
   const handleTyping = useCallback(() => {

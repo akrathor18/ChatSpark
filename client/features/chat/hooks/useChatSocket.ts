@@ -117,6 +117,13 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       }
     };
 
+    const onMessageUnsent = (data: any) => {
+      const { conversationId: convId, messageId } = data;
+      if (convId && messageId) {
+        useMessageStore.getState().markAsUnsent(convId, messageId);
+      }
+    };
+
     // REGISTER EVENTS
     socket.on("connect", onConnect);
     socket.on("receive_message", onReceiveMessage);
@@ -133,6 +140,7 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     socket.on("user_blocked", onUserBlocked);
     socket.on("user_unblocked", onUserUnblocked);
     socket.on("message_blocked", onMessageBlocked);
+    socket.on("message_unsent", onMessageUnsent);
 
     if (socket.connected) {
       onConnect();
@@ -159,6 +167,7 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       socket.off("user_blocked", onUserBlocked);
       socket.off("user_unblocked", onUserUnblocked);
       socket.off("message_blocked", onMessageBlocked);
+      socket.off("message_unsent", onMessageUnsent);
     };
 
   }, [conversationId, userId]);
@@ -169,7 +178,7 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     }
   }, [conversationId]);
 
-  const sendMessage = (content: string) => {
+  const sendMessage = (content: string, replyToId?: string) => {
     if (!conversationId || !userId) return;
 
     // Stop typing immediately when sending
@@ -186,6 +195,7 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       content,
       status: "sending",
       createdAt: new Date().toISOString(),
+      ...(replyToId ? { replyTo: replyToId } : {}),
     };
 
     useMessageStore.getState().addMessage(optimisticMessage);
@@ -196,6 +206,7 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       senderId: currentUserId,
       content,
       tempId,
+      ...(replyToId ? { replyTo: replyToId } : {}),
     });
   };
 

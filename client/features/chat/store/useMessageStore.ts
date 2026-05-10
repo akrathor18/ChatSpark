@@ -11,6 +11,8 @@ interface MessageState {
     fetchOlderMessages: (conversationId: string) => Promise<void>;
     addMessage: (msg: any) => void;
     updateMessage: (conversationId: string, messageId: string, updates: any) => void;
+    removeMessage: (conversationId: string, messageId: string) => void;
+    markAsUnsent: (conversationId: string, messageId: string) => void;
 }
 
 const MESSAGES_LIMIT = 50;
@@ -178,5 +180,46 @@ export const useMessageStore = create<MessageState>((set, get) => ({
                     [conversationId]: updatedMessages
                 }
             };
-        })
+        }),
+
+    removeMessage: (conversationIdInput, messageId) =>
+        set((state) => {
+            const conversationId = conversationIdInput?.toString();
+            if (!conversationId) return state;
+
+            const conversationMessages = state.messages[conversationId] || [];
+            const filtered = conversationMessages.filter((m) => {
+                const targetId = m._id?.toString() || m.id?.toString() || m.tempId;
+                return targetId !== messageId?.toString();
+            });
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: filtered
+                }
+            };
+        }),
+
+    markAsUnsent: (conversationIdInput, messageId) =>
+        set((state) => {
+            const conversationId = conversationIdInput?.toString();
+            if (!conversationId) return state;
+
+            const conversationMessages = state.messages[conversationId] || [];
+            const updatedMessages = conversationMessages.map((m) => {
+                const targetId = m._id?.toString() || m.id?.toString() || m.tempId;
+                if (targetId === messageId?.toString()) {
+                    return { ...m, content: "", isUnsent: true };
+                }
+                return m;
+            });
+
+            return {
+                messages: {
+                    ...state.messages,
+                    [conversationId]: updatedMessages
+                }
+            };
+        }),
 }));
