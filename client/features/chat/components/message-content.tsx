@@ -21,6 +21,15 @@ export function detectRawCode(text: string): { isCode: boolean; language: string
 
   if (!trimmed || trimmed.startsWith("```")) return { isCode: false, language: "" }
 
+  const containsUrl = /(https?:\/\/[^\s]+)/g.test(trimmed)
+
+  if (containsUrl) {
+    return {
+      isCode: false,
+      language: "",
+    }
+  }
+
   try {
     const result = hljs.highlightAuto(trimmed)
 
@@ -60,7 +69,27 @@ export const MessageContent = memo(({ content, isSent }: MessageContentProps) =>
   if (!isMarkdown) {
     return (
       <div className={cn(isSent ? "text-white" : "text-foreground")}>
-        <p className="whitespace-pre-wrap leading-relaxed">{content}</p>
+        <p className="whitespace-pre-wrap leading-relaxed">
+          {content.split(/(https?:\/\/[^\s]+)/g).map((part, index) => {
+            const isUrl = /^https?:\/\/[^\s]+$/.test(part)
+
+            if (isUrl) {
+              return (
+                <a
+                  key={index}
+                  href={part}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white underline underline-offset-4 hover:text-white/80 break-all"
+                >
+                  {part}
+                </a>
+              )
+            }
+
+            return <React.Fragment key={index}>{part}</React.Fragment>
+          })}
+        </p>
       </div>
     )
   }
