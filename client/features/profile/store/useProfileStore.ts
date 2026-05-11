@@ -7,6 +7,7 @@ interface ProfileState {
     isCheckingUsername: boolean;
     isUploadingAvatar: boolean;
     usernameAvailable: boolean | null;
+    usernameMessage: string | null;
     error: any;
     getProfile: () => Promise<void>;
     checkUsername: (username: string) => Promise<void>;
@@ -28,6 +29,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     isCheckingUsername: false,
     isUploadingAvatar: false,
     usernameAvailable: null,
+    usernameMessage: null,
     error: null,
 
     getProfile: async () => {
@@ -51,12 +53,21 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             return;
         }
         try {
-            set({ isCheckingUsername: true, error: null });
+            set({ isCheckingUsername: true, error: null, usernameMessage: null, usernameAvailable: null });
             const res: any = await profileService.checkUsername(username);
-            set({ usernameAvailable: res.available, isCheckingUsername: false });
+            set({ 
+                usernameAvailable: res.available, 
+                usernameMessage: res.message,
+                isCheckingUsername: false 
+            });
         } catch (error: any) {
             console.error("Check Username Error:", error);
-            set({ isCheckingUsername: false, usernameAvailable: false, error });
+            set({ 
+                isCheckingUsername: false, 
+                usernameAvailable: false, 
+                usernameMessage: error.response?.data?.message || "Error checking username",
+                error 
+            });
         }
     },
 
@@ -76,8 +87,9 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             return true;
         } catch (error: any) {
             console.error("Update Username Error:", error);
-            set({ isLoading: false, error });
-            return false;
+            const message = error.response?.data?.message || error.message || "Failed to update username";
+            set({ isLoading: false, error: message });
+            throw new Error(message);
         }
     },
 
@@ -97,8 +109,9 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             return true;
         } catch (error: any) {
             console.error("Update Profile Error:", error);
-            set({ isLoading: false, error });
-            return false;
+            const message = error.response?.data?.message || error.message || "Failed to update profile";
+            set({ isLoading: false, error: message });
+            throw new Error(message);
         }
     },
 

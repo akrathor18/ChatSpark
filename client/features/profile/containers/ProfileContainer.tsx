@@ -27,10 +27,11 @@ const navItems: NavItem[] = [
 
 export function ProfileContainer() {
   const router = useRouter()
-  const {logout} = useAuthStore()
+  const { logout } = useAuthStore()
   const [activeSection, setActiveSection] = useState("profile")
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
 
@@ -50,6 +51,7 @@ export function ProfileContainer() {
     isCheckingUsername,
     isUploadingAvatar,
     usernameAvailable,
+    usernameMessage,
   } = useProfile()
 
   // Form setup
@@ -66,9 +68,26 @@ export function ProfileContainer() {
       email: user?.email || "",
       bio: user?.bio || "",
     },
+    mode: "onChange",
   })
 
   const watchedUsername = watch("username")
+
+  // Debounced username check
+  useEffect(() => {
+    if (watchedUsername === user?.username) return
+    if (!watchedUsername || watchedUsername.length < 3) return
+
+    // Server-side rules check before calling API
+    const isValidFormat = /^[a-z0-9](?!.*__)[a-z0-9_]*[a-z0-9]$|^[a-z0-9]$/.test(watchedUsername)
+    if (!isValidFormat) return
+
+    const timer = setTimeout(() => {
+      checkUsername(watchedUsername)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [watchedUsername, user?.username, checkUsername])
 
   // Settings state
   const [settings, setSettings] = useState<SettingsState>({
@@ -84,7 +103,7 @@ export function ProfileContainer() {
 
   // Sync state with user data
   useEffect(() => {
-    if (user) {
+    if (user && !isSaving) {
       reset({
         name: user.name,
         username: user.username,
@@ -93,18 +112,18 @@ export function ProfileContainer() {
       })
 
       if (user.notificationSettings || user.privacySettings) {
-          setSettings(prev => ({
-              ...prev,
-              notifications: user.notificationSettings?.notifications ?? prev.notifications,
-              emailNotifications: user.notificationSettings?.emailNotifications ?? prev.emailNotifications,
-              showOnlineStatus: user.privacySettings?.showOnlineStatus ?? prev.showOnlineStatus,
-              readReceipts: user.privacySettings?.readReceipts ?? prev.readReceipts,
-          }))
+        setSettings(prev => ({
+          ...prev,
+          notifications: user.notificationSettings?.notifications ?? prev.notifications,
+          emailNotifications: user.notificationSettings?.emailNotifications ?? prev.emailNotifications,
+          showOnlineStatus: user.privacySettings?.showOnlineStatus ?? prev.showOnlineStatus,
+          readReceipts: user.privacySettings?.readReceipts ?? prev.readReceipts,
+        }))
       }
-    } else {
+    } else if (!user) {
       getProfile()
     }
-  }, [user, reset, getProfile])
+  }, [user, reset, getProfile, isSaving])
 
   // --- Avatar upload state ---
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -167,21 +186,21 @@ export function ProfileContainer() {
   }, [watchedUsername, user?.username, checkUsername])
 
   const onUpdateNotificationSettings = async (newSettings: Partial<SettingsState>) => {
-      const updated = { ...settings, ...newSettings }
-      setSettings(updated)
-      await updateNotificationSettings({
-          notifications: updated.notifications,
-          emailNotifications: updated.emailNotifications,
-      })
+    const updated = { ...settings, ...newSettings }
+    setSettings(updated)
+    await updateNotificationSettings({
+      notifications: updated.notifications,
+      emailNotifications: updated.emailNotifications,
+    })
   }
 
   const onUpdatePrivacySettings = async (newSettings: Partial<SettingsState>) => {
-      const updated = { ...settings, ...newSettings }
-      setSettings(updated)
-      await updatePrivacySettings({
-          showOnlineStatus: updated.showOnlineStatus,
-          readReceipts: updated.readReceipts,
-      })
+    const updated = { ...settings, ...newSettings }
+    setSettings(updated)
+    await updatePrivacySettings({
+      showOnlineStatus: updated.showOnlineStatus,
+      readReceipts: updated.readReceipts,
+    })
   }
 
   // Scrolling logic
@@ -231,31 +250,27 @@ export function ProfileContainer() {
 
   const onSubmit = async (data: ProfileFormData) => {
     setIsSaving(true)
+    setErrorMsg(null)
     try {
       // 1. Update Name and Bio
-      const profileSuccess = await updateProfile({
+      await updateProfile({
         name: data.name,
         bio: data.bio || "",
       })
 
-      if (!profileSuccess) {
-        setIsSaving(false)
-        return
+      // 2. Update Username if changed
+      const cleanNewUsername = data.username.trim().toLowerCase()
+      const cleanOldUsername = user?.username?.trim()?.toLowerCase()
+
+      if (cleanNewUsername !== cleanOldUsername) {
+        await updateUsername(data.username)
       }
 
-      // 2. Update Username if changed
-      if (data.username !== user?.username) {
-        const success = await updateUsername(data.username)
-        if (!success) {
-          setIsSaving(false)
-          return
-        }
-      }
-      
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save failed:", error)
+      setErrorMsg(error.message || "An unexpected error occurred")
     } finally {
       setIsSaving(false)
     }
@@ -270,10 +285,10 @@ export function ProfileContainer() {
     if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
       const success = await deleteAccount()
       if (success) {
-          await logout()
-          router.push("/")
+        await logout()
+        router.push("/")
       } else {
-          alert("Failed to delete account. Please try again.")
+        alert("Failed to delete account. Please try again.")
       }
     }
   }
@@ -336,12 +351,20 @@ export function ProfileContainer() {
                   if (file) handleAvatarFileSelect(file)
                 }}
               />
+              {errorMsg && (
+                <div className="mb-6 rounded-xl bg-destructive/10 p-4 text-sm text-destructive ring-1 ring-destructive/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <p className="flex items-center font-medium">
+                    <span className="mr-2"></span> {errorMsg}
+                  </p>
+                </div>
+              )}
               <ProfileForm
                 register={register}
                 errors={errors}
                 watchedUsername={watchedUsername}
                 initialUsername={user?.username}
                 usernameAvailable={usernameAvailable}
+                usernameMessage={usernameMessage}
                 isCheckingUsername={isCheckingUsername}
               />
             </SettingsSection>

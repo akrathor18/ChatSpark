@@ -13,6 +13,7 @@ interface ProfileFormProps {
   watchedUsername: string
   initialUsername?: string
   usernameAvailable?: boolean | null
+  usernameMessage?: string | null
   isCheckingUsername: boolean
 }
 
@@ -22,6 +23,7 @@ export function ProfileForm({
   watchedUsername,
   initialUsername,
   usernameAvailable,
+  usernameMessage,
   isCheckingUsername,
 }: ProfileFormProps) {
   const isUsernameChanged = watchedUsername !== initialUsername
@@ -61,10 +63,13 @@ export function ProfileForm({
             id="username"
             {...register("username", {
               required: "Username is required",
-              pattern: { value: /^[a-zA-Z0-9_]+$/, message: "Only letters, numbers, and underscores" },
+              pattern: { 
+                value: /^[a-z0-9](?!.*__)[a-z0-9_]*[a-z0-9]$|^[a-z0-9]$/, 
+                message: "3-20 chars, lowercase, numbers, underscores (no leading/trailing/double underscores)" 
+              },
               validate: (value) => {
                 if (value !== initialUsername && usernameAvailable === false) {
-                  return "Username is already taken"
+                  return usernameMessage || "Username is already taken"
                 }
                 return true
               }
@@ -90,8 +95,14 @@ export function ProfileForm({
         {errors.username && (
           <p className="text-xs text-destructive">{errors.username.message as string}</p>
         )}
+        {isUsernameChanged && isCheckingUsername && !errors.username && (
+          <p className="text-xs text-muted-foreground animate-pulse">Checking availability...</p>
+        )}
+        {isUsernameChanged && usernameAvailable === false && !errors.username && (
+            <p className="text-xs text-destructive">{usernameMessage || "This username is not available"}</p>
+        )}
         {isUsernameChanged && usernameAvailable === true && !errors.username && (
-          <p className="text-xs text-online">Username is available</p>
+          <p className="text-xs text-online">{usernameMessage || "Username is available"}</p>
         )}
       </div>
 

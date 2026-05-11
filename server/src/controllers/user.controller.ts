@@ -36,7 +36,8 @@ export const checkUsername = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Username required" });
         }
 
-        const result = await userService.checkUsernameAvailabilityService(username);
+        const userId = (req as any).user?.id;
+        const result = await userService.checkUsernameAvailabilityService(username, userId);
 
         res.json(result);
     } catch (error: any) {

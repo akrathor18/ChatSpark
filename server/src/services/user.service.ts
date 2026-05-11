@@ -8,10 +8,9 @@ import { Conversation } from "../models/conversations.model.js";
 import { ConversationMember } from "../models/conversationMembers.model.js";
 import { AppError } from "../utils/AppError.js";
 import bcrypt from "bcryptjs";
+import * as usernameValidation from "./usernameValidation.service.js";
 import {
-    isValidUsername,
     normalizeUsername,
-    isReservedUsername,
 } from "../utils/username.js";
 
 export const searchUsers = async (query: string, currentUserId: string) => {
@@ -46,26 +45,13 @@ export const getUserProfile = async (userId: string) => {
     return user;
 }
 
-export const checkUsernameAvailabilityService = async (username: string) => {
-    const normalized = normalizeUsername(username);
-
-    if (!isValidUsername(normalized)) {
-        throw new Error("Invalid username format");
-    }
-
-    if (isReservedUsername(normalized)) {
-        throw new Error("Username is reserved");
-    }
-
-    const existing = await User.findOne({
-        $or: [
-            { username: normalized },
-            { previousUsernames: normalized }
-        ]
-    });
-
+export const checkUsernameAvailabilityService = async (username: string, currentUserId?: string) => {
+    const result = await usernameValidation.validateUsername(username, currentUserId);
+    
     return {
-        available: !existing,
+        available: result.available && result.valid,
+        message: result.message,
+        valid: result.valid
     };
 };
 
@@ -73,16 +59,6 @@ export const updateUsernameService = async (
     userId: string,
     username: string
 ) => {
-    const normalized = normalizeUsername(username);
-
-    if (!isValidUsername(normalized)) {
-        throw new Error("Invalid username");
-    }
-
-    if (isReservedUsername(normalized)) {
-        throw new Error("Username is reserved");
-    }
-
     const user = await User.findById(userId);
 
     if (!user) {
@@ -90,27 +66,22 @@ export const updateUsernameService = async (
     }
 
 
-    if (user.username === normalized) {
+    if (user.username === username.toLowerCase()) {
         return user;
     }
 
-    const existing = await User.findOne({
-        _id: { $ne: userId },
-        $or: [
-            { username: normalized },
-            { previousUsernames: normalized }
-        ]
-    });
+    const result = await usernameValidation.validateUsername(username, userId);
 
-    if (existing) {
-        throw new Error("Username already taken");
+    if (!result.valid) {
+        throw new Error(result.message);
     }
 
     if (user.username) {
         user.previousUsernames.push(user.username);
     }
 
-    user.username = normalized;
+    user.username = username.toLowerCase();
+    user.normalizedUsername = result.normalized!;
 
     await user.save();
 

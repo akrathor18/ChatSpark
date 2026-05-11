@@ -4,11 +4,19 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 import { upload } from "../middlewares/upload.middleware.js";
 const router = express.Router();
 
+import { rateLimit } from "express-rate-limit";
+
+const usernameCheckLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50, // limit each IP to 50 requests per windowMs
+    message: { message: "Too many username checks. Please try again later." },
+});
+
 router.get("/search", authMiddleware, userController.searchUsers);
 router.get("/profile", authMiddleware, userController.getProfile);
 router.put("/username", authMiddleware, userController.updateUsername);
 router.get("/u/:username", userController.getUserByUsername);
-router.get("/check-username", userController.checkUsername);
+router.get("/check-username", authMiddleware, usernameCheckLimiter, userController.checkUsername);
 router.post(
     "/upload-profile",
     authMiddleware,

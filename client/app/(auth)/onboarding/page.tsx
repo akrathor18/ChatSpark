@@ -37,6 +37,7 @@ export default function OnboardingPage() {
     isCheckingUsername,
     isUploadingAvatar,
     usernameAvailable,
+    usernameMessage,
   } = useProfile()
   const router = useRouter()
   const [username, setUsername] = useState("")
@@ -150,15 +151,17 @@ export default function OnboardingPage() {
   const validationRules = {
     minLength: username.length >= 3,
     maxLength: username.length <= 20,
-    validChars: /^[a-zA-Z0-9_]*$/.test(username),
-    startsWithLetter: /^[a-zA-Z]/.test(username),
+    validChars: /^[a-z0-9_]*$/.test(username),
+    startsEndsWithAlphanumeric: /^[a-z0-9].*[a-z0-9]$|^[a-z0-9]$/.test(username),
+    noConsecutiveUnderscores: !username.includes("__"),
   }
 
   const isValidFormat =
     validationRules.minLength &&
     validationRules.maxLength &&
     validationRules.validChars &&
-    validationRules.startsWithLetter
+    validationRules.startsEndsWithAlphanumeric &&
+    validationRules.noConsecutiveUnderscores
 
   const status: UsernameStatus = isCheckingUsername
     ? "checking"
@@ -174,7 +177,7 @@ export default function OnboardingPage() {
 
   const checkUsername = useCallback(async (value: string) => {
     if (!value || value.length < 3) return
-    if (!(/^[a-zA-Z][a-zA-Z0-9_]*$/.test(value))) return
+    if (!(/^[a-z0-9](?!.*__)[a-z0-9_]*[a-z0-9]$|^[a-z0-9]$/.test(value))) return
     checkUsernameStore(value)
   }, [checkUsernameStore])
 
@@ -235,13 +238,13 @@ export default function OnboardingPage() {
       case "checking":
         return { text: "Checking availability...", color: "text-muted-foreground" }
       case "available":
-        return { text: "Username is available!", color: "text-online" }
+        return { text: usernameMessage || "Username is available!", color: "text-online" }
       case "taken":
-        return { text: "This username is already taken", color: "text-destructive" }
+        return { text: usernameMessage || "This username is already taken", color: "text-destructive" }
       case "invalid":
         return { text: "Invalid username format", color: "text-destructive" }
       default:
-        return null
+        return usernameMessage ? { text: usernameMessage, color: "text-destructive" } : null
     }
   }
 
@@ -491,10 +494,11 @@ export default function OnboardingPage() {
               </p>
               <div className="grid gap-2">
                 {[
-                  { check: validationRules.startsWithLetter, label: "Starts with a letter" },
+                  { check: validationRules.startsEndsWithAlphanumeric, label: "Starts & ends with letter or number" },
                   { check: validationRules.minLength, label: "At least 3 characters" },
                   { check: validationRules.maxLength, label: "Maximum 20 characters" },
-                  { check: validationRules.validChars, label: "Only letters, numbers, and underscores" },
+                  { check: validationRules.noConsecutiveUnderscores, label: "No consecutive underscores" },
+                  { check: validationRules.validChars, label: "Only lowercase letters, numbers, and underscores" },
                 ].map(({ check, label }) => (
                   <div key={label} className="flex items-center gap-2 text-xs">
                     <div className={cn(
