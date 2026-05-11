@@ -41,6 +41,8 @@ import NoMessage from "./no-message"
 import { MessageContextMenu } from "./message-context-menu"
 import { ReplyPreviewBar } from "./reply-preview-bar"
 
+import ChatSkeleton from "./chat-skeleton"
+
 interface ChatWindowLayoutProps {
   user: ChatUser | null
   messages: Message[]
@@ -105,6 +107,10 @@ export function ChatWindow({
     const typers = typingUsers[selectedConversationId] || {}
     return Object.keys(typers).length > 0
   }, [typingUsers, selectedConversationId])
+
+  if (isLoading && messages.length === 0) {
+    return <ChatSkeleton />
+  }
 
   if (!user) {
     return (
@@ -198,14 +204,7 @@ export function ChatWindow({
 
       {/* Messages */}
       <div className="flex-1 min-h-0 bg-background/50 relative">
-        {isLoading && messages.length === 0 ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
-              <Clock className="h-4 w-4 animate-spin" />
-              <span>Loading messages...</span>
-            </div>
-          </div>
-        ) : messages.length === 0 ? (
+        {messages.length === 0 ? (
           <NoMessage user={user} onSendMessage={setInputValue} />
         ) : (
           <Virtuoso

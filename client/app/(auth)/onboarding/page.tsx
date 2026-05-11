@@ -32,6 +32,7 @@ export default function OnboardingPage() {
     getProfile,
     checkUsername: checkUsernameStore,
     updateUsername,
+    updateProfile,
     uploadProfilePic,
     isCheckingUsername,
     isUploadingAvatar,
@@ -39,6 +40,7 @@ export default function OnboardingPage() {
   } = useProfile()
   const router = useRouter()
   const [username, setUsername] = useState("")
+  const [userBio, setUserBio] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [touched, setTouched] = useState(false)
 
@@ -209,6 +211,12 @@ export default function OnboardingPage() {
         }
         setAvatarUploaded(true)
       }
+
+      // Update profile with name and bio
+      await updateProfile({
+        name: user.name,
+        bio: userBio,
+      })
 
       // Update username
       const success = await updateUsername(username)
@@ -450,6 +458,29 @@ export default function OnboardingPage() {
                 {username.length}/20 characters
               </p>
             </div>
+          </div>
+
+          {/* Bio Input */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="bio" className="text-sm font-medium text-foreground">
+                Bio <span className="text-[10px] text-muted-foreground font-normal">(Optional)</span>
+              </Label>
+              <span className="text-[10px] text-muted-foreground">
+                {userBio.length}/200
+              </span>
+            </div>
+            <textarea
+              id="bio"
+              placeholder="Tell the community about yourself..."
+              value={userBio}
+              onChange={(e) => setUserBio(e.target.value.slice(0, 200))}
+              rows={3}
+              className="w-full resize-none rounded-xl border border-border bg-input px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all duration-200"
+            />
+            <p className="text-[11px] text-muted-foreground/70">
+              Brief description for your profile.
+            </p>
           </div>
 
           {/* Validation checklist */}

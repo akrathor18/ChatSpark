@@ -113,7 +113,23 @@ export function ConversationList({ conversations, selectedId, onSelect, onDelete
       {/* Conversations */}
       <div className="flex-1 overflow-y-auto overscroll-contain px-2" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className="space-y-0.5 pb-4">
-          {filteredConversations.length > 0 ? (
+          {conversations.length === 0 && !searchTerm ? (
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+                <Sparkles className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-base font-semibold text-foreground">No conversations yet</h3>
+              <p className="mt-1.5 text-sm text-muted-foreground">Start your first conversation to begin chatting with your team.</p>
+              <div className="mt-6">
+                {newChatButton || (
+                  <Button className="rounded-xl px-5 shadow-lg shadow-primary/25">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Conversation
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : filteredConversations.length > 0 ? (
             filteredConversations.map((conversation) => {
               // Destructure API fields
               const { conversationId, user, lastMessage, lastMessageAt, unreadCount = 0, } = conversation
@@ -211,8 +227,11 @@ export function ConversationList({ conversations, selectedId, onSelect, onDelete
             })
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm font-medium text-muted-foreground">No conversations found</p>
-              <p className="text-xs text-muted-foreground/70">Try a different search term</p>
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-secondary/50">
+                <Search className="h-6 w-6 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">No results for &quot;{searchTerm}&quot;</p>
+              <p className="mt-1 text-xs text-muted-foreground/70">Check the spelling or try a different term</p>
             </div>
           )}
         </div>
