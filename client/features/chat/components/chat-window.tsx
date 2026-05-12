@@ -1,6 +1,9 @@
 "use client"
 
-import { useRef, useMemo, memo, useCallback } from "react"
+import { useRef, useMemo, memo, useCallback, useState } from "react"
+import dynamic from "next/dynamic"
+import { useTheme } from "next-themes"
+import { Theme } from "emoji-picker-react"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -42,6 +45,8 @@ import { MessageContextMenu } from "./message-context-menu"
 import { ReplyPreviewBar } from "./reply-preview-bar"
 
 import ChatSkeleton from "./chat-skeleton"
+
+const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false })
 
 interface ChatWindowLayoutProps {
   user: ChatUser | null
@@ -101,6 +106,7 @@ export function ChatWindow({
   onMessageInfo,
 }: ChatWindowLayoutProps) {
   const { typingUsers, selectedConversationId } = useConversationStore()
+  const { resolvedTheme } = useTheme()
 
   const isOtherTyping = useMemo(() => {
     if (!selectedConversationId) return false
@@ -334,7 +340,24 @@ export function ChatWindow({
               style={{ lineHeight: "1.5" }}
             />
             <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
-              <Button variant="ghost" size="icon" className="hidden h-8 w-8 rounded-lg text-muted-foreground sm:flex"><Smile className="h-4 w-4" /></Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="hidden h-8 w-8 rounded-lg text-muted-foreground sm:flex">
+                    <Smile className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" align="end" className="p-0 border-none bg-transparent shadow-none w-auto">
+                  <div onKeyDown={(e) => e.stopPropagation()}>
+                    <EmojiPicker
+                      onEmojiClick={(emojiData) => {
+                        setInputValue(inputValue + emojiData.emoji)
+                      }}
+                      theme={resolvedTheme === "light" ? Theme.LIGHT : Theme.DARK}
+                      autoFocusSearch={true}
+                    />
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 onClick={onSend}
                 disabled={!inputValue.trim()}
