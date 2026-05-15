@@ -6,17 +6,13 @@ import TechStack from "@/components/landingPage/TechStack"
 import CTABanner from "@/components/landingPage/CTABanner"
 import { 
   Sparkles, 
-  MessageSquare, 
   Shield, 
   Zap, 
   Users, 
   Lock, 
   Globe,
   ArrowRight,
-  Check,
   Star,
-  ChevronRight,
-  Play,
   Code,
   Terminal,
   Layers,
@@ -250,32 +246,6 @@ function HeroSection() {
   )
 }
 
-// Stats Section
-function StatsSection() {
-  const stats = [
-    { value: "10K+", label: "Active Users", description: "Developers trust ChatSpark" },
-    { value: "99.9%", label: "Uptime", description: "Enterprise reliability" },
-    { value: "50ms", label: "Latency", description: "Real-time messaging" },
-    { value: "256-bit", label: "Encryption", description: "End-to-end secure" },
-  ]
-
-  return (
-    <section className="border-y border-border bg-secondary/20 py-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="text-3xl font-bold text-foreground sm:text-4xl">{stat.value}</div>
-              <div className="mt-1 text-sm font-medium text-primary">{stat.label}</div>
-              <div className="mt-1 text-xs text-muted-foreground">{stat.description}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
 // Features Section
 function FeaturesSection() {
   const features = [
@@ -349,14 +319,12 @@ function FeaturesSection() {
   )
 }
 
-
 // Footer
 function Footer() {
   const links = {
-    Product: ["Features", "Pricing", "Integrations", "Changelog", "Roadmap"],
-    Company: ["About", "Blog", "Careers", "Press", "Partners"],
-    Resources: ["Documentation", "API Reference", "Community", "Status", "Support"],
-    Legal: ["Privacy", "Terms", "Security", "Cookies"],
+    Product: ["Features",],
+    Social: ["GitHub",],
+    Legal: ["Privacy", "Terms",],
   }
 
   return (
@@ -477,7 +445,6 @@ export default function LandingPage() {
     <div className="w-full overflow-hidden bg-background">
       <Navbar />
       <HeroSection />
-      <StatsSection />
       <FeaturesSection />
       <TechStack />
       <RoadmapSection />

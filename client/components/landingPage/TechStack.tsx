@@ -1,15 +1,13 @@
 "use client";
 
 import {
-    Database,
     Globe,
     Layers,
-    Wind,
-    Server,
-    Zap,
-    Radio,
 } from "lucide-react";
-
+import { RiTailwindCssFill, RiNextjsFill } from "react-icons/ri";
+import { BiLogoTypescript } from "react-icons/bi";
+import { IoLogoNodejs } from "react-icons/io5";
+import { SiExpress, SiSocketdotio, SiMongodb } from "react-icons/si";
 type Tech = {
     name: string;
     icon: React.ReactNode;
@@ -27,22 +25,18 @@ const categories: Category[] = [
             {
                 name: "Next.js",
                 icon: (
-                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-white text-black font-black text-sm leading-none">
-                        N
-                    </span>
+                    <RiNextjsFill className="w-7 h-7" />
                 ),
             },
             {
                 name: "TypeScript",
                 icon: (
-                    <span className="flex items-center justify-center w-8 h-8 rounded bg-blue-600 text-white font-black text-xs leading-none">
-                        TS
-                    </span>
+                    <BiLogoTypescript className="w-7 h-7  text-blue-600" />
                 ),
             },
             {
                 name: "TailwindCSS",
-                icon: <Wind className="w-7 h-7 text-sky-400" strokeWidth={2} />,
+                icon: <RiTailwindCssFill className="w-7 h-7 text-sky-400" />,
             },
         ],
     },
@@ -51,19 +45,17 @@ const categories: Category[] = [
         techs: [
             {
                 name: "Node.js",
-                icon: <Server className="w-7 h-7 text-green-400" strokeWidth={1.8} />,
+                icon: <IoLogoNodejs className="w-7 h-7 text-green-400" />,
             },
             {
                 name: "Express.js",
                 icon: (
-                    <span className="flex items-center justify-center w-8 h-8 text-slate-200 font-light text-lg leading-none tracking-tighter">
-                        ex
-                    </span>
+                    <SiExpress className="w-7 h-7 bg-black rounded-4xl p-1 text-white    " />
                 ),
             },
             {
                 name: "Socket.io",
-                icon: <Radio className="w-7 h-7 text-slate-200" strokeWidth={1.8} />,
+                icon: <SiSocketdotio className="w-7 h-7 text-slate-200" />,
             },
         ],
     },
@@ -72,7 +64,7 @@ const categories: Category[] = [
         techs: [
             {
                 name: "MongoDB",
-                icon: <Database className="w-7 h-7 text-green-500" strokeWidth={1.8} />,
+                icon: <SiMongodb className="w-7 h-7 text-green-500" />,
             },
         ],
     },
@@ -87,7 +79,7 @@ export default function TechStack() {
                 style={{
                     backgroundImage:
                         "linear-gradient(#a0c4ff 1px, transparent 1px), linear-gradient(90deg, #a0c4ff 1px, transparent 1px)",
-                    backgroundSize: "48px 48px",
+                    backgroundSize: "45px 45px",
                 }}
             />
 
@@ -132,7 +124,7 @@ export default function TechStack() {
                                     >
                                         <span className="transition-transform duration-200 group-hover/item:scale-110">
                                             {tech.icon}
-                                        </span> 
+                                        </span>
                                         <span className="text-sm font-medium text-slate-300 whitespace-nowrap">
                                             {tech.name}
                                         </span>
