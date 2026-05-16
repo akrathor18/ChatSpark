@@ -127,35 +127,6 @@ function HeroSection() {
                 </Button>
               </Link>
             </div>
-
-            {/* Social Proof */}
-            <div className="mt-12 flex flex-col items-center gap-6 lg:flex-row lg:items-start">
-              <div className="flex -space-x-2">
-                {[
-                  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
-                  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
-                  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop",
-                  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop",
-                ].map((url, i) => (
-                  <div
-                    key={i}
-                    className="h-10 w-10 rounded-full border-2 border-background bg-secondary bg-cover bg-center"
-                    style={{ backgroundImage: `url(${url})` }}
-                  />
-                ))}
-              </div>
-              <div className="text-center lg:text-left">
-                <div className="flex items-center justify-center gap-1 lg:justify-start">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                  ))}
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Trusted by <span className="font-semibold text-foreground">10,000+</span> developers worldwide
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Right Content - Chat Preview */}
