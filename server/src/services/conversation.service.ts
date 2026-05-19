@@ -2,6 +2,7 @@ import {Conversation} from "../models/conversations.model.js";
 import {ConversationMember} from "../models/conversationMembers.model.js";
 import {Message} from "../models/message.model.js";
 import { isBlockedService } from "./block.service.js";
+import { safeDecryptFromJson } from "../utils/encryption.js";
 
 import mongoose from "mongoose";
 
@@ -190,7 +191,9 @@ export const getUserConversationsService = async (userId: string, page = 1, limi
     user: conv.type === "direct"
       ? memberMap[conv._id.toString()]?.[0] ?? null
       : memberMap[conv._id.toString()] ?? [],
-    lastMessage: conv.lastMessage,
+    // Decrypt the lastMessage preview before sending to the client.
+    // safeDecryptFromJson handles legacy plaintext rows gracefully.
+    lastMessage: safeDecryptFromJson(conv.lastMessage ?? null),
     lastMessageAt: conv.lastMessageAt,
     unreadCount: unreadMap[conv._id.toString()] || 0
   }));

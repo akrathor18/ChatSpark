@@ -4,6 +4,23 @@ import { isBlockedService } from "../services/block.service.js";
 import { ConversationMember } from "../models/conversationMembers.model.js";
 import { Message } from "../models/message.model.js";
 import { User } from "../models/user.model.js";
+import { decrypt } from "../utils/encryption.js";
+
+/**
+ * Decrypts the content field of a raw Mongoose message object before it is
+ * emitted over the socket.  Returns the same object with content as a string.
+ */
+function decryptForEmit(msg: any): any {
+  if (msg.isUnsent) return { ...msg, content: "" };
+  try {
+    const c = msg.content;
+    if (!c || typeof c === "string") return msg;
+    if (!c.cipherText || !c.iv || !c.authTag) return { ...msg, content: "" };
+    return { ...msg, content: decrypt(c.cipherText, c.iv, c.authTag) };
+  } catch {
+    return { ...msg, content: "[Decryption error]" };
+  }
+}
 
 interface OnlineUser {
   sockets: Set<string>;
@@ -93,11 +110,11 @@ export const registerHandlers = (io: Server, socket: Socket) => {
         replyTo,
       });
 
-      // Convert message to plain object and add tempId
-      const finalMessage = {
+      // Decrypt content before emitting so the client always receives plain text
+      const finalMessage = decryptForEmit({
         ...message.toObject(),
-        tempId: tempId
-      };
+        tempId,
+      });
 
       // ✅ Find all members of the conversation to notify them
       const members = await ConversationMember.find({ conversationId });
@@ -144,9 +161,9 @@ export const registerHandlers = (io: Server, socket: Socket) => {
         return;
       }
 
-      // Update in DB
+      // Update in DB — use the empty sentinel (valid IEncryptedContent shape)
       message.isUnsent = true;
-      message.content = "";
+      message.content = { cipherText: "", iv: "", authTag: "" } as any;
       await message.save();
 
       // Broadcast to all members
