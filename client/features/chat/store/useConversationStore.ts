@@ -129,10 +129,11 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
                     user: {
                         id: selectedConv.user._id,
                         name: selectedConv.user.name,
+                        username: selectedConv.user.username,
                         email: selectedConv.user.email,
                         avatar: selectedConv.user.avatar || "",
                         isOnline: userStatus[selectedConv.user._id.toString()]?.online || false,
-                        lastSeen: userStatus[selectedConv.user._id.toString()]?.lastSeen,
+                        lastSeen: userStatus[selectedConv.user._id.toString()]?.lastSeen || selectedConv.user.lastSeen,
                     },
                 },
             });

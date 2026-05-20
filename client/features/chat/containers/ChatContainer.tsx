@@ -29,6 +29,7 @@ export interface Message {
 export interface ChatUser {
     id: string
     name: string
+    username?: string
     email: string
     avatar: string
     isOnline: boolean

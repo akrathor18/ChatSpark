@@ -39,7 +39,7 @@ import type { Message, ChatUser } from "../containers/ChatContainer"
 import { useConversationStore } from "../store/useConversationStore"
 import { MessageContent, detectRawCode } from "./message-content"
 import { DateSeparator } from "./date-separator"
-import { isDifferentDay, getDateLabel } from "../utils/formatMessageTime"
+import { isDifferentDay, getDateLabel, formatLastSeen } from "../utils/formatMessageTime"
 import NoMessage from "./no-message"
 import { MessageContextMenu } from "./message-context-menu"
 import { ReplyPreviewBar } from "./reply-preview-bar"
@@ -165,7 +165,7 @@ export function ChatWindow({
               {user.name}
             </h2>
             <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              {user.isOnline ? "Active now" : "Offline"}
+              {user.isOnline ? "Active now" : formatLastSeen(user.lastSeen)}
             </p>
           </div>
         </div>

@@ -62,3 +62,47 @@ export const isDifferentDay = (
     dateA.getDate() !== dateB.getDate()
   );
 };
+
+/**
+ * Formats user lastSeen timestamp.
+ */
+export const formatLastSeen = (dateInput: string | Date | undefined): string => {
+  if (!dateInput) return "Offline";
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return "Offline";
+
+  const time = format(date, "hh:mm a");
+
+  if (isToday(date)) {
+    return `Last seen today at ${time}`;
+  }
+  if (isYesterday(date)) {
+    return `Last seen yesterday at ${time}`;
+  }
+  if (isThisYear(date)) {
+    return `Last seen on ${format(date, "dd MMM")} at ${time}`;
+  }
+  return `Last seen on ${format(date, "dd MMM yyyy")} at ${time}`;
+};
+
+/**
+ * Formats the timestamp for the conversation list item.
+ */
+export const formatConversationTime = (dateInput: string | Date | undefined): string => {
+  if (!dateInput) return "";
+  const date = new Date(dateInput);
+  if (isNaN(date.getTime())) return "";
+
+  if (isToday(date)) {
+    return format(date, "hh:mm a");
+  }
+  if (isYesterday(date)) {
+    return "Yesterday";
+  }
+  if (isThisYear(date)) {
+    return format(date, "dd MMM");
+  }
+  return format(date, "dd/MM/yy");
+};
+
+

@@ -1,6 +1,6 @@
-import {Conversation} from "../models/conversations.model.js";
-import {ConversationMember} from "../models/conversationMembers.model.js";
-import {Message} from "../models/message.model.js";
+import { Conversation } from "../models/conversations.model.js";
+import { ConversationMember } from "../models/conversationMembers.model.js";
+import { Message } from "../models/message.model.js";
 import { isBlockedService } from "./block.service.js";
 import { safeDecryptFromJson } from "../utils/encryption.js";
 
@@ -52,7 +52,7 @@ export const createConversationService = async (
     const otherMember = await ConversationMember.findOne({
       conversationId: conversation._id,
       userId: { $ne: currentUserId },
-    }).populate("userId", "name email avatar");
+    }).populate("userId", "name username avatar lastSeen");
 
     return {
       conversationId: conversation._id,
@@ -103,7 +103,7 @@ export const createConversationService = async (
     const otherMember = await ConversationMember.findOne({
       conversationId: newConversation._id,
       userId: userId,
-    }).populate("userId", "name email avatar");
+    }).populate("userId", "name username email avatar lastSeen");
 
     return {
       conversationId: newConversation._id,
@@ -152,7 +152,7 @@ export const getUserConversationsService = async (userId: string, page = 1, limi
       conversationId: { $in: conversationIds },
       userId: { $ne: userId },
     })
-      .populate("userId", "name email avatar")
+      .populate("userId", "name username email avatar lastSeen")
       .lean(),
   ]);
 
@@ -169,13 +169,13 @@ export const getUserConversationsService = async (userId: string, page = 1, limi
     conversations.map(async (conv) => {
       const convId = conv._id.toString();
       const lastRead = lastReadMap[convId] || new Date(0);
-      
+
       const count = await Message.countDocuments({
         conversationId: conv._id,
         createdAt: { $gt: lastRead },
         senderId: { $ne: userId }
       });
-      
+
       return { convId, count };
     })
   );
@@ -200,39 +200,39 @@ export const getUserConversationsService = async (userId: string, page = 1, limi
 };
 
 export const markAsReadService = async (conversationId: string, userId: string) => {
-    return await ConversationMember.findOneAndUpdate(
-        { conversationId, userId },
-        { $set: { lastReadAt: new Date() } },
-        { new: true }
-    );
+  return await ConversationMember.findOneAndUpdate(
+    { conversationId, userId },
+    { $set: { lastReadAt: new Date() } },
+    { new: true }
+  );
 };
 
 export const deleteChatForUserService = async (conversationId: string, userId: string) => {
-    // Validate conversation exists
-    const conversation = await Conversation.findById(conversationId);
-    if (!conversation) {
-        throw Object.assign(new Error("Conversation not found"), { status: 404 });
-    }
+  // Validate conversation exists
+  const conversation = await Conversation.findById(conversationId);
+  if (!conversation) {
+    throw Object.assign(new Error("Conversation not found"), { status: 404 });
+  }
 
-    // Validate user is a participant
-    const membership = await ConversationMember.findOne({ conversationId, userId });
-    if (!membership) {
-        throw Object.assign(new Error("You are not a participant of this conversation"), { status: 403 });
-    }
+  // Validate user is a participant
+  const membership = await ConversationMember.findOne({ conversationId, userId });
+  if (!membership) {
+    throw Object.assign(new Error("You are not a participant of this conversation"), { status: 403 });
+  }
 
-    // $addToSet prevents duplicate entries
-    await Conversation.findByIdAndUpdate(conversationId, {
-        $addToSet: {
-            deletedFor: { user: userId, deletedAt: new Date() },
-        },
-    });
+  // $addToSet prevents duplicate entries
+  await Conversation.findByIdAndUpdate(conversationId, {
+    $addToSet: {
+      deletedFor: { user: userId, deletedAt: new Date() },
+    },
+  });
 
-    return { success: true };
+  return { success: true };
 };
 
 export const restoreChatForUsersService = async (conversationId: string) => {
-    // Remove all users from deletedFor — chat is restored for everyone
-    return await Conversation.findByIdAndUpdate(conversationId, {
-        $set: { deletedFor: [] },
-    });
+  // Remove all users from deletedFor — chat is restored for everyone
+  return await Conversation.findByIdAndUpdate(conversationId, {
+    $set: { deletedFor: [] },
+  });
 };

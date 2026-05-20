@@ -12,6 +12,7 @@ import {
 import { Search, Sparkles, Plus, Settings, X, MoreVertical, Trash2, ShieldBan } from "lucide-react"
 import Link from "next/link"
 import { useState, useMemo } from "react"
+import { formatConversationTime } from "../utils/formatMessageTime"
 
 // Updated to match API response shape
 export interface Conversation {
@@ -20,8 +21,10 @@ export interface Conversation {
   user: {
     _id: string
     name: string
+    username?: string
     email: string
     avatar?: string
+    lastSeen?: string
   } | null
   lastMessage?: string
   lastMessageAt?: string
@@ -136,11 +139,10 @@ export function ConversationList({ conversations, selectedId, onSelect, onDelete
               const isOnline = conversation.isOnline || false;
               const isBlocked = conversation.isBlocked || false;
 
+              const displayName = user?.username ? `@${user.username}` : (user?.name ?? "Unknown")
               const name = user?.name ?? "Unknown"
               const avatar = user?.avatar ?? ""
-              const timestamp = lastMessageAt
-                ? new Date(lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                : ""
+              const timestamp = formatConversationTime(lastMessageAt)
 
               return (
                 <button
@@ -172,7 +174,7 @@ export function ConversationList({ conversations, selectedId, onSelect, onDelete
                           ? "font-semibold text-foreground"
                           : "font-medium text-foreground/90"
                       )}>
-                        {name}
+                        {displayName}
                       </span>
                       {isBlocked && (
                         <ShieldBan className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
@@ -250,8 +252,8 @@ export function ConversationList({ conversations, selectedId, onSelect, onDelete
                     </AvatarFallback>
                   </Avatar>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">{user?.name || "User"}</p>
-            <p className="truncate text-xs font-medium text-foreground">{user?.email || "user@example.com"}</p>
+            <p className="truncate text-sm font-medium text-foreground">{user?.username ? `@${user.username}` : (user?.name || "User")}</p>
+            <p className="truncate text-xs text-muted-foreground">{user?.name || ""}</p>
             <p className="truncate text-xs text-muted-foreground">View profile</p>
           </div>
           <Settings className="h-4 w-4 text-muted-foreground transition-colors duration-200 group-hover:text-foreground" />
