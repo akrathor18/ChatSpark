@@ -279,20 +279,6 @@ export default function TermsOfServicePage() {
             </section>
           ))}
         </div>
-
-        {/* Contact */}
-        <div className="mt-12 rounded-2xl border border-border bg-card p-6 text-center">
-          <h3 className="mb-2 font-semibold text-foreground">Questions about our Terms?</h3>
-          <p className="mb-4 text-sm text-muted-foreground">
-            If you have any questions about these Terms of Service, please contact us.
-          </p>
-          <a
-            href="mailto:legal@chatspark.app"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:bg-primary/90"
-          >
-            Contact Legal Team
-          </a>
-        </div>
       </main>
 
       {/* Footer */}

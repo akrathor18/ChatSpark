@@ -1,13 +1,21 @@
 "use client"
 
 import { Sparkles } from "lucide-react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 
-export default function AuthLayout({
+import Link from "next/link"
+import { getCookie } from 'cookies-next';
+export default async function AuthLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+  const router = useRouter()
+const token = getCookie('token');
+if (!token){
+    router.push("/chat")
+}
+
     return (
         <div className="flex min-h-[100dvh] flex-col bg-background">
             {/* Header */}
