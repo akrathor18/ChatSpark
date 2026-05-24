@@ -187,13 +187,11 @@ export function ConversationList({ conversations, selectedId, onSelect, onDelete
                           {timestamp}
                         </span>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button
-                              onClick={(e) => e.stopPropagation()}
-                              className="h-6 w-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-secondary"
-                            >
-                              <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                            </button>
+                          <DropdownMenuTrigger
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-6 w-6 rounded-md flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-secondary"
+                          >
+                            <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuItem

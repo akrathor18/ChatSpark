@@ -2,8 +2,9 @@
 // Responsible for: 404 state when a username doesn't exist
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Sparkles, ArrowLeft, MessageSquare, UserX } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 type Props = {
   username: string
@@ -55,15 +56,16 @@ export function ProfileNotFound({ username, onBack }: Props) {
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button
-              asChild
-              className="h-11 gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/25 transition-all duration-200 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/30 active:scale-[0.97]"
+            <Link
+              href="/chat"
+              className={cn(
+                buttonVariants({ variant: "default" }),
+                "flex h-11 gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/25 transition-all duration-200 hover:bg-primary/90 hover:shadow-md hover:shadow-primary/30 active:scale-[0.97] justify-center items-center"
+              )}
             >
-              <Link href="/chat">
-                <MessageSquare className="h-4 w-4" />
-                Go to Chat
-              </Link>
-            </Button>
+              <MessageSquare className="h-4 w-4" />
+              Go to Chat
+            </Link>
             <Button
               variant="outline"
               onClick={onBack}

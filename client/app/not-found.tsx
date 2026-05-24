@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Sparkles, Home, MessageSquare, ArrowLeft, Search } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export default function NotFound() {
   return (
@@ -49,25 +50,26 @@ export default function NotFound() {
 
         {/* Actions */}
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            asChild
-            className=" flex h-11 gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/25 transition-all hover:bg-primary/90"
+          <Link
+            href="/chat"
+            className={cn(
+              buttonVariants({ variant: "default" }),
+              "flex h-11 gap-2 rounded-xl bg-primary px-6 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/25 transition-all hover:bg-primary/90 justify-center items-center"
+            )}
           >
-            <Link href="/chat" className="flex gap-1.5 justify-center items-center">
-              <MessageSquare className="h-4 w-4" />
-              Go to Chat
-            </Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="h-11 gap-2 rounded-xl border-border px-6 text-sm font-medium text-foreground transition-all hover:bg-secondary"
+            <MessageSquare className="h-4 w-4" />
+            Go to Chat
+          </Link>
+          <Link
+            href="/"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "flex h-11 gap-2 rounded-xl border-border px-6 text-sm font-medium text-foreground transition-all hover:bg-secondary justify-center items-center"
+            )}
           >
-            <Link href="/" >
-              <Home className="h-4 w-4" />
-              Back to Home
-            </Link>
-          </Button>
+            <Home className="h-4 w-4" />
+            Back to Home
+          </Link>
         </div>
 
         {/* Quick links */}

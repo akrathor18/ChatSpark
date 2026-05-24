@@ -25,7 +25,7 @@ export interface SearchableUser {
 interface NewChatModalProps {
   existingConversationMap: Record<string, string>
   onSelectUser: (user: SearchableUser, conversationId: string) => void
-  trigger?: React.ReactNode
+  trigger?: React.ReactElement
 }
 
 export function NewChatModal({
@@ -124,18 +124,20 @@ export function NewChatModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 rounded-lg text-muted-foreground transition-all duration-200 bg-secondary hover:text-foreground"
-          >
-            <Plus className="h-4.5 w-4.5" />
-            <span className="sr-only">New chat</span>
-          </Button>
-        )}
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          trigger || (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 rounded-lg text-muted-foreground transition-all duration-200 bg-secondary hover:text-foreground"
+            >
+              <Plus className="h-4.5 w-4.5" />
+              <span className="sr-only">New chat</span>
+            </Button>
+          )
+        }
+      />
       <DialogContent
         className="gap-0 overflow-hidden p-0 flex flex-col max-h-[calc(100dvh-4rem)] w-[calc(100%-2rem)] sm:mx-auto sm:max-w-md"
       >

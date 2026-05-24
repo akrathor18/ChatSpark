@@ -2,8 +2,9 @@
 // Responsible for: the sticky top header (back, logo, copy, edit)
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Sparkles, ArrowLeft, Copy, Check, Settings } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 type Props = {
   isOwnProfile: boolean
@@ -54,16 +55,16 @@ export function ProfileHeader({ isOwnProfile, copied, onBack, onCopy }: Props) {
           </Button>
 
           {isOwnProfile && (
-            <Button
-              asChild
-              variant="outline"
-              className="h-9 gap-2 rounded-xl border-border text-sm font-medium transition-all duration-200 hover:bg-secondary active:scale-[0.97]"
+            <Link
+              href="/profile"
+              className={cn(
+                buttonVariants({ variant: "outline" }),
+                "flex h-9 gap-2 rounded-xl border-border text-sm font-medium transition-all duration-200 hover:bg-secondary active:scale-[0.97] justify-center items-center"
+              )}
             >
-              <Link href="/profile">
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">Edit Profile</span>
-              </Link>
-            </Button>
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Edit Profile</span>
+            </Link>
           )}
         </div>
       </div>

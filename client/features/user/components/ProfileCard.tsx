@@ -33,7 +33,7 @@ export function ProfileCard({
         <span className="h-2 w-2 rounded-full bg-[var(--online)]" />
         <span className="text-xs font-medium text-[var(--online)]">Active now</span>
       </div>
-    ) : user.privacySettings.showLastSeen && user.lastSeen ? (
+    ) : user.lastSeen ? (
       <div className="flex items-center gap-1.5">
         <Clock className="h-3 w-3 text-muted-foreground" />
         <span className="text-xs text-muted-foreground">Last seen {user.lastSeen}</span>
@@ -80,9 +80,6 @@ export function ProfileCard({
             <h1 className="text-xl font-semibold tracking-tight text-foreground md:text-2xl">
               {user.name}
             </h1>
-            {user.isVerified && (
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
-            )}
           </div>
 
           <p className="mt-0.5 text-sm text-muted-foreground">@{user.username}</p>

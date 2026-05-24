@@ -121,19 +121,17 @@ export const MessageContextMenu = memo(({
           )}
         >
           <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <button
-                className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-full",
-                  "bg-card/95 backdrop-blur-md shadow-lg ring-1 ring-border/50",
-                  "text-muted-foreground hover:text-foreground hover:bg-accent",
-                  "transition-all duration-200 hover:shadow-xl hover:scale-110",
-                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer",
-                  isMenuOpen && "bg-accent text-foreground ring-border scale-110"
-                )}
-              >
-                <MoreVertical className="h-4 w-4" />
-              </button>
+            <DropdownMenuTrigger
+              className={cn(
+                "flex h-7 w-7 items-center justify-center rounded-full",
+                "bg-card/95 backdrop-blur-md shadow-lg ring-1 ring-border/50",
+                "text-muted-foreground hover:text-foreground hover:bg-accent",
+                "transition-all duration-200 hover:shadow-xl hover:scale-110",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer",
+                isMenuOpen && "bg-accent text-foreground ring-border scale-110"
+              )}
+            >
+              <MoreVertical className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align={message.isSent ? "start" : "end"}

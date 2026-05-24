@@ -2,8 +2,9 @@
 // Responsible for: rendering the primary CTA (Edit / Continue Chat / Send Message)
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Settings, MessageSquare, Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 type Props = {
   isOwnProfile: boolean
@@ -23,12 +24,17 @@ export function ActionButton({
 
   if (isOwnProfile) {
     return (
-      <Button asChild className={btnClass}>
-        <Link href="/profile">
-          <Settings className="h-4 w-4" />
-          Edit Profile
-        </Link>
-      </Button>
+      <Link
+        href="/profile"
+        className={cn(
+          buttonVariants({ variant: "default" }),
+          btnClass,
+          "flex justify-center items-center"
+        )}
+      >
+        <Settings className="h-4 w-4" />
+        Edit Profile
+      </Link>
     )
   }
 

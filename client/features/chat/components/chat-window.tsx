@@ -6,7 +6,7 @@ import { useTheme } from "next-themes"
 import { Theme } from "emoji-picker-react"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -173,10 +173,8 @@ export function ChatWindow({
           {/* <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground"><Phone className="h-4 w-4" /></Button>
           <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground"><Video className="h-4 w-4" /></Button> */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+            <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-9 w-9 rounded-lg text-muted-foreground")}>
+              <MoreHorizontal className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               {isBlockedByMe ? (
@@ -341,10 +339,8 @@ export function ChatWindow({
             />
             <div className="flex shrink-0 items-center gap-0.5 pb-0.5">
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hidden h-8 w-8 rounded-lg text-muted-foreground sm:flex">
-                    <Smile className="h-4 w-4" />
-                  </Button>
+                <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "hidden h-8 w-8 rounded-lg text-muted-foreground sm:flex")}>
+                  <Smile className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="end" className="p-0 border-none bg-transparent shadow-none w-auto">
                   <div onKeyDown={(e) => e.stopPropagation()}>
