@@ -33,7 +33,10 @@ app.use(
   }),
 );
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Hello ChatSpark!");
+});
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ success: true, message: "API is healthy" });
 });
 
 app.use("/api/auth", authRoutes);

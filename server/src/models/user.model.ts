@@ -12,7 +12,7 @@ export interface IUser extends Document {
     avatar?: string;
     avatarId?: string;
     resetPasswordToken?: string;
-    resetPasswordExpires?: Date;
+    resetPasswordExpires?: Date | null;
     provider: "local" | "google" | "github";
     isOnline: boolean;
     lastSeen?: Date;

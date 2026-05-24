@@ -1,7 +1,5 @@
 import cloudinary from "../config/cloudinary.js";
 import { User } from "../models/user.model.js";
-import type { File } from "multer";
-// services/user.service.ts
 import mongoose from "mongoose";
 import { Message } from "../models/message.model.js";
 import { Conversation } from "../models/conversations.model.js";

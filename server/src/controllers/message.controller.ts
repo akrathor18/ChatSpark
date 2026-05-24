@@ -23,7 +23,7 @@ export const sendMessage = async (req: Request, res: Response) => {
 export const getMessages = async (req: Request, res: Response) => {
   try {
 
-    const { conversationId } = req.params;
+    const conversationId = req.params.conversationId as string;
     const userId = (req as any).user.id;
     const { limit, before } = req.query;
 
@@ -45,7 +45,7 @@ export const getMessages = async (req: Request, res: Response) => {
 export const unsendMessage = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { messageId } = req.params;
+    const messageId = req.params.messageId as string;
 
     const message = await messageService.unsendMessage(messageId, userId);
 
@@ -61,7 +61,7 @@ export const unsendMessage = async (req: Request, res: Response) => {
 export const deleteMessageForMe = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).user.id;
-    const { messageId } = req.params;
+    const messageId = req.params.messageId as string;
 
     await messageService.deleteMessageForUser(messageId, userId);
 
@@ -74,7 +74,7 @@ export const deleteMessageForMe = async (req: Request, res: Response) => {
 
 export const getMessageInfo = async (req: Request, res: Response) => {
   try {
-    const { messageId } = req.params;
+    const messageId = req.params.messageId as string;
 
     const message = await messageService.getMessageInfo(messageId);
 

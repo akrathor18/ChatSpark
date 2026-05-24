@@ -87,7 +87,7 @@ export const uploadProfilePicController = async (
             });
         }
 
-        const result = await userService.uploadProfilePic({ userId, file });
+        const result = await userService.uploadProfilePic({ userId, file: file as any });
 
         if (result?.notFound) {
             return res.status(404).json({
@@ -240,7 +240,7 @@ export const getUserByUsername = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Username required" });
         }
 
-        const user = await userService.getUserByUsernameService(username);
+        const user = await userService.getUserByUsernameService(username as string);
 
         res.json(user);
     } catch (error: any) {

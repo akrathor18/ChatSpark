@@ -80,6 +80,10 @@ export const createConversationService = async (
       { session }
     );
 
+    if (!newConversation) {
+      throw new Error("Failed to create conversation");
+    }
+
     // Add members
     await ConversationMember.insertMany(
       [

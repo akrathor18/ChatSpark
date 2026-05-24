@@ -128,8 +128,8 @@ export const resetPasswordService = async (
     }
 
     user.password = newPassword; // make sure hashing middleware runs
-    user.resetPasswordToken = null;
-    user.resetPasswordExpires = null;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
 
     await user.save();
 };

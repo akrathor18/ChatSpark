@@ -51,8 +51,10 @@ export const markAsReadController = async (req: Request, res: Response) => {
     try {
         const userId = (req as any).user.id;
         const { id: conversationId } = req.params;
-
-        await markAsReadService(conversationId, userId);
+        if (!conversationId) {
+            throw new Error("Conversation ID required");
+        }
+        await markAsReadService(conversationId as string, userId);
 
         res.status(200).json({
             success: true,
@@ -71,8 +73,10 @@ export const deleteChatForUserController = async (req: Request, res: Response) =
     try {
         const userId = (req as any).user.id;
         const { id: conversationId } = req.params;
-
-        await deleteChatForUserService(conversationId, userId);
+        if (!conversationId) {
+            throw new Error("Conversation ID required");
+        }
+        await deleteChatForUserService(conversationId as string, userId);
 
         res.status(200).json({
             success: true,
