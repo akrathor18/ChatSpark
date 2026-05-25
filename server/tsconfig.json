@@ -13,7 +13,6 @@
     // "outDir": "./dist",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "types": ["node"],
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
