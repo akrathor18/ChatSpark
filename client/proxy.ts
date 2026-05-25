@@ -23,7 +23,7 @@ export function proxy(request: NextRequest) {
         request.nextUrl.pathname.startsWith(route)
     );
     
-    if (isAuthRoute && (token || nextAuthSession || secureNextAuthSession)) {
+    if (isAuthRoute && (token)) {
         return NextResponse.redirect(new URL("/chat", request.url));
     }
 
