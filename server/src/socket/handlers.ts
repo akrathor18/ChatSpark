@@ -5,6 +5,11 @@ import { ConversationMember } from "../models/conversationMembers.model.js";
 import { Message } from "../models/message.model.js";
 import { User } from "../models/user.model.js";
 import { decrypt } from "../utils/encryption.js";
+import {
+  sendMessageThrottle,
+  typingThrottle,
+  registerUserThrottle,
+} from "./rateLimiter.socket.js";
 
 /**
  * Decrypts the content field of a raw Mongoose message object before it is
@@ -34,6 +39,15 @@ export const registerHandlers = (io: Server, socket: Socket) => {
 
   //  Register user room for personal notifications
   socket.on("register_user", async (userId: string) => {
+    // Throttle: max 3 register_user calls per 60s per socket
+    if (registerUserThrottle.isThrottled(socket.id)) {
+      socket.emit("rate_limited", {
+        event: "register_user",
+        retryAfter: registerUserThrottle.retryAfterMs(socket.id),
+      });
+      return;
+    }
+
     if (userId) {
       socket.join(`user_${userId}`);
       console.log(`Socket ${socket.id} registered to user_${userId}`);
@@ -80,6 +94,16 @@ export const registerHandlers = (io: Server, socket: Socket) => {
 
   //  Send message
   socket.on("send_message", async (data) => {
+    // Throttle: max 5 messages per 3 seconds per socket
+    if (sendMessageThrottle.isThrottled(socket.id)) {
+      socket.emit("rate_limited", {
+        event: "send_message",
+        tempId: data.tempId,
+        retryAfter: sendMessageThrottle.retryAfterMs(socket.id),
+      });
+      return;
+    }
+
     try {
       const { conversationId, senderId, content, tempId, replyTo } = data;
 
@@ -261,6 +285,11 @@ export const registerHandlers = (io: Server, socket: Socket) => {
     const userId = socket.data.userId;
     const privacy = socket.data.privacy;
 
+    // Clean up per-socket throttle state to prevent memory leaks
+    sendMessageThrottle.cleanup(socket.id);
+    typingThrottle.cleanup(socket.id);
+    registerUserThrottle.cleanup(socket.id);
+
     if (!userId) return;
 
     const userData = onlineUsers.get(userId);
@@ -314,6 +343,9 @@ export const registerHandlers = (io: Server, socket: Socket) => {
   socket.on("typing", (data) => {
     const { conversationId, userId } = data;
     const privacy = socket.data.privacy;
+
+    // Throttle: max 10 typing events per 5 seconds per socket
+    if (typingThrottle.isThrottled(socket.id)) return;
 
     // Reciprocity: If I hide my status, I don't send typing indicators
     if (!privacy?.showOnlineStatus) return;

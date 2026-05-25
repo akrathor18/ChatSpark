@@ -8,10 +8,16 @@ import userRoutes from "./routes/user.route.js";
 import conversationRoutes from "./routes/conversation.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import cookieParser from "cookie-parser";
+import { generalApiLimiter } from "./middlewares/rateLimiter.middleware.js";
 
 import bodyParser from "body-parser";
 const app = express();
 const server = http.createServer(app);
+
+// Trust the first hop reverse proxy (nginx, Vercel, Render, etc.)
+// Required so req.ip returns the real client IP, not the proxy IP.
+app.set("trust proxy", 1);
+
 app.use(cookieParser());
 app.use(bodyParser.json());
 import cors from "cors";
@@ -38,6 +44,9 @@ app.get("/", (req, res) => {
 app.get("/api/health", (req, res) => {
   res.status(200).json({ success: true, message: "API is healthy" });
 });
+
+// Global safety net: 200 req / 15 min per IP across all API routes
+app.use("/api", generalApiLimiter);
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
