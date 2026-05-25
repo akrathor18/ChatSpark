@@ -1,7 +1,3 @@
-// hooks/usePublicProfile.ts
-// Responsible for: orchestrating service calls, writing to store, exposing
-// derived values and action handlers to the container.
-
 import { useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { profileService } from "../services/profileService"

@@ -17,9 +17,20 @@ export function proxy(request: NextRequest) {
     if (isProtected && !isAuth) {
         return NextResponse.redirect(new URL("/sign-in", request.url));
     }
+
+    const authRoutes = ["/sign-in", "/sign-up"];
+    const isAuthRoute = authRoutes.some((route) =>
+        request.nextUrl.pathname.startsWith(route)
+    );
+    
+    if (isAuthRoute && (token || nextAuthSession || secureNextAuthSession)) {
+        return NextResponse.redirect(new URL("/chat", request.url));
+    }
+
     return NextResponse.next();
+    
 }
 
 export const config = {
-    matcher: ["/chat/:path*", "/profile/:path*"],
+    matcher: ["/chat/:path*", "/profile/:path*", "/sign-in","/sign-up",],
 };

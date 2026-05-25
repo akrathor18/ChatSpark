@@ -2,9 +2,7 @@
 
 import { Sparkles } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 import Link from "next/link"
-import { getCookie } from 'cookies-next';
 
 export default function AuthLayout({
     children,
@@ -13,12 +11,6 @@ export default function AuthLayout({
 }) {
   const router = useRouter()
 
-  useEffect(() => {
-    const token = getCookie('token')
-    if (token) {
-      router.push("/chat")
-    }
-  }, [router])
 
     return (
         <div className="flex min-h-[100dvh] flex-col bg-background">

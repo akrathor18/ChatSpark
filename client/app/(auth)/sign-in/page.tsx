@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react"
 import OAuthButtons from "@/components/auth/oauth-buttons"
 import { useAuthStore } from "@/store/useAuthStore"
-export default async function SignInPage() {
+export default function SignInPage() {
   const router = useRouter()
   const { login, error, isLoading } = useAuthStore()
 
