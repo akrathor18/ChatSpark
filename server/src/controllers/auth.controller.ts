@@ -101,3 +101,16 @@ export const resetPassword = async (req: Request, res: Response) => {
         });
     }
 };
+
+export const setOAuthCookie = (req: Request, res: Response) => {
+    const token = req.query.token as string;
+    const redirectUrl = req.query.redirect as string || "https://chatspark-dev.vercel.app/chat";
+
+    if (!token) {
+        res.status(400).send("No token provided");
+        return;
+    }
+
+    res.cookie("token", token, cookieOptions);
+    res.redirect(redirectUrl);
+};

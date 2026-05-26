@@ -38,17 +38,13 @@ export async function GET(req: NextRequest) {
   }
 
   const redirectPath = isOnboarded ? "/chat" : "/onboarding";
-  const response = NextResponse.redirect(new URL(redirectPath, req.url));
+  const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || "https://chatspark-dev.vercel.app";
+  const finalRedirect = `${frontendUrl}${redirectPath}`;
 
+  const backendCookieUrl = `${API_URL}/auth/set-oauth-cookie?token=${apiToken}&redirect=${encodeURIComponent(finalRedirect)}`;
+
+  const response = NextResponse.redirect(new URL(backendCookieUrl));
   response.headers.set("Cache-Control", "no-store, max-age=0");
-
-  response.cookies.set("token", apiToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  });
 
   return response;
 }

@@ -1,4 +1,4 @@
-import { register, login, logout, oauthLogin, forgotPassword, resetPassword } from '../controllers/auth.controller.js';
+import { register, login, logout, oauthLogin, forgotPassword, resetPassword, setOAuthCookie } from '../controllers/auth.controller.js';
 import { Router } from "express";
 import {
   loginLimiter,
@@ -15,5 +15,6 @@ router.post("/logout",                                      logout);
 router.post("/oauth",                 oauthLimiter,         oauthLogin);
 router.post("/forgot-password",       passwordResetLimiter, forgotPassword);
 router.post("/reset-password/:token", passwordResetLimiter, resetPassword);
+router.get("/set-oauth-cookie", setOAuthCookie);
 
 export default router;
