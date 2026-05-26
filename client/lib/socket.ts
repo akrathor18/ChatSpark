@@ -6,7 +6,7 @@ let socket: Socket | null = null;
 
 export const getSocket = () => {
     if (!socket) {
-        socket = io("http://localhost:5000", {
+        socket = io("https://chatspark-p2ik.onrender.com", {
             withCredentials: true,
         });
     }

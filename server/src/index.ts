@@ -22,8 +22,6 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 import cors from "cors";
 
-const allowedOrigin = process.env.FRONTEND_URL!;
-console.log("Allowed CORS origin:", allowedOrigin);
 app.use(
   cors({
     origin: "https://chatspark-dev.vercel.app",
