@@ -22,26 +22,23 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 import cors from "cors";
 
+const allowedOrigin = process.env.FRONTEND_URL!;
+
+app.use(
+  cors({
+    origin: allowedOrigin,
+    credentials: true,
+  })
+);
+
 export const io = new Server(server, {
   cors: {
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL
-        : "https://chatspark-dev.vercel.app/",
+    origin: allowedOrigin,
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL
-        : "https://chatspark-dev.vercel.app/",
-    credentials: true,
-  }),
-);
 app.get("/", (req, res) => {
   res.send("Hello ChatSpark!");
 });
