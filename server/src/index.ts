@@ -27,7 +27,7 @@ export const io = new Server(server, {
     origin:
       process.env.NODE_ENV === "production"
         ? process.env.FRONTEND_URL
-        : "http://localhost:3000",
+        : "https://chatspark-dev.vercel.app/",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -38,7 +38,7 @@ app.use(
     origin:
       process.env.NODE_ENV === "production"
         ? process.env.FRONTEND_URL
-        : "http://localhost:3000",
+        : "https://chatspark-dev.vercel.app/",
     credentials: true,
   }),
 );
