@@ -36,7 +36,7 @@ export default function ChatPage() {
   // 🔹 Fetch user
   useEffect(() => {
     if (!user) getProfile();
-  }, []);
+  }, [user, getProfile]);
 
   // 🔹 Fetch conversations + blocked users
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function ChatPage() {
       fetchConversations();
       fetchBlockedUsers();
     }
-  }, [user]);
+  }, [user, fetchConversations, fetchBlockedUsers]);
 
   const CURRENT_USER_ID = user?._id || "";
 
@@ -84,6 +84,7 @@ export default function ChatPage() {
     }
   }, [selectedConversationId, deleteChatForUser]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNewChat = useCallback((user: any, conversationId: string) => {
     if (conversationId) {
       setSelectedConversationId(conversationId);
@@ -117,16 +118,18 @@ export default function ChatPage() {
   }, [selectedUserId, unblockUser]);
 
   const existingConversationMap = useMemo(() => {
-    return conversations.reduce((acc: any, c: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return conversations.reduce((acc: Record<string, string>, c: any) => {
       if (c.user?._id) {
         acc[c.user._id.toString()] = c.conversationId;
       }
       return acc;
-    }, {});
+    }, {} as Record<string, string>);
   }, [conversations]);
 
   // Merge reactive userStatus into conversations so online dots update in real-time
   const conversationsWithStatus = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return conversations.map((c: any) => ({
       ...c,
       isOnline: c.user?._id ? (userStatus[c.user._id.toString()]?.online ?? false) : false,

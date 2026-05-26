@@ -1,7 +1,6 @@
 "use client"
 
 import { Sparkles } from "lucide-react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 
 export default function AuthLayout({
@@ -9,8 +8,6 @@ export default function AuthLayout({
 }: {
     children: React.ReactNode
 }) {
-  const router = useRouter()
-
 
     return (
         <div className="flex min-h-[100dvh] flex-col bg-background">

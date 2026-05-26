@@ -74,7 +74,6 @@ export default function ResetPasswordPage({
     const [errorInfo, setErrorInfo] = useState<ErrorInfo>(null)
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
-    const [watchedPassword, setWatchedPassword] = useState("")
 
     const {
         register,
@@ -95,16 +94,18 @@ export default function ResetPasswordPage({
         try {
             await resetPassword(decodedToken, data.password)
             setPageState("success")
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Reset password error:", error)
+
+            const err = error as { response?: { data?: { error?: string, message?: string } }, message?: string };
 
             // The Axios interceptor rejects with a plain string message
             const serverMessage: string =
                 typeof error === "string"
                     ? error
-                    : error?.response?.data?.error ||
-                      error?.response?.data?.message ||
-                      error?.message ||
+                    : err?.response?.data?.error ||
+                      err?.response?.data?.message ||
+                      err?.message ||
                       "Something went wrong"
 
             const msg = serverMessage.toLowerCase()

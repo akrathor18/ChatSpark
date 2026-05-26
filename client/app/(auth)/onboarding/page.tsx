@@ -19,8 +19,6 @@ import {
   Trash2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useAuthStore } from "@/store/useAuthStore"
-import { redirect } from 'next/navigation';
 import { useProfile } from "@/features/profile/hooks/useProfile"
 
 type UsernameStatus = "idle" | "checking" | "available" | "taken" | "invalid"
@@ -313,11 +311,14 @@ export default function OnboardingPage() {
                 )}
               >
                 {avatarPreview ? (
-                  <img
-                    src={avatarPreview}
-                    alt="Profile preview"
-                    className="h-full w-full object-cover"
-                  />
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={avatarPreview}
+                      alt="Profile preview"
+                      className="h-full w-full object-cover"
+                    />
+                  </>
                 ) : (
                   <ImagePlus className={cn(
                     "h-8 w-8 transition-colors",

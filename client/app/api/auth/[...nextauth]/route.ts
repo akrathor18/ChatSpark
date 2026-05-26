@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 import { oauthLogin } from "@/services/auth.service";
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_ID!,
@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
           provider: account?.provider as "google" | "github" | undefined,
         });
 
-        (user as any).backendToken = (data as any).token;
+        (user as { backendToken?: string }).backendToken = (data as { token?: string }).token;
 
         return true;
       } catch (error) {
@@ -36,15 +36,15 @@ export const authOptions: NextAuthOptions = {
 
     async jwt({ token, user }) {
       // On first sign-in, user object is available — store the backend token in the JWT
-      if (user && (user as any).backendToken) {
-        token.backendToken = (user as any).backendToken;
+      if (user && (user as { backendToken?: string }).backendToken) {
+        token.backendToken = (user as { backendToken?: string }).backendToken;
       }
       return token;
     },
 
     async session({ session, token }) {
       // Expose the backend token on the session so client can read it
-      (session as any).backendToken = token.backendToken;
+      (session as { backendToken?: unknown }).backendToken = token.backendToken;
       return session;
     },
   },

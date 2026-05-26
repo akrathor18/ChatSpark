@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import { Sparkles, Home, MessageSquare, ArrowLeft, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 
