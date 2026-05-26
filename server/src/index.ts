@@ -23,17 +23,17 @@ app.use(bodyParser.json());
 import cors from "cors";
 
 const allowedOrigin = process.env.FRONTEND_URL!;
-
+console.log("Allowed CORS origin:", allowedOrigin);
 app.use(
   cors({
-    origin: allowedOrigin,
+    origin: "https://chatspark-dev.vercel.app",
     credentials: true,
   })
 );
 
 export const io = new Server(server, {
   cors: {
-    origin: allowedOrigin,
+    origin: "https://chatspark-dev.vercel.app",
     methods: ["GET", "POST"],
     credentials: true,
   },
