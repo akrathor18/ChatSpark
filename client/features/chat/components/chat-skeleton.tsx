@@ -1,9 +1,15 @@
 export default function ChatSkeleton() {
     return (
-        <div className="flex h-screen bg-[#0b0f14] text-white">
+        <div className="flex h-screen bg-[#0b0f14] text-white overflow-hidden">
 
             {/* Sidebar */}
-            <div className="w-[320px] border-r border-white/10 p-4 flex flex-col gap-4">
+            <div className="
+                w-full
+                md:w-[320px]
+                border-r border-white/10
+                p-4
+                flex flex-col gap-4
+            ">
 
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -27,7 +33,7 @@ export default function ChatSkeleton() {
                     ))}
                 </div>
 
-                {/* Profile (bottom) */}
+                {/* Profile */}
                 <div className="mt-auto flex items-center gap-3 border-t border-white/10 pt-4">
                     <div className="h-10 w-10 rounded-full bg-white/10 animate-pulse" />
                     <div className="flex-1 space-y-2">
@@ -38,23 +44,20 @@ export default function ChatSkeleton() {
             </div>
 
             {/* Main Chat Area */}
-            <div className="flex-1 flex flex-col justify-between p-6">
+            <div className="hidden md:flex flex-1 flex-col justify-between p-6">
 
                 {/* Messages */}
                 <div className="space-y-6">
 
-                    {/* Incoming */}
                     <div className="flex items-start gap-3">
                         <div className="h-8 w-8 rounded-full skeleton" />
                         <div className="h-10 w-40 skeleton" />
                     </div>
 
-                    {/* Outgoing */}
                     <div className="flex justify-end">
                         <div className="h-12 w-52 skeleton rounded-xl" />
                     </div>
 
-                    {/* Multi-line */}
                     <div className="flex items-start gap-3">
                         <div className="h-8 w-8 rounded-full skeleton" />
                         <div className="space-y-2">

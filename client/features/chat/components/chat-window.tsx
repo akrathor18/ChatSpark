@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useMemo, memo, useCallback, useState } from "react"
+import { useMemo, memo, } from "react"
 import dynamic from "next/dynamic"
 import { useTheme } from "next-themes"
 import { Theme } from "emoji-picker-react"
@@ -45,6 +45,7 @@ import { MessageContextMenu } from "./message-context-menu"
 import { ReplyPreviewBar } from "./reply-preview-bar"
 
 import ChatSkeleton from "./chat-skeleton"
+import ChatWindowSkeleton from "./chatWindow-skeleton"
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), { ssr: false })
 
@@ -115,7 +116,7 @@ export function ChatWindow({
   }, [typingUsers, selectedConversationId])
 
   if (isLoading && messages.length === 0) {
-    return <ChatSkeleton />
+    return <ChatWindowSkeleton />
   }
 
   if (!user) {
