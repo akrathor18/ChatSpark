@@ -80,7 +80,10 @@ export const MessageContent = memo(({ content, isSent }: MessageContentProps) =>
                   href={part}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-white underline underline-offset-4 hover:text-white/80 break-all"
+                  className={cn(
+                    "underline underline-offset-4 break-all transition-colors",
+                    isSent ? "text-white hover:text-white/80" : "text-primary hover:text-primary/80"
+                  )}
                 >
                   {part}
                 </a>
@@ -142,7 +145,10 @@ export const MessageContent = memo(({ content, isSent }: MessageContentProps) =>
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary underline underline-offset-4 hover:text-primary/80 transition-colors"
+                className={cn(
+                  "underline underline-offset-4 transition-colors break-all",
+                  isSent ? "text-white hover:text-white/80" : "text-primary hover:text-primary/80"
+                )}
               >
                 {children}
               </a>

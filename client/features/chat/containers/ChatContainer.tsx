@@ -165,7 +165,7 @@ export function ChatContainer({
             
             // Also emit via socket for real-time broadcast
             const socket = getSocket()
-            const userId = useConversationStore.getState().selectedConversationUser?.user?.id
+            const userId = user?.id
             socket.emit("unsend_message", {
                 conversationId: selectedConversationId,
                 messageId,

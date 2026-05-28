@@ -174,7 +174,8 @@ export const registerHandlers = (io: Server, socket: Socket) => {
   //  Unsend message (for everyone)
   socket.on("unsend_message", async (data) => {
     try {
-      const { conversationId, messageId, senderId } = data;
+      const { conversationId, messageId } = data;
+      const senderId = socket.data.userId;
 
       if (!conversationId || !messageId || !senderId) return;
 
