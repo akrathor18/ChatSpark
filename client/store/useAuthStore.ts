@@ -2,6 +2,7 @@ import { create } from "zustand";
 import * as authService from "@/services/auth.service"
 import { useProfileStore } from "@/features/profile/store/useProfileStore";
 import { signOut } from "next-auth/react"; // clear next-auth session on logout
+import { setCookie, deleteCookie } from "cookies-next";
 interface AuthState {
     isLoading: boolean;
     error: any
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ isLoading: true, error: null });
 
             const res: any = await authService.login(email, password);
+            setCookie("token", res.token, { maxAge: 30 * 24 * 60 * 60 });
             useProfileStore.getState().setUser(res.user);
             set({ isLoading: false, error: null });
             return true;
@@ -34,6 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             set({ isLoading: true, error: null });
             const res: any = await authService.register(name, email, password);
+            setCookie("token", res.token, { maxAge: 30 * 24 * 60 * 60 });
             useProfileStore.getState().setUser(res.user);
             set({ isLoading: false, error: null });
             return true;
@@ -60,6 +63,7 @@ export const useAuthStore = create<AuthState>((set) => ({
             return false;
         }
         finally {
+            deleteCookie("token");
             // Always clear NextAuth session cookies, even if backend logout failed
             await signOut({ redirect: false });
         }

@@ -24,14 +24,14 @@ import cors from "cors";
 
 app.use(
   cors({
-    origin: "https://chatspark-dev.vercel.app",
+    origin: process.env.CLIENT_URL || "https://chatspark-dev.vercel.app",
     credentials: true,
   })
 );
 
 export const io = new Server(server, {
   cors: {
-    origin: "https://chatspark-dev.vercel.app",
+    origin: process.env.CLIENT_URL || "https://chatspark-dev.vercel.app",
     methods: ["GET", "POST"],
     credentials: true,
   },
