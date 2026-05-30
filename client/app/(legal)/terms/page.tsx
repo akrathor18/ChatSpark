@@ -10,9 +10,11 @@ const sections = [
     title: "Acceptance of Terms",
     content: [
       {
+        subtitle: "",
         text: "By accessing or using ChatSpark (the \"Service\"), a real-time messaging and code-sharing platform, you agree to be bound by these Terms of Service. If you do not agree with any of these terms, you are prohibited from using the Service."
       },
       {
+        subtitle: "",
         text: "We reserve the right to update or modify these Terms at any time. Your continued use of ChatSpark after changes are posted constitutes your acceptance of the revised Terms."
       }
     ]
@@ -102,6 +104,7 @@ const sections = [
     title: "Limitation of Liability",
     content: [
       {
+        subtitle: "",
         text: "In no event shall ChatSpark or its operators be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of data or profits, arising out of your use of or inability to use the Service."
       }
     ]
