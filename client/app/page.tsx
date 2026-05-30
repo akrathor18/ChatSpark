@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button"
 import TechStack from "@/components/landingPage/TechStack"
 import CTABanner from "@/components/landingPage/CTABanner"
 import Footer from "@/components/landingPage/Footer"
-import { 
-  Sparkles, 
-  Shield, 
-  Zap, 
-  Users, 
-  Lock, 
+import {
+  Sparkles,
+  Shield,
+  Zap,
+  Users,
+  Lock,
   Target,
   ArrowRight,
   Star,
@@ -114,9 +114,9 @@ function HeroSection() {
                 </Button>
               </Link>
               <Link href="#features">
-                <Button 
-                  variant="outline" 
-                  size="lg" 
+                <Button
+                  variant="outline"
+                  size="lg"
                   className="w-full rounded-full px-8 sm:w-auto"
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
@@ -145,8 +145,8 @@ function HeroSection() {
               {/* Chat Messages */}
               <div className="space-y-4 p-4">
                 <div className="flex gap-3">
-                  <div 
-                    className="h-8 w-8 shrink-0 rounded-full bg-secondary bg-cover bg-center" 
+                  <div
+                    className="h-8 w-8 shrink-0 rounded-full bg-secondary bg-cover bg-center"
                     style={{ backgroundImage: "url(https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop)" }}
                   />
                   <div>
@@ -161,8 +161,8 @@ function HeroSection() {
                 </div>
 
                 <div className="flex gap-3">
-                  <div 
-                    className="h-8 w-8 shrink-0 rounded-full bg-secondary bg-cover bg-center" 
+                  <div
+                    className="h-8 w-8 shrink-0 rounded-full bg-secondary bg-cover bg-center"
                     style={{ backgroundImage: "url(https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop)" }}
                   />
                   <div>
@@ -258,10 +258,10 @@ function FeaturesSection() {
             <span className="text-xs font-medium text-primary">Features</span>
           </div>
           <h2 className="mt-6 text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Everything your team needs
+            Everything your need to stay connected
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-pretty text-lg text-muted-foreground">
-            Built for developers, by developers. ChatSpark combines powerful features with a clean interface.
+            ChatSpark combines fast messaging, secure authentication, and code sharing in a clean and modern experience.
           </p>
         </div>
 

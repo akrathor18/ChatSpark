@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Sparkles } from "lucide-react"
+import { Sparkles, Github, Twitter, Linkedin, Mail } from "lucide-react"
 
 function Footer() {
     const links = {
@@ -8,7 +8,7 @@ function Footer() {
         ],
         Social: [
             { name: "GitHub", href: "https://github.com/akrathor18/chatSpark/" },
-            { name: "LinkedIn", href: "https://linkedin.com/ashishkumartech" },
+            { name: "LinkedIn", href: "https://linkedin.com/in/ashishkumartech" },
         ],
         Legal: [
             { name: "Privacy", href: "/privacy" },
@@ -62,25 +62,47 @@ function Footer() {
                     ))}
                 </div>
 
-                <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
-                    <p className="text-sm text-muted-foreground">
-                        &copy; {new Date().getFullYear()} ChatSpark. All rights reserved.
-                    </p>
+                <div className="mt-12 flex flex-col items-center border-t border-border pt-8 pb-4">
+                    <div className="flex flex-col items-center gap-3 mb-8">
+                        <p className="text-sm text-muted-foreground">
+                            Built with <span className="text-red-500">❤️</span> by <a href="https://github.com/akrathor18" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">Ashish Kumar</a>.
+                        </p>
+                        <div className="flex items-center gap-4 text-muted-foreground">
+                            <a href="https://github.com/akrathor18" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                                <Github className="h-4 w-4" />
+                            </a>
+                            <a href="https://twitter.com/iam_ashish_dev" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                                <Twitter className="h-4 w-4" />
+                            </a>
+                            <a href="https://linkedin.com/in/ashishkumartech" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                                <Linkedin className="h-4 w-4" />
+                            </a>
+                            <a href="mailto:ashishk.codes@gmail.com" className="hover:text-foreground transition-colors">
+                                <Mail className="h-4 w-4" />
+                            </a>
+                        </div>
+                    </div>
 
-                    <div className="flex gap-6">
-                        <Link
-                            href="/privacy"
-                            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            Privacy Policy
-                        </Link>
+                    <div className="flex w-full flex-col items-center justify-between gap-4 sm:flex-row">
+                        <p className="text-sm text-muted-foreground">
+                            &copy; {new Date().getFullYear()} ChatSpark. All rights reserved.
+                        </p>
 
-                        <Link
-                            href="/terms"
-                            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            Terms of Service
-                        </Link>
+                        <div className="flex gap-6">
+                            <Link
+                                href="/privacy"
+                                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                Privacy Policy
+                            </Link>
+
+                            <Link
+                                href="/terms"
+                                className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                            >
+                                Terms of Service
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

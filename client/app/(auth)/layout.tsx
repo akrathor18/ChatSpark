@@ -28,7 +28,7 @@ export default function AuthLayout({
 
             {/* Footer */}
             <footer className="px-6 py-4 text-center text-xs text-muted-foreground md:px-8">
-                <p>By continuing, you agree to ChatSpark&apos;s <Link href="#" className="text-primary hover:underline">Terms of Service</Link> and <Link href="#" className="text-primary hover:underline">Privacy Policy</Link></p>
+                <p>By continuing, you agree to ChatSpark&apos;s <Link href="/terms" className="text-primary hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link></p>
             </footer>
         </div>
     )

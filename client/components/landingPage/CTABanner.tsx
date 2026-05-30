@@ -56,11 +56,10 @@ export default function CTABanner() {
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center gap-3">
           <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Built for developers who move fast
+            Ready to get started?
           </h2>
           <p className="text-slate-400 text-sm sm:text-base max-w-md leading-relaxed">
-            Join thousands of developers already using ChatSpark to communicate
-            and build better.
+            Join ChatSpark today and enjoy a modern messaging experience designed for speed, simplicity, and reliability.
           </p>
         </div>
 
