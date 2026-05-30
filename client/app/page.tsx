@@ -95,7 +95,7 @@ function HeroSection() {
               <span className="text-xs font-medium text-primary">Now in Public Beta</span>
             </div>
 
-            <h1 className="text-balance text-xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               The complete platform for{" "}
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 seamless messaging
