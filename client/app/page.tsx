@@ -103,7 +103,7 @@ function HeroSection() {
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground lg:mx-0">
-              Built for speed and simplicity, ChatSpark helps you communicate in real time without unnecessary complexity. Whether you're discussing ideas, sharing updates, or exchanging code, everything happens instantly.
+              Built for speed and simplicity, ChatSpark helps you communicate in real time without unnecessary complexity. Whether you&apos;re discussing ideas, sharing updates, or exchanging code, everything happens instantly.
             </p>
 
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row lg:justify-start">

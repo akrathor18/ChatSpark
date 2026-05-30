@@ -33,7 +33,7 @@ function Footer() {
                         </Link>
 
                         <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-                            Built for speed and simplicity, ChatSpark helps you communicate in real time without unnecessary complexity. Whether you're discussing ideas, sharing updates, or exchanging code, everything happens instantly.
+                            Built for speed and simplicity, ChatSpark helps you communicate in real time without unnecessary complexity. Whether you&apos;re discussing ideas, sharing updates, or exchanging code, everything happens instantly.
 
 
                         </p>
