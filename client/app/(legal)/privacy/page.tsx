@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Sparkles, ArrowLeft, Shield, Lock, Eye, Database, Globe, Bell, Trash2, Mail } from "lucide-react"
+import { Sparkles, ArrowLeft, Shield, Lock, Eye, Database, Globe, Bell, Mail } from "lucide-react"
 
 const sections = [
   {
@@ -11,19 +11,15 @@ const sections = [
     content: [
       {
         subtitle: "Account Information",
-        text: "When you create an account, we collect your email address, username, profile picture, and any other information you choose to provide. This information is necessary to create and maintain your ChatSpark account."
+        text: "When you sign up using Email/Password, Google OAuth, or GitHub OAuth, we collect your email address, name, username, and profile picture. This is required to create your account and identify you to other users on ChatSpark."
       },
       {
-        subtitle: "Messages and Content",
-        text: "We store the messages you send and receive through ChatSpark. Your messages are encrypted in transit and at rest. We do not read or analyze your private messages for advertising purposes."
+        subtitle: "Messages and Code Snippets",
+        text: "We store your one-to-one conversation history in our MongoDB database, which includes your text messages and shared code snippets. This allows you to access your chat history across different devices."
       },
       {
-        subtitle: "Usage Data",
-        text: "We automatically collect information about how you use ChatSpark, including features you use, time spent in the app, and interaction patterns. This helps us improve our service."
-      },
-      {
-        subtitle: "Device Information",
-        text: "We collect information about the devices you use to access ChatSpark, including device type, operating system, browser type, and IP address."
+        subtitle: "Device and Connection Data",
+        text: "When you connect to our real-time WebSocket servers, we temporarily process your IP address and connection details to maintain your active messaging session."
       }
     ]
   },
@@ -33,16 +29,12 @@ const sections = [
     title: "How We Use Your Information",
     content: [
       {
-        subtitle: "Providing Services",
-        text: "We use your information to operate, maintain, and improve ChatSpark, including delivering messages, syncing conversations across devices, and providing customer support."
-      },
-      {
-        subtitle: "Security",
-        text: "We use your information to protect the security of ChatSpark, detect and prevent fraud, and enforce our terms of service."
+        subtitle: "Providing the Service",
+        text: "We use your information exclusively to operate ChatSpark. This includes authenticating your login, delivering real-time messages via WebSockets, and securely syncing your conversation history."
       },
       {
         subtitle: "Communication",
-        text: "We may send you service-related emails, such as account verification, security alerts, and updates about our terms and policies."
+        text: "We may use your email address to send essential service-related notices, such as account recovery instructions or password resets."
       }
     ]
   },
@@ -52,16 +44,12 @@ const sections = [
     title: "Data Sharing and Disclosure",
     content: [
       {
-        subtitle: "Third-Party Services",
-        text: "We may share information with third-party service providers who help us operate ChatSpark, such as cloud hosting providers and analytics services. These providers are bound by confidentiality agreements."
+        subtitle: "Infrastructure Providers",
+        text: "We host ChatSpark on third-party cloud infrastructure providers (such as Vercel and cloud-hosted MongoDB). These providers process your encrypted data strictly on our behalf to keep the application running."
       },
       {
         subtitle: "Legal Requirements",
-        text: "We may disclose your information if required by law, such as in response to a subpoena, court order, or other legal process."
-      },
-      {
-        subtitle: "Business Transfers",
-        text: "If ChatSpark is involved in a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction."
+        text: "We may disclose your information if legally required to do so in response to a valid court order, subpoena, or other legal process."
       }
     ]
   },
@@ -71,16 +59,12 @@ const sections = [
     title: "Data Security",
     content: [
       {
-        subtitle: "Encryption",
-        text: "All data transmitted between your device and our servers is encrypted using TLS 1.3. Messages are encrypted at rest using AES-256 encryption."
+        subtitle: "Encryption in Transit",
+        text: "All data transmitted between your browser and our Node.js backend servers is protected using HTTPS/TLS encryption."
       },
       {
-        subtitle: "Access Controls",
-        text: "We implement strict access controls to limit who can access your data within our organization. Access is granted on a need-to-know basis."
-      },
-      {
-        subtitle: "Regular Audits",
-        text: "We conduct regular security audits and penetration testing to identify and address potential vulnerabilities."
+        subtitle: "Encryption at Rest",
+        text: "Before being saved to our MongoDB database, the content of your messages and code snippets is securely encrypted using AES-256-GCM. We never store your message content in plain text."
       }
     ]
   },
@@ -90,54 +74,23 @@ const sections = [
     title: "Your Rights and Choices",
     content: [
       {
-        subtitle: "Access and Portability",
-        text: "You can access and download a copy of your data at any time through your account settings. We provide your data in a machine-readable format."
+        subtitle: "Managing Messages",
+        text: "You can unsend or delete your own messages within your conversations at any time."
       },
       {
-        subtitle: "Correction",
-        text: "You can update or correct your account information at any time through your profile settings."
-      },
-      {
-        subtitle: "Deletion",
-        text: "You can delete your account and all associated data at any time. Once deleted, your data cannot be recovered."
-      },
-      {
-        subtitle: "Opt-Out",
-        text: "You can opt out of non-essential communications through your notification settings. You cannot opt out of service-related communications."
+        subtitle: "Account Deletion",
+        text: "You can request the complete deletion of your account and associated data by contacting us. Once processed, your account and messages will be permanently removed from our active database."
       }
     ]
   },
   {
     id: "cookies",
     icon: Bell,
-    title: "Cookies and Tracking",
+    title: "Cookies and Authentication",
     content: [
       {
-        subtitle: "Essential Cookies",
-        text: "We use essential cookies to maintain your session and remember your preferences. These cookies are necessary for ChatSpark to function properly."
-      },
-      {
-        subtitle: "Analytics",
-        text: "We use analytics tools to understand how users interact with ChatSpark. You can opt out of analytics tracking through your browser settings."
-      }
-    ]
-  },
-  {
-    id: "data-retention",
-    icon: Trash2,
-    title: "Data Retention",
-    content: [
-      {
-        subtitle: "Active Accounts",
-        text: "We retain your data for as long as your account is active. You can delete your messages individually, or delete your entire account to remove all data."
-      },
-      {
-        subtitle: "Inactive Accounts",
-        text: "Accounts that have been inactive for more than 24 months may be deleted. We will notify you before deleting an inactive account."
-      },
-      {
-        subtitle: "Backup Retention",
-        text: "Backup copies of your data may be retained for up to 90 days after deletion for disaster recovery purposes."
+        subtitle: "Authentication Cookies",
+        text: "We use strictly necessary cookies to keep you logged in. These cookies are required for ChatSpark to securely verify your identity as you use the application. We do not use tracking or advertising cookies."
       }
     ]
   },
@@ -147,12 +100,8 @@ const sections = [
     title: "Contact Us",
     content: [
       {
-        subtitle: "Privacy Questions",
-        text: "If you have questions about this Privacy Policy or our data practices, please contact us at privacy@chatspark.app."
-      },
-      {
-        subtitle: "Data Protection Officer",
-        text: "Our Data Protection Officer can be reached at dpo@chatspark.app for any privacy-related concerns."
+        subtitle: "Questions and Requests",
+        text: "If you have any questions about this Privacy Policy, the ChatSpark service, or if you would like to request account deletion, please contact:\n\nAshish Kumar\nEmail: ashishk.codes@gmail.com"
       }
     ]
   }
@@ -190,11 +139,10 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p className="mt-4 text-muted-foreground">
-            Last updated: March 27, 2026
+            Last updated: May 30, 2026
           </p>
           <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-            At ChatSpark, we take your privacy seriously. This policy explains how we collect,
-            use, and protect your personal information when you use our service.
+            At ChatSpark, we take your privacy seriously. ChatSpark is a real-time messaging application that allows users to engage in one-to-one conversations and share code snippets with syntax highlighting. This policy explains what information we collect, how we use it solely to provide the messaging service, and how your conversations are protected using AES-256-GCM encryption at rest and HTTPS/TLS encryption in transit.
           </p>
         </div>
       </section>
@@ -238,8 +186,8 @@ export default function PrivacyPolicyPage() {
               <div className="space-y-6">
                 {section.content.map((item, index) => (
                   <div key={index}>
-                    <h3 className="mb-2 font-medium text-foreground">{item.subtitle}</h3>
-                    <p className="text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+                     <h3 className="mb-2 font-medium text-foreground">{item.subtitle}</h3>
+                     <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">{item.text}</p>
                   </div>
                 ))}
               </div>
@@ -252,7 +200,7 @@ export default function PrivacyPolicyPage() {
           <p className="text-sm text-muted-foreground">
             By using ChatSpark, you agree to the collection and use of information in accordance with this policy.
             If you have any questions, please{" "}
-            <a href="mailto:privacy@chatspark.app" className="text-primary hover:underline">
+            <a href="mailto:ashishk.codes@gmail.com" className="text-primary hover:underline">
               contact us
             </a>.
           </p>
@@ -262,7 +210,7 @@ export default function PrivacyPolicyPage() {
       {/* Footer */}
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground md:flex-row">
-          <p>&copy; 2026 ChatSpark. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} ChatSpark. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="/terms" className="hover:text-foreground">Terms of Service</Link>
             <Link href="/privacy" className="text-primary">Privacy Policy</Link>

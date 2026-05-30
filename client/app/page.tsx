@@ -11,7 +11,7 @@ import {
   Zap, 
   Users, 
   Lock, 
-  Globe,
+  Target,
   ArrowRight,
   Star,
   Code,
@@ -95,16 +95,15 @@ function HeroSection() {
               <span className="text-xs font-medium text-primary">Now in Public Beta</span>
             </div>
 
-            <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="text-balance text-xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
               The complete platform for{" "}
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                developer chat
+                seamless messaging
               </span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground lg:mx-0">
-              Your team&apos;s communication toolkit to stop context-switching and start shipping. 
-              Securely collaborate, share code, and build faster with ChatSpark.
+              Built for speed and simplicity, ChatSpark helps you communicate in real time without unnecessary complexity. Whether you're discussing ideas, sharing updates, or exchanging code, everything happens instantly.
             </p>
 
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
@@ -139,7 +138,7 @@ function HeroSection() {
                   <div className="h-3 w-3 rounded-full bg-green-500/60" />
                 </div>
                 <div className="flex-1 text-center">
-                  <span className="text-xs text-muted-foreground">ChatSpark - #engineering</span>
+                  <span className="text-xs text-muted-foreground">ChatSpark</span>
                 </div>
               </div>
 
@@ -156,7 +155,7 @@ function HeroSection() {
                       <span className="text-xs text-muted-foreground">10:32 AM</span>
                     </div>
                     <div className="mt-1 rounded-xl rounded-tl-sm bg-secondary px-3 py-2">
-                      <p className="text-sm text-foreground">Hey team! The new API is ready for review</p>
+                      <p className="text-sm text-foreground">Hey! Have you checked the latest update?</p>
                     </div>
                   </div>
                 </div>
@@ -173,7 +172,7 @@ function HeroSection() {
                     </div>
                     <div className="mt-1 space-y-2">
                       <div className="rounded-xl rounded-tl-sm bg-secondary px-3 py-2">
-                        <p className="text-sm text-foreground">Nice! Let me check the endpoints</p>
+                        <p className="text-sm text-foreground">Yes, everything looks good now.</p>
                       </div>
                       <div className="overflow-hidden rounded-lg border border-border bg-background">
                         <div className="flex items-center gap-2 border-b border-border bg-secondary/50 px-3 py-1.5">
@@ -195,7 +194,7 @@ function HeroSection() {
                 <div className="flex justify-end">
                   <div className="max-w-[80%]">
                     <div className="rounded-xl rounded-tr-sm bg-primary px-3 py-2">
-                      <p className="text-sm text-primary-foreground">Looks great! Merging now</p>
+                      <p className="text-sm text-primary-foreground">Looks great 👍</p>
                     </div>
                   </div>
                 </div>
@@ -204,7 +203,7 @@ function HeroSection() {
               {/* Input Area */}
               <div className="border-t border-border bg-secondary/20 px-4 py-3">
                 <div className="flex items-center gap-2 rounded-xl bg-input px-3 py-2">
-                  <span className="text-sm text-muted-foreground">Message #engineering...</span>
+                  <span className="text-sm text-muted-foreground">Message</span>
                 </div>
               </div>
             </div>
@@ -235,18 +234,18 @@ function FeaturesSection() {
     },
     {
       icon: Users,
-      title: "Team Channels",
-      description: "Organize conversations by project, team, or topic. Keep discussions focused.",
+      title: "Secure Authentication",
+      description: "Login with Email, Google, or GitHub.",
     },
     {
       icon: Layers,
-      title: "Integrations",
-      description: "Connect with GitHub, Jira, Slack, and 50+ other tools your team already uses.",
+      title: "Private Conversations",
+      description: "One-to-one messaging designed for focused communication.",
     },
     {
-      icon: Globe,
-      title: "Global CDN",
-      description: "Lightning-fast delivery worldwide with our distributed edge network.",
+      icon: Target,
+      title: "No distractions",
+      description: "Simple, lightweight, and easy to use",
     },
   ]
 

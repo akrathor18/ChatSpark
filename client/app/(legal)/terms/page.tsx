@@ -10,10 +10,10 @@ const sections = [
     title: "Acceptance of Terms",
     content: [
       {
-        text: "By accessing or using ChatSpark, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this service."
+        text: "By accessing or using ChatSpark (the \"Service\"), a real-time messaging and code-sharing platform, you agree to be bound by these Terms of Service. If you do not agree with any of these terms, you are prohibited from using the Service."
       },
       {
-        text: "These Terms apply to all visitors, users, and others who access or use ChatSpark. We reserve the right to update or modify these Terms at any time without prior notice."
+        text: "We reserve the right to update or modify these Terms at any time. Your continued use of ChatSpark after changes are posted constitutes your acceptance of the revised Terms."
       }
     ]
   },
@@ -24,19 +24,11 @@ const sections = [
     content: [
       {
         subtitle: "Account Creation",
-        text: "You must be at least 13 years old to use ChatSpark. By creating an account, you represent that you meet this age requirement and that all information you provide is accurate and complete."
+        text: "You may create an account using Email/Password, Google OAuth, or GitHub OAuth. You are responsible for ensuring that the information you provide during registration is accurate."
       },
       {
         subtitle: "Account Security",
-        text: "You are responsible for maintaining the security of your account and password. ChatSpark cannot and will not be liable for any loss or damage from your failure to comply with this security obligation."
-      },
-      {
-        subtitle: "One Person, One Account",
-        text: "Each user may maintain only one account. Creating multiple accounts may result in termination of all accounts."
-      },
-      {
-        subtitle: "Account Transfer",
-        text: "You may not transfer your account to another person without our written consent."
+        text: "You are responsible for maintaining the security of your account credentials. ChatSpark cannot and will not be liable for any loss or damage resulting from your failure to protect your login information."
       }
     ]
   },
@@ -47,115 +39,73 @@ const sections = [
     content: [
       {
         subtitle: "Permitted Use",
-        text: "You may use ChatSpark for lawful purposes only. You agree to use the service in compliance with all applicable local, state, national, and international laws and regulations."
+        text: "You may use ChatSpark for lawful, one-to-one messaging and code sharing purposes only."
       },
       {
         subtitle: "Prohibited Activities",
-        text: "You agree not to: (a) use the service for any unlawful purpose; (b) harass, abuse, or harm others; (c) send spam or unsolicited messages; (d) impersonate others; (e) interfere with or disrupt the service; (f) attempt to gain unauthorized access to any systems; (g) upload malicious code or viruses."
+        text: "You agree not to: (a) use the service for any unlawful purpose; (b) harass, abuse, or harm others; (c) send spam or unsolicited messages; (d) attempt to gain unauthorized access to our WebSocket servers, database, or other users' accounts; or (e) distribute malicious code or viruses."
       },
       {
         subtitle: "Content Standards",
-        text: "You are solely responsible for all content you send through ChatSpark. Content must not be illegal, threatening, defamatory, obscene, or otherwise objectionable."
+        text: "You are solely responsible for all messages and code snippets you send through ChatSpark. Content must not be illegal, threatening, or designed to exploit vulnerabilities in the platform."
       }
     ]
   },
   {
     id: "intellectual-property",
     icon: Shield,
-    title: "Intellectual Property",
+    title: "Intellectual Property and Content",
     content: [
       {
         subtitle: "Our Rights",
-        text: "ChatSpark and its original content, features, and functionality are owned by ChatSpark and are protected by international copyright, trademark, and other intellectual property laws."
+        text: "The ChatSpark application, including its source code, UI/UX, and underlying infrastructure, is owned by ChatSpark and protected by intellectual property laws."
       },
       {
-        subtitle: "Your Content",
-        text: "You retain ownership of content you create and share through ChatSpark. By posting content, you grant us a non-exclusive, worldwide, royalty-free license to use, display, and distribute your content in connection with providing the service."
-      },
-      {
-        subtitle: "Feedback",
-        text: "Any feedback, suggestions, or ideas you provide about ChatSpark may be used by us without any obligation to compensate you."
-      }
-    ]
-  },
-  {
-    id: "privacy",
-    icon: Shield,
-    title: "Privacy and Data",
-    content: [
-      {
-        text: "Your privacy is important to us. Please review our Privacy Policy, which also governs your use of ChatSpark, to understand our practices regarding the collection and use of your personal information."
-      },
-      {
-        subtitle: "Data Processing",
-        text: "By using ChatSpark, you consent to the collection, processing, and storage of your data as described in our Privacy Policy."
+        subtitle: "Your Messages and Code Snippets",
+        text: "You retain ownership of the messages and code snippets you share through ChatSpark. By sending messages, you grant us a limited license to store, encrypt (via AES-256-GCM), and display your content solely for the purpose of operating the messaging service and delivering your messages to the intended recipient."
       }
     ]
   },
   {
     id: "termination",
     icon: AlertTriangle,
-    title: "Termination",
+    title: "Suspension and Termination",
     content: [
       {
         subtitle: "By You",
-        text: "You may terminate your account at any time by deleting it through your account settings. Upon termination, your right to use the service will immediately cease."
+        text: "You may stop using ChatSpark at any time. You can request full account deletion by contacting us, which will permanently remove your user data and messages from our active database."
       },
       {
         subtitle: "By Us",
-        text: "We may terminate or suspend your account immediately, without prior notice or liability, for any reason, including breach of these Terms."
+        text: "We reserve the right to suspend or terminate your access to ChatSpark at any time, without prior notice, if we believe you have violated these Terms or are using the service maliciously."
+      }
+    ]
+  },
+  {
+    id: "service-availability",
+    icon: RefreshCw,
+    title: "Service Availability",
+    content: [
+      {
+        subtitle: "As Is / As Available",
+        text: "ChatSpark is provided on an \"as is\" and \"as available\" basis. We do not offer Service Level Agreements (SLAs), guaranteed uptime, or guarantee that the service will be entirely error-free."
       },
       {
-        subtitle: "Effect of Termination",
-        text: "Upon termination, all provisions of these Terms which by their nature should survive will survive, including ownership provisions, warranty disclaimers, and limitations of liability."
+        subtitle: "Maintenance and Outages",
+        text: "The real-time messaging service, MongoDB database, or underlying APIs may experience temporary outages for maintenance or due to unforeseen technical issues. We are not liable for any disruption in service or message delivery delays."
       }
     ]
   },
   {
     id: "disclaimers",
     icon: Scale,
-    title: "Disclaimers and Limitations",
+    title: "Limitation of Liability",
     content: [
       {
-        subtitle: "Service Provided \"As Is\"",
-        text: "ChatSpark is provided on an \"as is\" and \"as available\" basis without warranties of any kind, either express or implied, including but not limited to implied warranties of merchantability, fitness for a particular purpose, or non-infringement."
-      },
-      {
-        subtitle: "No Guarantee",
-        text: "We do not guarantee that the service will be uninterrupted, timely, secure, or error-free. We do not guarantee any specific results from the use of the service."
-      },
-      {
-        subtitle: "Limitation of Liability",
-        text: "In no event shall ChatSpark, its directors, employees, partners, or suppliers be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, or other intangible losses."
+        text: "In no event shall ChatSpark or its operators be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of data or profits, arising out of your use of or inability to use the Service."
       }
     ]
   },
-  {
-    id: "changes",
-    icon: RefreshCw,
-    title: "Changes to Terms",
-    content: [
-      {
-        text: "We reserve the right to modify or replace these Terms at any time. If a revision is material, we will provide at least 30 days notice prior to any new terms taking effect."
-      },
-      {
-        text: "By continuing to access or use our service after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, please stop using the service."
-      }
-    ]
-  },
-  {
-    id: "governing-law",
-    icon: Gavel,
-    title: "Governing Law",
-    content: [
-      {
-        text: "These Terms shall be governed by and construed in accordance with the laws of the State of California, United States, without regard to its conflict of law provisions."
-      },
-      {
-        text: "Any disputes arising out of or relating to these Terms or the service shall be resolved exclusively in the state or federal courts located in San Francisco, California."
-      }
-    ]
-  }
 ]
 
 export default function TermsOfServicePage() {
@@ -190,11 +140,10 @@ export default function TermsOfServicePage() {
             Terms of Service
           </h1>
           <p className="mt-4 text-muted-foreground">
-            Last updated: March 27, 2026
+            Last updated: May 30, 2026
           </p>
           <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-            Please read these Terms of Service carefully before using ChatSpark.
-            By using our service, you agree to be bound by these terms.
+            Please read these Terms of Service carefully before using ChatSpark, a real-time messaging application for one-to-one conversations and code snippet sharing. By using our service, you agree to be bound by these terms.
           </p>
         </div>
       </section>
@@ -209,19 +158,19 @@ export default function TermsOfServicePage() {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-              You must be 13+ years old to use ChatSpark
+              Use ChatSpark for lawful, one-to-one messaging and code sharing
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-              Be respectful and follow our community guidelines
+              You own your messages, but give us a limited license to store and transmit them
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-              You own your content, but give us license to display it
+              We do not provide guaranteed uptime or Service Level Agreements (SLAs)
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-              We can terminate accounts that violate these terms
+              We can suspend accounts that violate these terms or act maliciously
             </li>
           </ul>
         </div>
@@ -284,7 +233,7 @@ export default function TermsOfServicePage() {
       {/* Footer */}
       <footer className="border-t border-border px-6 py-8">
         <div className="mx-auto flex max-w-4xl flex-col items-center justify-between gap-4 text-sm text-muted-foreground md:flex-row">
-          <p>&copy; 2026 ChatSpark. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} ChatSpark. All rights reserved.</p>
           <div className="flex gap-6">
             <Link href="/terms" className="text-primary">Terms of Service</Link>
             <Link href="/privacy" className="hover:text-foreground">Privacy Policy</Link>

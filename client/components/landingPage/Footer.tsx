@@ -33,8 +33,9 @@ function Footer() {
                         </Link>
 
                         <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-                            The complete communication platform for developer teams.
-                            Built with love for people who build.
+                            Built for speed and simplicity, ChatSpark helps you communicate in real time without unnecessary complexity. Whether you're discussing ideas, sharing updates, or exchanging code, everything happens instantly.
+
+
                         </p>
                     </div>
 
