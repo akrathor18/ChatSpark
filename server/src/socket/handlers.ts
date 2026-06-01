@@ -186,10 +186,16 @@ export const registerHandlers = (io: Server, socket: Socket) => {
         return;
       }
 
-      // Update in DB — use the empty sentinel (valid IEncryptedContent shape)
-      message.isUnsent = true;
-      message.content = { cipherText: "", iv: "", authTag: "" } as any;
-      await message.save();
+      await Message.findByIdAndUpdate(messageId, {
+        $set: {
+          isUnsent: true,
+          content: {
+            cipherText: "",
+            iv: "",
+            authTag: "",
+          },
+        },
+      });
 
       // Broadcast to all members
       const members = await ConversationMember.find({ conversationId });
