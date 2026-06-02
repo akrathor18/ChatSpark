@@ -5,6 +5,7 @@ import { ChatWindow as ChatWindowLayout } from "../components/chat-window"
 import { MessageInfoModal } from "../components/message-info-modal"
 import { useConversationStore } from "../store/useConversationStore"
 import { useMessageStore } from "../store/useMessageStore"
+import { useChatSocket } from "../hooks/useChatSocket"
 import * as messageService from "../services/message.service"
 import { getSocket } from "@/lib/socket"
 import { VirtuosoHandle } from "react-virtuoso"
@@ -47,6 +48,7 @@ interface ChatContainerProps {
     isBlockedMe?: boolean
     onBlockUser?: () => void
     onUnblockUser?: () => void
+    newMessageTrigger?: number
 }
 
 export function ChatContainer({
@@ -60,6 +62,7 @@ export function ChatContainer({
     isBlockedMe,
     onBlockUser,
     onUnblockUser,
+    newMessageTrigger = 0,
 }: ChatContainerProps) {
     // ── State ──────────────────────────────────────────────────────────────────
     const [inputValue, setInputValue] = useState("")
@@ -75,6 +78,35 @@ export function ChatContainer({
     const virtuosoRef = useRef<VirtuosoHandle>(null)
     const inputRef = useRef<HTMLTextAreaElement>(null)
 
+    // ── Scroll helper ──────────────────────────────────────────────────────────
+    // Uses absolute scrollTo instead of scrollToIndex("LAST"). scrollToIndex("LAST")
+    // aligns the last item to the viewport, which ignores the Footer padding and
+    // causes the last message to look cut off or touch the input bar directly.
+    const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+        // We use a small timeout instead of requestAnimationFrame because Virtuoso
+        // needs a moment to render the new item and update its internal scrollHeight.
+        setTimeout(() => {
+            // Number.MAX_SAFE_INTEGER ensures we hit the absolute bottom of the scroll container
+            virtuosoRef.current?.scrollTo({ top: 9999999, behavior })
+        }, 100)
+    }, [])
+
+    // Scroll to bottom whenever the typing indicator appears so it is always
+    // visible. Virtuoso's followOutput only fires on data-array changes, not
+    // on Footer height changes, so we must drive this imperatively.
+    useEffect(() => {
+        if (isOtherTyping) {
+            scrollToBottom()
+        }
+    }, [isOtherTyping, scrollToBottom])
+
+    // Scroll when a new socket message arrives (triggered from page.tsx)
+    useEffect(() => {
+        if (newMessageTrigger > 0) {
+            scrollToBottom()
+        }
+    }, [newMessageTrigger, scrollToBottom])
+
     // ── Handlers ───────────────────────────────────────────────────────────────
 
     const handleLoadOlder = useCallback(() => {
@@ -83,31 +115,25 @@ export function ChatContainer({
         }
     }, [selectedConversationId, fetchOlderMessages]);
 
-    const handleSend = () => {
-        if (inputValue.trim()) {
-            onSendMessage(inputValue.trim(), replyingTo?.id)
-            setInputValue("")
-            
-            // Clear reply state after sending
-            if (replyingTo) {
-                setReplyingTo(null)
-            }
+    const handleSend = useCallback(() => {
+        if (!inputValue.trim()) return
 
-            // Explicitly scroll to bottom on send
-            setTimeout(() => {
-                virtuosoRef.current?.scrollToIndex({
-                    index: messages.length,
-                    align: 'end',
-                    behavior: 'smooth'
-                })
-            }, 100)
+        onSendMessage(inputValue.trim(), replyingTo?.id)
+        setInputValue("")
 
-            if (inputRef.current) {
-                inputRef.current.style.height = "auto"
-                inputRef.current.focus()
-            }
+        // Clear reply state after sending
+        if (replyingTo) setReplyingTo(null)
+
+        // Scroll to the newly-added optimistic message.
+        // requestAnimationFrame waits for the React paint so Virtuoso has
+        // already rendered the new item before we ask it to scroll.
+        scrollToBottom()
+
+        if (inputRef.current) {
+            inputRef.current.style.height = "auto"
+            inputRef.current.focus()
         }
-    }
+    }, [inputValue, replyingTo, onSendMessage, setReplyingTo, scrollToBottom])
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -118,9 +144,16 @@ export function ChatContainer({
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const el = e.target
+        const prevHeight = el.style.height
         el.style.height = "auto"
-        el.style.height = `${Math.min(el.scrollHeight, 128)}px`
+        const newHeight = `${Math.min(el.scrollHeight, 128)}px`
+        el.style.height = newHeight
         setInputValue(el.value)
+        
+        // If textarea grew/shrank, scroll to bottom so the input bar doesn't overlap messages
+        if (prevHeight !== newHeight && prevHeight !== "") {
+            scrollToBottom("auto")
+        }
         
         // Trigger typing indicator
         if (onTyping) onTyping()

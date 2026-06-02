@@ -3,7 +3,11 @@ import { getSocket } from "@/lib/socket";
 import { useMessageStore } from "@/features/chat/store/useMessageStore";
 import { useConversationStore } from "@/features/chat/store/useConversationStore";
 
-export const useChatSocket = (conversationId: string | null, userId?: string) => {
+export const useChatSocket = (
+  conversationId: string | null,
+  userId?: string,
+  onNewMessage?: () => void,
+) => {
   const socket = getSocket();
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -31,6 +35,12 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
 
       useMessageStore.getState().addMessage(cleanMessage);
       useConversationStore.getState().updateConversationFromMessage(cleanMessage);
+
+      // Notify the container to scroll when a message arrives for the active chat
+      const selectedId = useConversationStore.getState().selectedConversationId;
+      if (selectedId === convId) {
+        onNewMessage?.();
+      }
 
       if (conversationId?.toString() === convId && currentUserId !== sendId) {
         socket.emit("mark_read", { conversationId: convId, userId: currentUserId });
@@ -188,6 +198,20 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
     const convId = conversationId.toString();
     const currentUserId = userId.toString();
 
+    // Build a populated replyTo for immediate display (no page-refresh needed).
+    // useConversationStore.getState() is an imperative Zustand call — safe outside render.
+    const replyingTo = useConversationStore.getState().replyingTo;
+    const optimisticReplyTo = replyToId
+      ? replyingTo
+        ? {
+            id:         replyingTo.id ?? replyToId,
+            content:    replyingTo.isUnsent ? "" : (replyingTo.content ?? ""),
+            senderName: replyingTo.isSent ? "You" : undefined,
+            isUnsent:   replyingTo.isUnsent ?? false,
+          }
+        : { id: replyToId, content: "", senderName: undefined, isUnsent: false }
+      : undefined;
+
     const optimisticMessage = {
       tempId,
       conversationId: convId,
@@ -195,7 +219,7 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
       content,
       status: "sending",
       createdAt: new Date().toISOString(),
-      ...(replyToId ? { replyTo: replyToId } : {}),
+      ...(optimisticReplyTo ? { replyTo: optimisticReplyTo } : {}),
     };
 
     useMessageStore.getState().addMessage(optimisticMessage);
@@ -213,14 +237,16 @@ export const useChatSocket = (conversationId: string | null, userId?: string) =>
   const startTyping = () => {
     if (!conversationId || !userId) return;
 
-    if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+    // Emit "typing" only at the start of each debounce window.
+    // If no timeout is pending, this is the first keystroke of a new burst.
+    if (!typingTimeoutRef.current) {
+      socket.emit("typing", { conversationId, userId });
     } else {
-        socket.emit("typing", { conversationId, userId });
+      clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-        stopTyping();
+      stopTyping();
     }, 3000);
   };
 

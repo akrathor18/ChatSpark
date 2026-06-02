@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useCallback } from "react";
+import { useEffect, useMemo, useCallback, useState } from "react";
 import { ConversationList } from "@/features/chat/components/conversation-list";
 import { ChatContainer } from "@/features/chat/containers/ChatContainer";
 import { NewChatModal } from "@/features/chat/components/new-chat-modal";
@@ -49,7 +49,11 @@ export default function ChatPage() {
   const CURRENT_USER_ID = user?._id || "";
 
   // 🔹 Socket Hook
-  const { sendMessage, startTyping } = useChatSocket(selectedConversationId, user?._id);
+  const [newMessageTrigger, setNewMessageTrigger] = useState(0);
+  const handleNewMessage = useCallback(() => {
+    setNewMessageTrigger((prev) => prev + 1);
+  }, []);
+  const { sendMessage, startTyping } = useChatSocket(selectedConversationId, user?._id, handleNewMessage);
 
   // 🔹 Transform messages
   const currentMessages = useMemo(() => {
@@ -205,6 +209,7 @@ export default function ChatPage() {
           isBlockedMe={isBlockedMe}
           onBlockUser={handleBlockUser}
           onUnblockUser={handleUnblockUser}
+          newMessageTrigger={newMessageTrigger}
         />
       </main>
     </div>

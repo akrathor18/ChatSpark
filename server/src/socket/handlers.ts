@@ -27,6 +27,49 @@ function decryptForEmit(msg: any): any {
   }
 }
 
+/**
+ * Decrypts top-level content AND the nested replyTo.content so the client
+ * always receives fully-populated, plain-text reply previews — no page
+ * refresh needed.
+ */
+function decryptForEmitFull(msg: any): any {
+  let result = decryptForEmit(msg);
+
+  if (result.replyTo && !result.replyTo.isUnsent) {
+    const rt = result.replyTo;
+    try {
+      // rt.content is the encrypted sub-document when populated from MongoDB
+      if (rt.content && typeof rt.content === "object" && rt.content.cipherText) {
+        const { cipherText, iv, authTag } = rt.content;
+        result = {
+          ...result,
+          replyTo: {
+            ...rt,
+            content:    decrypt(cipherText, iv, authTag),
+            senderName: rt.senderId?.name ?? undefined,
+          },
+        };
+      } else if (typeof rt.content === "string") {
+        // Already decrypted or plain (e.g. optimistic round-trip)
+        result = {
+          ...result,
+          replyTo: {
+            ...rt,
+            senderName: rt.senderId?.name ?? undefined,
+          },
+        };
+      }
+    } catch {
+      result = {
+        ...result,
+        replyTo: { ...rt, content: "[Decryption error]" },
+      };
+    }
+  }
+
+  return result;
+}
+
 interface OnlineUser {
   sockets: Set<string>;
   showOnlineStatus: boolean;
@@ -107,12 +150,12 @@ export const registerHandlers = (io: Server, socket: Socket) => {
     try {
       const { conversationId, senderId, content, tempId, replyTo } = data;
 
-      // ✅ validate
+      // validate
       if (!conversationId || !senderId || !content) {
         return;
       }
 
-      // ✅ Check block status before saving
+      // Check block status before saving
       const otherMember = await ConversationMember.findOne({
         conversationId,
         userId: { $ne: senderId },
@@ -126,7 +169,7 @@ export const registerHandlers = (io: Server, socket: Socket) => {
         }
       }
 
-      // ✅ save to DB (also restores chat if it was soft-deleted)
+      // save to DB (also restores chat if it was soft-deleted)
       const { message, restoredChat } = await createMessage({
         conversationId,
         senderId,
@@ -134,29 +177,38 @@ export const registerHandlers = (io: Server, socket: Socket) => {
         replyTo,
       });
 
-      // Decrypt content before emitting so the client always receives plain text
-      const finalMessage = decryptForEmit({
-        ...message.toObject(),
+      // Re-fetch the saved message with replyTo populated so the client
+      // receives a fully-shaped replyTo object (id + content + senderName)
+      // and never needs a page refresh to see reply previews.
+      const populatedMessage = await Message.findById(message._id)
+        .populate({
+          path: "replyTo",
+          select: "content senderId isUnsent",
+          populate: { path: "senderId", select: "name" },
+        })
+        .lean();
+
+      // Decrypt both the top-level content and the nested replyTo.content
+      const finalMessage = decryptForEmitFull({
+        ...(populatedMessage ?? message.toObject()),
         tempId,
       });
 
-      // ✅ Find all members of the conversation to notify them
+      // Find all members of the conversation to notify them
       const members = await ConversationMember.find({ conversationId });
 
-      // ✅ emit to the conversation room (including sender if they're in the room)
+      // emit to the conversation room (including sender if they're in the room)
       io.to(conversationId).emit("receive_message", finalMessage);
 
-      // ✅ Also emit to each member's personal room (for conversation list updates)
+      //  Also emit to each member's personal room (for conversation list updates)
       members.forEach((member) => {
         const memberId = member.userId.toString();
-        // Skip if it's the sender and we already emitted to conversation room?
-        // Actually, emitting to user specific room is safer for notification consistency.
         if (memberId !== senderId) {
           io.to(`user_${memberId}`).emit("receive_message", finalMessage);
         }
       });
 
-      // ✅ If chat was restored from soft-delete, notify members to refresh
+      // If chat was restored from soft-delete, notify members to refresh
       if (restoredChat) {
         members.forEach((member) => {
           const memberId = member.userId.toString();
