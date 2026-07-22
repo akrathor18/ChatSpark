@@ -98,7 +98,7 @@ export const forgotPasswordService = async (email: string) => {
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    await sendEmail({
+    sendEmail({
         to: user.email,
         subject: "Password Reset",
         html: `
@@ -106,7 +106,7 @@ export const forgotPasswordService = async (email: string) => {
             <a href="${resetUrl}">Reset Password</a>
             <p>This link expires in 15 minutes</p>
         `,
-    });
+    }).catch(console.error);;
 };
 
 export const resetPasswordService = async (
