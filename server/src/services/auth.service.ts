@@ -1,7 +1,7 @@
 import { User } from "../models/user.model.js";
 import { generateToken } from "../utils/jwt.js";
 import crypto from "crypto";
-import { sendEmail } from "../utils/auth.utils.js";
+import { sendResetEmail } from "../utils/mail.js";
 export const registerUser = async (
     email: string,
     password: string,
@@ -98,15 +98,7 @@ export const forgotPasswordService = async (email: string) => {
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-    sendEmail({
-        to: user.email,
-        subject: "Password Reset",
-        html: `
-            <p>You requested a password reset</p>
-            <a href="${resetUrl}">Reset Password</a>
-            <p>This link expires in 15 minutes</p>
-        `,
-    }).catch(console.error);;
+    await sendResetEmail(user.email, resetUrl).catch(console.error);
 };
 
 export const resetPasswordService = async (
