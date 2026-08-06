@@ -12,7 +12,7 @@ export const sendResetEmail = async (
     const response = await brevo.transactionalEmails.sendTransacEmail({
       sender: {
         name: "ChatSpark",
-        email: "ashishkunar678@example.com",
+        email: "ashishkunar678@gmail.com",
       },
       to: [
         {
