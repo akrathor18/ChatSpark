@@ -197,16 +197,19 @@ export const registerHandlers = (io: Server, socket: Socket) => {
       // Find all members of the conversation to notify them
       const members = await ConversationMember.find({ conversationId });
 
-      // emit to the conversation room (including sender if they're in the room)
-      io.to(conversationId).emit("receive_message", finalMessage);
-
-      //  Also emit to each member's personal room (for conversation list updates)
+      // Gather all rooms that should receive this message.
+      // Socket.io natively deduplicates when passing an array of rooms,
+      // so a socket in both the conversationId and user_id room receives it exactly once.
+      const targetRooms = [conversationId];
       members.forEach((member) => {
         const memberId = member.userId.toString();
         if (memberId !== senderId) {
-          io.to(`user_${memberId}`).emit("receive_message", finalMessage);
+          targetRooms.push(`user_${memberId}`);
         }
       });
+
+      // ✅ Emit once to all target rooms
+      io.to(targetRooms).emit("receive_message", finalMessage);
 
       // If chat was restored from soft-delete, notify members to refresh
       if (restoredChat) {

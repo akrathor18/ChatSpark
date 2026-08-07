@@ -9,6 +9,7 @@ import { useChatSocket } from "../hooks/useChatSocket"
 import * as messageService from "../services/message.service"
 import { getSocket } from "@/lib/socket"
 import { VirtuosoHandle } from "react-virtuoso"
+import { requestNotificationPermission } from "@/lib/notification"
 
 export interface Message {
     id: string
@@ -107,6 +108,10 @@ export function ChatContainer({
         }
     }, [newMessageTrigger, scrollToBottom])
 
+    // ── Notification request ───────────────────────────────────────────────────────────────
+    useEffect(() => {
+    requestNotificationPermission();
+}, []);
     // ── Handlers ───────────────────────────────────────────────────────────────
 
     const handleLoadOlder = useCallback(() => {

@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { getSocket } from "@/lib/socket";
 import { useMessageStore } from "@/features/chat/store/useMessageStore";
 import { useConversationStore } from "@/features/chat/store/useConversationStore";
+import { useProfileStore } from "@/features/profile/store/useProfileStore";
+import { showNotification } from "@/lib/notification";
 
 export const useChatSocket = (
   conversationId: string | null,
@@ -44,6 +46,33 @@ export const useChatSocket = (
 
       if (conversationId?.toString() === convId && currentUserId !== sendId) {
         socket.emit("mark_read", { conversationId: convId, userId: currentUserId });
+      }
+
+      // ── Notification Logic ──
+      if (currentUserId !== sendId) {
+        // Tab is considered active if it is visible to the user
+        const isTabVisible = typeof document !== "undefined" && document.visibilityState === "visible";
+        
+        // Show notification if the tab is hidden OR they are looking at a different chat
+        if (!isTabVisible || selectedId !== convId) {
+          const userProfile = useProfileStore.getState().user;
+          // default to true if setting is not explicitly false
+          const allowNotif = userProfile?.notificationSettings?.notifications !== false; 
+          
+          if (allowNotif) {
+            // Find sender's name from conversations list
+            const conv = useConversationStore.getState().conversations.find((c: any) => c.conversationId?.toString() === convId);
+            const senderName = conv?.user?.name || "New Message";
+            
+            showNotification({
+              title: senderName,
+              body: cleanMessage.content || "Sent an attachment",
+              onClick: () => {
+                useConversationStore.getState().setSelectedConversationId(convId);
+              }
+            });
+          }
+        }
       }
     };
 
