@@ -17,7 +17,7 @@ export const useChatSocket = (
     const onConnect = () => {
 
       if (userId) {
-        socket.emit("register_user", userId);
+        socket.emit("register_user");
       }
 
       socket.emit("get_online_users");
@@ -45,7 +45,7 @@ export const useChatSocket = (
       }
 
       if (conversationId?.toString() === convId && currentUserId !== sendId) {
-        socket.emit("mark_read", { conversationId: convId, userId: currentUserId });
+        socket.emit("mark_read", { conversationId: convId });
       }
 
       // ── Notification Logic ──
@@ -186,7 +186,7 @@ export const useChatSocket = (
     }
 
     if (conversationId && userId) {
-      socket.emit("mark_read", { conversationId, userId });
+      socket.emit("mark_read", { conversationId });
     }
 
     return () => {
@@ -256,7 +256,6 @@ export const useChatSocket = (
 
     socket.emit("send_message", {
       conversationId: convId,
-      senderId: currentUserId,
       content,
       tempId,
       ...(replyToId ? { replyTo: replyToId } : {}),
@@ -264,12 +263,12 @@ export const useChatSocket = (
   };
 
   const startTyping = () => {
-    if (!conversationId || !userId) return;
+    if (!conversationId) return;
 
     // Emit "typing" only at the start of each debounce window.
     // If no timeout is pending, this is the first keystroke of a new burst.
     if (!typingTimeoutRef.current) {
-      socket.emit("typing", { conversationId, userId });
+      socket.emit("typing", { conversationId });
     } else {
       clearTimeout(typingTimeoutRef.current);
     }
@@ -280,12 +279,12 @@ export const useChatSocket = (
   };
 
   const stopTyping = () => {
-    if (!conversationId || !userId) return;
+    if (!conversationId) return;
 
     if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
         typingTimeoutRef.current = null;
-        socket.emit("stop_typing", { conversationId, userId });
+        socket.emit("stop_typing", { conversationId });
     }
   };
 

@@ -45,7 +45,7 @@ function decryptForEmitFull(msg: any): any {
           ...result,
           replyTo: {
             ...rt,
-            content:    decrypt(cipherText, iv, authTag),
+            content: decrypt(cipherText, iv, authTag),
             senderName: rt.senderId?.name ?? undefined,
           },
         };
@@ -81,7 +81,7 @@ const onlineUsers = new Map<string, OnlineUser>();
 export const registerHandlers = (io: Server, socket: Socket) => {
 
   //  Register user room for personal notifications
-  socket.on("register_user", async (userId: string) => {
+  socket.on("register_user", async () => {
     // Throttle: max 3 register_user calls per 60s per socket
     if (registerUserThrottle.isThrottled(socket.id)) {
       socket.emit("rate_limited", {
@@ -90,50 +90,82 @@ export const registerHandlers = (io: Server, socket: Socket) => {
       });
       return;
     }
+    const userId = socket.data.userId as string;
 
-    if (userId) {
-      socket.join(`user_${userId}`);
-      console.log(`Socket ${socket.id} registered to user_${userId}`);
-
-      // Fetch user privacy settings
-      const user = await User.findById(userId).select("privacySettings");
-      const privacy = {
-        showOnlineStatus: user?.privacySettings?.showOnlineStatus !== false,
-        readReceipts: user?.privacySettings?.readReceipts !== false,
-      };
-
-      //  Track multiple sockets
-      const isFirstConnection = !onlineUsers.has(userId);
-
-      if (!onlineUsers.has(userId)) {
-        onlineUsers.set(userId, {
-          sockets: new Set(),
-          ...privacy,
-        });
-      }
-
-      onlineUsers.get(userId)!.sockets.add(socket.id);
-      socket.data.userId = userId;
-      socket.data.privacy = privacy;
-
-      if (isFirstConnection && privacy.showOnlineStatus) {
-        // Broadcast to others who have status enabled
-        const publicUsers = Array.from(onlineUsers.entries())
-          .filter(([id, data]) => id !== userId && data.showOnlineStatus)
-          .map(([id]) => id);
-
-        publicUsers.forEach(id => {
-          io.to(`user_${id}`).emit("user_online", { userId });
-        });
-      }
+    if (!userId) {
+      socket.disconnect();
+      return;
     }
-  });
+
+    socket.join(`user_${userId}`);
+    console.log(`Socket ${socket.id} registered to user_${userId}`);
+
+    // Fetch user privacy settings
+    const user = await User.findById(userId).select("privacySettings");
+    const privacy = {
+      showOnlineStatus: user?.privacySettings?.showOnlineStatus !== false,
+      readReceipts: user?.privacySettings?.readReceipts !== false,
+    };
+
+    //  Track multiple sockets
+    const isFirstConnection = !onlineUsers.has(userId);
+
+    if (!onlineUsers.has(userId)) {
+      onlineUsers.set(userId, {
+        sockets: new Set(),
+        ...privacy,
+      });
+    }
+
+    onlineUsers.get(userId)!.sockets.add(socket.id);
+    socket.data.userId = userId;
+    socket.data.privacy = privacy;
+
+    if (isFirstConnection && privacy.showOnlineStatus) {
+      // Broadcast to others who have status enabled
+      const publicUsers = Array.from(onlineUsers.entries())
+        .filter(([id, data]) => id !== userId && data.showOnlineStatus)
+        .map(([id]) => id);
+
+      publicUsers.forEach(id => {
+        io.to(`user_${id}`).emit("user_online", { userId });
+      });
+    }
+  }
+  );
 
   //  Join conversation room
-  socket.on("join_conversation", (conversationId: string) => {
+ socket.on("join_conversation", async (conversationId: string) => {
+  try {
+    const userId = socket.data.userId as string;
+
+    if (!conversationId || !userId) {
+      return;
+    }
+
+    const isMember = await ConversationMember.exists({
+      conversationId,
+      userId,
+    });
+
+    if (!isMember) {
+      socket.emit("join_conversation_failed", {
+        conversationId,
+        error: "Unauthorized",
+      });
+
+      return;
+    }
+
     socket.join(conversationId);
-    console.log(`Socket ${socket.id} joined conversation: ${conversationId}`);
-  });
+
+    console.log(
+      `Socket ${socket.id} joined conversation: ${conversationId}`
+    );
+  } catch (error) {
+    console.error("Socket join_conversation error:", error);
+  }
+});
 
   //  Send message
   socket.on("send_message", async (data) => {
@@ -148,13 +180,11 @@ export const registerHandlers = (io: Server, socket: Socket) => {
     }
 
     try {
-      const { conversationId, senderId, content, tempId, replyTo } = data;
-
-      // validate
+      const { conversationId, content, tempId, replyTo } = data;
+      const senderId = socket.data.userId as string;
       if (!conversationId || !senderId || !content) {
         return;
       }
-
       // Check block status before saving
       const otherMember = await ConversationMember.findOne({
         conversationId,
@@ -271,7 +301,9 @@ export const registerHandlers = (io: Server, socket: Socket) => {
 
   //  Mark messages as read via socket to notify sender
   socket.on("mark_read", async (data) => {
-    const { conversationId, userId } = data;
+    const { conversationId } = data;
+    const userId = socket.data.userId as string;
+
     if (!conversationId || !userId) return;
 
     // Reciprocity: If reader has read receipts off, don't update anything
@@ -403,7 +435,9 @@ export const registerHandlers = (io: Server, socket: Socket) => {
   });
 
   socket.on("typing", (data) => {
-    const { conversationId, userId } = data;
+    const { conversationId } = data;
+    const userId = socket.data.userId as string;
+    if (!conversationId || !userId) return;
     const privacy = socket.data.privacy;
 
     // Throttle: max 10 typing events per 5 seconds per socket
@@ -423,7 +457,9 @@ export const registerHandlers = (io: Server, socket: Socket) => {
   });
 
   socket.on("stop_typing", (data) => {
-    const { conversationId, userId } = data;
+    const { conversationId } = data;
+    const userId = socket.data.userId as string;
+    if (!conversationId || !userId) return;
     const privacy = socket.data.privacy;
 
     if (!privacy?.showOnlineStatus) return;
