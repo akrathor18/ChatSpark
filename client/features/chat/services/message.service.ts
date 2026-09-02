@@ -22,3 +22,7 @@ export const deleteMessageForMe = async (messageId: string) => {
 export const getMessageInfo = async (messageId: string) => {
     return api.get(`/messages/${messageId}/info`);
 }
+
+export const editMessage = async (messageId: string, content: string) => {
+    return api.patch(`/messages/${messageId}/edit`, { content });
+}

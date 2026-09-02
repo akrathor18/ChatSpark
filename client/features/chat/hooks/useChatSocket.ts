@@ -163,6 +163,19 @@ export const useChatSocket = (
       }
     };
 
+    const onMessageEdited = ({ message }: any) => {
+      const convId = message?.conversationId?.toString();
+      const msgId = message?._id?.toString();
+      if (!convId || !msgId) return;
+
+      // updateMessage is idempotent — safe even if sender already updated via API response
+      useMessageStore.getState().updateMessage(convId, msgId, {
+        content: message.content,
+        isEdited: message.isEdited,
+        editedAt: message.editedAt,
+      });
+    };
+
     // REGISTER EVENTS
     socket.on("connect", onConnect);
     socket.on("receive_message", onReceiveMessage);
@@ -180,6 +193,7 @@ export const useChatSocket = (
     socket.on("user_unblocked", onUserUnblocked);
     socket.on("message_blocked", onMessageBlocked);
     socket.on("message_unsent", onMessageUnsent);
+    socket.on("message_edited", onMessageEdited);
 
     if (socket.connected) {
       onConnect();
@@ -207,6 +221,7 @@ export const useChatSocket = (
       socket.off("user_unblocked", onUserUnblocked);
       socket.off("message_blocked", onMessageBlocked);
       socket.off("message_unsent", onMessageUnsent);
+      socket.off("message_edited", onMessageEdited);
     };
 
   }, [conversationId, userId]);

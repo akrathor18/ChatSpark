@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, memo, } from "react"
+import { useMemo, memo, useState, useRef, useEffect } from "react"
 import dynamic from "next/dynamic"
 import { useTheme } from "next-themes"
 import { Theme } from "emoji-picker-react"
@@ -76,6 +76,7 @@ interface ChatWindowLayoutProps {
   onUnsendMessage?: (messageId: string) => void
   onDeleteMessage?: (messageId: string) => void
   onMessageInfo?: (messageId: string) => void
+  onEditMessage?: (messageId: string, newContent: string) => Promise<void>
 }
 
 export function ChatWindow({
@@ -105,6 +106,7 @@ export function ChatWindow({
   onUnsendMessage,
   onDeleteMessage,
   onMessageInfo,
+  onEditMessage,
 }: ChatWindowLayoutProps) {
   const { typingUsers, selectedConversationId } = useConversationStore()
   const { resolvedTheme } = useTheme()
@@ -248,6 +250,11 @@ export function ChatWindow({
                     onInfo={onMessageInfo}
                     onUnsend={onUnsendMessage}
                     onDelete={onDeleteMessage}
+                    onEdit={(messageId) => {
+                      // Delegate to the parent-supplied handler
+                      // MessageItem itself will manage local editing state
+                    }}
+                    onEditMessage={onEditMessage}
                   />
                 </>
               )
@@ -381,6 +388,7 @@ const MessageItem = memo(({
   onInfo,
   onUnsend,
   onDelete,
+  onEditMessage,
 }: {
   message: Message;
   prevSame: boolean;
@@ -391,8 +399,71 @@ const MessageItem = memo(({
   onInfo?: (messageId: string) => void;
   onUnsend?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
+  onEditMessage?: (messageId: string, newContent: string) => Promise<void>;
 }) => {
   const { isCode } = useMemo(() => detectRawCode(message.isUnsent ? "" : (message.content || "")), [message.content, message.isUnsent])
+
+  // ── Inline edit state ──
+  const [isEditing, setIsEditing] = useState(false)
+  const [editContent, setEditContent] = useState(message.content || "")
+  const [isSaving, setIsSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const editInputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Sync editContent if the message content changes externally (e.g. socket update)
+  useEffect(() => {
+    if (!isEditing) setEditContent(message.content || "")
+  }, [message.content, isEditing])
+
+  // Auto-focus textarea when edit mode opens
+  useEffect(() => {
+    if (isEditing) {
+      setTimeout(() => {
+        if (editInputRef.current) {
+          editInputRef.current.focus()
+          editInputRef.current.setSelectionRange(
+            editInputRef.current.value.length,
+            editInputRef.current.value.length
+          )
+        }
+      }, 50)
+    }
+  }, [isEditing])
+
+  const handleStartEdit = () => {
+    setEditContent(message.content || "")
+    setEditError(null)
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setEditContent(message.content || "")
+    setEditError(null)
+    setIsEditing(false)
+  }
+
+  const handleSaveEdit = async () => {
+    const trimmed = editContent.trim()
+    if (!trimmed) {
+      setEditError("Message cannot be empty.")
+      return
+    }
+    // Skip API call if nothing changed
+    if (trimmed === (message.content || "").trim()) {
+      setIsEditing(false)
+      return
+    }
+    setIsSaving(true)
+    setEditError(null)
+    try {
+      await onEditMessage?.(message.id, trimmed)
+      setIsEditing(false)
+    } catch (err: any) {
+      setEditError(err?.response?.data?.message || "Failed to update message. Please try again.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div
@@ -429,6 +500,54 @@ const MessageItem = memo(({
           </div>
         )}
 
+        {/* Inline Edit Mode */}
+        {isEditing ? (
+          <div className="w-full min-w-[220px]">
+            <textarea
+              ref={editInputRef}
+              value={editContent}
+              onChange={(e) => {
+                setEditContent(e.target.value)
+                e.target.style.height = "auto"
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSaveEdit() }
+                if (e.key === "Escape") handleCancelEdit()
+              }}
+              disabled={isSaving}
+              rows={1}
+              className={cn(
+                "w-full resize-none rounded-xl px-3 py-2 text-[14px] leading-relaxed",
+                "bg-background/80 ring-1 ring-primary/50 focus:outline-none focus:ring-primary",
+                "text-foreground placeholder:text-muted-foreground",
+                "max-h-[200px] overflow-y-auto",
+                isSaving && "opacity-60"
+              )}
+              style={{ lineHeight: "1.5" }}
+            />
+            {editError && (
+              <p className="mt-1 text-[11px] text-destructive">{editError}</p>
+            )}
+            <div className="mt-1.5 flex items-center justify-end gap-2">
+              <button
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+                className="rounded-lg px-3 py-1 text-[12px] font-medium text-muted-foreground hover:bg-accent transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSaving || !editContent.trim()}
+                className="rounded-lg bg-primary px-3 py-1 text-[12px] font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {isSaving ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        ) : (
+        <>
         {/* Message bubble wrapped in Context Menu */}
         <MessageContextMenu
           message={message}
@@ -437,6 +556,7 @@ const MessageItem = memo(({
           onInfo={onInfo}
           onUnsend={onUnsend}
           onDelete={onDelete}
+          onEdit={handleStartEdit}
         >
           {message.isUnsent ? (
             <div
@@ -481,6 +601,9 @@ const MessageItem = memo(({
               message.isSent ? "justify-end pr-1" : "pl-1"
             )}
           >
+            {message.isEdited && (
+              <span className="italic opacity-70">Edited</span>
+            )}
             <span>{message.timestamp}</span>
             {message.isSent && !message.isUnsent && (
               <span className={cn(message.status === "read" ? "text-primary" : "text-muted-foreground")}>
@@ -494,6 +617,8 @@ const MessageItem = memo(({
               </span>
             )}
           </div>
+        )}
+        </>
         )}
       </div>
     </div>

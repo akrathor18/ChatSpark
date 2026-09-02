@@ -19,6 +19,8 @@ export interface Message {
     isSent: boolean
     status?: "sending" | "sent" | "read" | "failed"
     isUnsent?: boolean
+    isEdited?: boolean
+    editedAt?: string
     replyTo?: {
         id: string
         content: string
@@ -70,7 +72,7 @@ export function ChatContainer({
     const [infoMessageId, setInfoMessageId] = useState<string | null>(null)
     const [isInfoOpen, setIsInfoOpen] = useState(false)
     const { typingUsers, selectedConversationId, replyingTo, setReplyingTo } = useConversationStore();
-    const { fetchOlderMessages, isLoadingOlder, hasMore, isLoading, removeMessage, markAsUnsent } = useMessageStore();
+    const { fetchOlderMessages, isLoadingOlder, hasMore, isLoading, removeMessage, markAsUnsent, updateMessage } = useMessageStore();
 
     // Calculate if others are typing
     const isOtherTyping = !!(selectedConversationId && Object.keys(typingUsers[selectedConversationId] || {}).length > 0);
@@ -228,6 +230,26 @@ export function ChatContainer({
         }
     }, [selectedConversationId, removeMessage])
 
+    const handleEditMessage = useCallback(async (messageId: string, newContent: string) => {
+        if (!selectedConversationId) return
+
+        // Skip API call if content hasn't changed
+        const existingMsg = useMessageStore.getState().messages[selectedConversationId]?.find(
+            (m: any) => (m._id?.toString() || m.id?.toString()) === messageId
+        )
+        if (existingMsg && existingMsg.content === newContent) return
+
+        const res: any = await messageService.editMessage(messageId, newContent)
+        const updated = res?.data?.message ?? res?.message
+        if (!updated) return
+
+        updateMessage(selectedConversationId, messageId, {
+            content: updated.content,
+            isEdited: true,
+            editedAt: updated.editedAt,
+        })
+    }, [selectedConversationId])
+
     const handleMessageInfo = useCallback((messageId: string) => {
         setInfoMessageId(messageId)
         setIsInfoOpen(true)
@@ -262,6 +284,7 @@ export function ChatContainer({
                 onUnsendMessage={handleUnsendMessage}
                 onDeleteMessage={handleDeleteMessage}
                 onMessageInfo={handleMessageInfo}
+                onEditMessage={handleEditMessage}
             />
             <MessageInfoModal
                 messageId={infoMessageId}

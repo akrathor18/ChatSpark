@@ -190,3 +190,51 @@ export const getMessageInfo = async (messageId: string) => {
   const plain = message.toObject();
   return decryptMessageContent(plain);
 };
+
+export const editMessage = async (
+  messageId: string,
+  userId: string,
+  newContent: string
+) => {
+  const message = await Message.findById(messageId);
+
+  if (!message) {
+    throw new Error("Message not found");
+  }
+
+  if (message.isUnsent) {
+    throw new Error("Cannot edit an unsent message");
+  }
+
+  if (message.senderId.toString() !== userId) {
+    throw new Error("You can only edit your own messages");
+  }
+
+  // Enforce the 15-minute edit window
+  const EDIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+  const ageMs = Date.now() - new Date(message.createdAt).getTime();
+  if (ageMs > EDIT_WINDOW_MS) {
+    throw new Error("Messages can only be edited within 15 minutes of sending");
+  }
+
+  // Encrypt the new content before persisting (same as createMessage)
+  const encryptedContent = encrypt(newContent);
+
+  // Atomic update — one round-trip to MongoDB
+  const updated = await Message.findByIdAndUpdate(
+    messageId,
+    {
+      $set: {
+        content: encryptedContent,
+        isEdited: true,
+        editedAt: new Date(),
+      },
+    },
+    { new: true }
+  ).lean();
+
+  if (!updated) throw new Error("Message not found");
+
+  // Decrypt before returning to caller so the controller / socket get plain text
+  return decryptMessageContent(updated);
+};

@@ -23,6 +23,9 @@ export interface IMessage extends Document {
 
     isUnsent: boolean;
 
+    isEdited: boolean;
+    editedAt?: Date;
+
     deletedFor: Types.ObjectId[];
 
     createdAt: Date;
@@ -92,6 +95,16 @@ const messageSchema = new Schema<IMessage>(
         isUnsent: {
             type: Boolean,
             default: false,
+        },
+
+        isEdited: {
+            type: Boolean,
+            default: false,
+        },
+
+        editedAt: {
+            type: Date,
+            default: null,
         },
 
         deletedFor: [

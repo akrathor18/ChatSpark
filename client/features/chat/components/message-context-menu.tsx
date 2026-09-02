@@ -14,6 +14,7 @@ import {
   Undo2,
   Trash2,
   MoreVertical,
+  Edit3,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Message } from "../containers/ChatContainer"
@@ -26,6 +27,7 @@ interface MessageContextMenuProps {
   onInfo?: (messageId: string) => void
   onUnsend?: (messageId: string) => void
   onDelete?: (messageId: string) => void
+  onEdit?: (messageId: string) => void
 }
 
 export const MessageContextMenu = memo(({
@@ -36,6 +38,7 @@ export const MessageContextMenu = memo(({
   onInfo,
   onUnsend,
   onDelete,
+  onEdit,
 }: MessageContextMenuProps) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -80,8 +83,15 @@ export const MessageContextMenu = memo(({
     return <>{children}</>
   }
 
+  // Edit is only available within 15 minutes of sending
+  const EDIT_WINDOW_MS = 15 * 60 * 1000;
+  const isWithin15Min = Date.now() - new Date(message.createdAt).getTime() < EDIT_WINDOW_MS;
+
   const actions = message.isSent
     ? [
+        ...(isWithin15Min
+          ? [{ key: "edit", label: "Edit", icon: Edit3, onClick: () => onEdit?.(message.id) }]
+          : []),
         { key: "reply", label: "Reply", icon: Reply, onClick: () => onReply?.(message) },
         { key: "copy", label: "Copy", icon: Copy, onClick: () => onCopy?.(message.content) },
         { key: "info", label: "Info", icon: Info, onClick: () => onInfo?.(message.id) },

@@ -50,6 +50,8 @@ export const mapMessages = (messages: any, conversationId: any, currentUserId: s
       isSent: senderId === currentId,
       status: msg.status ?? "sent",
       isUnsent: msg.isUnsent || false,
+      isEdited: msg.isEdited || false,
+      editedAt: msg.editedAt,
       replyTo,
       senderId,
     };
