@@ -250,10 +250,6 @@ export function ChatWindow({
                     onInfo={onMessageInfo}
                     onUnsend={onUnsendMessage}
                     onDelete={onDeleteMessage}
-                    onEdit={(messageId) => {
-                      // Delegate to the parent-supplied handler
-                      // MessageItem itself will manage local editing state
-                    }}
                     onEditMessage={onEditMessage}
                   />
                 </>
